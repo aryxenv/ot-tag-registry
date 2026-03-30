@@ -9,7 +9,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.config.cosmos import get_cosmos_client, get_database
+from src.utils.db import get_cosmos_client, get_database
 
 logging.basicConfig(
     level=logging.INFO,

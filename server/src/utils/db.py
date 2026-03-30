@@ -1,13 +1,60 @@
-"""Generic CRUD helper wrapping an Azure Cosmos DB container."""
+"""Cosmos DB runtime helpers — client connection, CRUD repository, and
+per-container factory functions.
+
+This module is the server's only touchpoint with Azure Cosmos DB.
+Container *creation* and data *seeding* live in ``services/database/``.
+"""
 
 import logging
+import os
 from datetime import datetime, timezone
 
-from azure.cosmos import ContainerProxy
+from azure.cosmos import ContainerProxy, CosmosClient, DatabaseProxy
 from azure.cosmos.exceptions import (
     CosmosHttpResponseError,
     CosmosResourceNotFoundError,
 )
+
+# ---------------------------------------------------------------------------
+# Cosmos client
+# ---------------------------------------------------------------------------
+
+logger = logging.getLogger("cosmos")
+
+COSMOS_ENDPOINT = os.environ.get("COSMOS_ENDPOINT", "")
+COSMOS_KEY = os.environ.get("COSMOS_KEY", "")
+COSMOS_DATABASE = os.environ.get("COSMOS_DATABASE", "ot-tag-registry")
+
+
+def get_cosmos_client() -> CosmosClient:
+    """Create and return a Cosmos DB client, validating env vars first."""
+    if not COSMOS_ENDPOINT or not COSMOS_KEY:
+        logger.error(
+            "COSMOS_ENDPOINT and COSMOS_KEY must be set (endpoint=%r)",
+            COSMOS_ENDPOINT,
+        )
+        raise ValueError("COSMOS_ENDPOINT and COSMOS_KEY must be set")
+    try:
+        return CosmosClient(COSMOS_ENDPOINT, credential=COSMOS_KEY)
+    except Exception as e:
+        logger.error("Failed to connect to Cosmos DB at %s: %s", COSMOS_ENDPOINT, e)
+        raise
+
+
+def get_database(client: CosmosClient | None = None) -> DatabaseProxy:
+    if client is None:
+        client = get_cosmos_client()
+    return client.get_database_client(COSMOS_DATABASE)
+
+
+def get_container(container_name: str, client: CosmosClient | None = None):
+    db = get_database(client)
+    return db.get_container_client(container_name)
+
+
+# ---------------------------------------------------------------------------
+# Generic CRUD repository
+# ---------------------------------------------------------------------------
 
 
 class CosmosRepository:
@@ -23,9 +70,6 @@ class CosmosRepository:
             f"cosmos.{container_client.id}"
         )
 
-    # ------------------------------------------------------------------
-    # Create
-    # ------------------------------------------------------------------
     def create(self, item: dict) -> dict:
         """Upsert *item* into the container and return the persisted document."""
         try:
@@ -38,9 +82,6 @@ class CosmosRepository:
             )
             raise
 
-    # ------------------------------------------------------------------
-    # Read – single item
-    # ------------------------------------------------------------------
     def get_by_id(self, item_id: str, partition_key: str) -> dict | None:
         """Point-read a single document.  Returns *None* on 404."""
         try:
@@ -61,9 +102,6 @@ class CosmosRepository:
             )
             raise
 
-    # ------------------------------------------------------------------
-    # Read – list
-    # ------------------------------------------------------------------
     def get_all(self, partition_key: str | None = None) -> list[dict]:
         """Return every document in the container.
 
@@ -98,9 +136,6 @@ class CosmosRepository:
             )
             raise
 
-    # ------------------------------------------------------------------
-    # Query – parameterised SQL
-    # ------------------------------------------------------------------
     def query(
         self,
         query_str: str,
@@ -128,9 +163,6 @@ class CosmosRepository:
             )
             raise
 
-    # ------------------------------------------------------------------
-    # Update (partial merge)
-    # ------------------------------------------------------------------
     def update(self, item_id: str, partition_key: str, updates: dict) -> dict:
         """Point-read the document, merge *updates* over it, and upsert back.
 
@@ -168,9 +200,6 @@ class CosmosRepository:
             )
             raise
 
-    # ------------------------------------------------------------------
-    # Delete (soft-delete → status = "retired")
-    # ------------------------------------------------------------------
     def delete(self, item_id: str, partition_key: str) -> None:
         """Soft-delete: set ``status`` to ``retired`` and update timestamp."""
         try:
@@ -203,3 +232,28 @@ class CosmosRepository:
                 exc.status_code,
             )
             raise
+
+
+# ---------------------------------------------------------------------------
+# Per-container repository factories
+# ---------------------------------------------------------------------------
+
+
+def get_assets_repo() -> CosmosRepository:
+    return CosmosRepository(get_container("assets"))
+
+
+def get_tags_repo() -> CosmosRepository:
+    return CosmosRepository(get_container("tags"))
+
+
+def get_sources_repo() -> CosmosRepository:
+    return CosmosRepository(get_container("sources"))
+
+
+def get_l1_rules_repo() -> CosmosRepository:
+    return CosmosRepository(get_container("l1Rules"))
+
+
+def get_l2_rules_repo() -> CosmosRepository:
+    return CosmosRepository(get_container("l2Rules"))
