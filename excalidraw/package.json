@@ -1,0 +1,27 @@
+{
+  "name": "data_case",
+  "version": "1.0.0",
+  "description": "This project is about building an end-to-end data solution for the Special Olympics. We are acting as consultants for a client (Special Olympics) to transform raw data into actionable insights using Python and Power BI.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aryxenv/data_case_special_olympics.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aryxenv/data_case_special_olympics/issues"
+  },
+  "homepage": "https://github.com/aryxenv/data_case_special_olympics#readme",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}
