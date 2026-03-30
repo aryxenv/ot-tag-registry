@@ -90,6 +90,7 @@ Required variables:
 ```bash
 # Install dependencies
 cd server && uv venv && uv pip install -r requirements.txt
+cd ../services && uv venv && uv pip install -r requirements.txt
 cd ../client && npm install
 
 # Start backend (port 8000)
@@ -104,7 +105,7 @@ cd client && npm run dev
 The seed script populates your Cosmos DB with realistic sample data for development and demo purposes:
 
 ```bash
-cd server && uv run python -m src.scripts.seed
+cd services && uv run python -m database.seed
 ```
 
 This will:
@@ -119,8 +120,9 @@ This will:
 ```
 ot-tag-registry/
 ├── client/          # React + Vite + TypeScript frontend
-├── server/          # Python (FastAPI) backend API
-└── services/        # Azure service integrations
+├── server/          # Python (FastAPI) backend API (standalone deployable)
+└── services/        # Local-only setup tools (not deployed)
+    ├── database/    # Cosmos DB container creation + data seeding
     ├── search/      # Azure AI Search (vector index)
     └── language/    # Language normalisation (optional)
 ```

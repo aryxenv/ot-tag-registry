@@ -4,9 +4,10 @@
 
 Industrial IoT tag registry with three layers and an orchestrated agent system:
 
-- **`server/`** — Python FastAPI backend. Domain models (Pydantic), Cosmos DB persistence, REST API, deterministic naming validator, suggest-name orchestrator.
+- **`server/`** — Python FastAPI backend. Domain models (Pydantic), Cosmos DB query logic (repository layer), REST API, deterministic naming validator, suggest-name orchestrator. **Standalone deployable** — never imports from `services/`.
 - **`client/`** — React 19 + TypeScript + Vite frontend. Fluent UI v9 component library. Dev server proxies `/api/*` to `localhost:8000`.
-- **`services/`** — Standalone Python modules for Azure AI integrations:
+- **`services/`** — Local-only Python modules for Azure service setup and configuration. **Not deployed** — used during development to create infrastructure, seed data, and configure external services. Has its own `requirements.txt` and venv.
+  - `services/database/` — Cosmos DB setup: container creation (`cosmos_setup.py`) and data seeding (`seed.py`).
   - `services/search/` — Azure AI Search: vector index creation, golden tag seeding, hybrid suggest-name queries.
   - `services/language/` — Language detection and normalisation to English.
 - **`.github/agents/`** — Copilot agent orchestration. `ot-builder` orchestrator delegates to `ob--backend-api`, `ob--frontend`, and `ob--ai-search` subagents.
@@ -24,8 +25,11 @@ cd server && uv run uvicorn src.main:app --reload --port 8000
 cd client && npm install
 cd client && npm run dev          # Vite dev server on port 5173
 
+# Services (local-only setup tools)
+cd services && uv venv && uv pip install -r requirements.txt
+
 # Seed sample data into Cosmos DB
-cd server && uv run python -m src.scripts.seed
+cd services && uv run python -m database.seed
 
 # AI Search services
 cd services/search && uv venv && uv pip install -r requirements.txt
@@ -47,6 +51,12 @@ cd server && uv run pytest tests/ -k "test_name"  # Single test by name
 ```
 
 ## Key Conventions
+
+### Server vs. Services Separation
+
+- **`server/`** is a **standalone deployable API**. It contains only runtime logic: routes, models, repository (query layer), validators. It never imports from `services/`.
+- **`services/`** is **local-only** — used during development for infrastructure setup (DB container creation, data seeding, AI Search index creation). Not deployed with the server.
+- Non-API service configurations (Cosmos DB setup, AI Search index management, data seeding) always live in `services/`, never in `server/`.
 
 ### Python (server + services)
 

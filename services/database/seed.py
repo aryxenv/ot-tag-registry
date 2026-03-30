@@ -8,15 +8,24 @@ Populates:
   • 5  L2 state-profile rules (pump pressures, motor speeds)
 
 Usage:
-    cd server
-    uv run python -m src.scripts.seed
+    cd services
+    uv run python -m database.seed
 """
+
+import sys
+from pathlib import Path
+
+# Resolve repo root for cross-package imports and .env loading
+_repo_root = Path(__file__).resolve().parent.parent.parent
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(_repo_root / "server" / ".env")
 
-from src.config.cosmos import ensure_containers, get_cosmos_client
+# Add server/ to sys.path for cross-package imports (local-only)
+sys.path.insert(0, str(_repo_root / "server"))
+
+from database.cosmos_setup import ensure_containers, get_cosmos_client
 from src.models import (
     Asset,
     Tag,

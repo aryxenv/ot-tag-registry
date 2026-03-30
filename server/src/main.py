@@ -6,10 +6,10 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.config.cosmos import ensure_containers, get_cosmos_client, get_database
+from src.config.cosmos import get_cosmos_client, get_database
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +24,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # --- startup ---
     try:
         client = get_cosmos_client()
-        ensure_containers(client)
         app.state.cosmos_client = client
         logger.info("Cosmos DB connection established")
     except Exception as e:
