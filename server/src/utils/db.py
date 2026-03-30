@@ -14,6 +14,7 @@ from azure.cosmos.exceptions import (
     CosmosHttpResponseError,
     CosmosResourceNotFoundError,
 )
+from azure.identity import DefaultAzureCredential
 
 # ---------------------------------------------------------------------------
 # Cosmos client
@@ -26,16 +27,38 @@ COSMOS_KEY = os.environ.get("COSMOS_KEY", "")
 COSMOS_DATABASE = os.environ.get("COSMOS_DATABASE", "ot-tag-registry")
 
 
+_cached_credential: DefaultAzureCredential | str | None = None
+
+
+def _get_credential() -> DefaultAzureCredential | str:
+    """Return an API key if COSMOS_KEY is set, otherwise DefaultAzureCredential.
+
+    The result is cached at module level so ``DefaultAzureCredential`` (which
+    probes multiple providers on first use) is only instantiated once.
+    """
+    global _cached_credential
+    if _cached_credential is None:
+        if COSMOS_KEY:
+            logger.info("Using API key credential (COSMOS_KEY is set)")
+            _cached_credential = COSMOS_KEY
+        else:
+            logger.info("Using DefaultAzureCredential (managed identity)")
+            _cached_credential = DefaultAzureCredential()
+    return _cached_credential
+
+
 def get_cosmos_client() -> CosmosClient:
-    """Create and return a Cosmos DB client, validating env vars first."""
-    if not COSMOS_ENDPOINT or not COSMOS_KEY:
-        logger.error(
-            "COSMOS_ENDPOINT and COSMOS_KEY must be set (endpoint=%r)",
-            COSMOS_ENDPOINT,
-        )
-        raise ValueError("COSMOS_ENDPOINT and COSMOS_KEY must be set")
+    """Create and return a Cosmos DB client.
+
+    Uses ``DefaultAzureCredential`` by default (managed identity in Azure,
+    Azure CLI / VS Code locally).  Falls back to ``COSMOS_KEY`` if set.
+    """
+    if not COSMOS_ENDPOINT:
+        logger.error("COSMOS_ENDPOINT must be set (endpoint=%r)", COSMOS_ENDPOINT)
+        raise ValueError("COSMOS_ENDPOINT must be set")
     try:
-        return CosmosClient(COSMOS_ENDPOINT, credential=COSMOS_KEY)
+        credential = _get_credential()
+        return CosmosClient(COSMOS_ENDPOINT, credential=credential)
     except Exception as e:
         logger.error("Failed to connect to Cosmos DB at %s: %s", COSMOS_ENDPOINT, e)
         raise

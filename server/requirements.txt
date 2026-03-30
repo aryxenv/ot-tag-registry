@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
 azure-cosmos
+azure-identity
 python-dotenv
 pydantic
