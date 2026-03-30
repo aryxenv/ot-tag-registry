@@ -65,7 +65,7 @@ graph TD
 
 ```bash
 # Install dependencies
-cd server && uv venv && uv run pip install -r requirements.txt
+cd server && uv venv && uv pip install -r requirements.txt
 cd ../client && npm install
 
 # Start backend (port 8000)

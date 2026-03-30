@@ -60,7 +60,7 @@ Scaffold the Python backend project from scratch. The `server/` directory is cur
 - [ ] Install Fluent UI React on the client:
   - `cd client && npm install @fluentui/react-components @fluentui/react-icons`
   - Wrap the app root in `<FluentProvider theme={webLightTheme}>` in `main.tsx`
-- [ ] Verify end-to-end: `uv venv && uv run pip install -r requirements.txt && uv run uvicorn src.main:app --reload` serves both endpoints
+- [ ] Verify end-to-end: `uv venv && uv pip install -r requirements.txt && uv run uvicorn src.main:app --reload` serves both endpoints
 
 **Acceptance criteria**
 
