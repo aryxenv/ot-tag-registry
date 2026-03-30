@@ -532,15 +532,52 @@ Prepare a coherent seed dataset that tells a believable story during the demo.
 
 ---
 
-## B) Live Demo Build (Built on stage with GitHub Copilot Agent)
+### Issue #14 — Wire vector search query logic in search service
 
-These issues represent the feature built **live during the demo** using GitHub Copilot agent. The pre-built app has a stub/placeholder for this feature; the live session fills it in.
+**Labels:** `azure`, `search`, `pre-built`, `priority: critical`
+
+**Dependencies:** Depends on Issue #9 (AI Search index must exist). Must be completed before Issue #12.
+
+**Description**
+
+Implement the search service module that encapsulates the Azure AI Search query logic used by the suggest-name endpoint.
+
+**Requirements**
+
+- [ ] Create `services/search/suggest_name.py` (or integrate into existing search service)
+- [ ] Function signature:
+  ```python
+  async def suggest_tag_name(
+      site: str,
+      line: str,
+      description: str,
+      equipment: str | None = None,
+      unit: str | None = None,
+      datatype: str | None = None,
+      top_k: int = 5,
+  ) -> SuggestionResult:
+      ...
+  ```
+- [ ] Build OData filter string from hard filter params
+- [ ] Generate embedding for semantic query text via Azure OpenAI
+- [ ] Execute hybrid query (vector + filters) against Azure AI Search
+- [ ] Map search results to `SuggestionResult` type
+- [ ] Handle: no results, API errors, timeout
+
+**Acceptance criteria**
+
+- Function correctly combines hard filters with vector search
+- Returns ranked results with scores
+- Gracefully handles missing optional parameters
+- Error handling doesn't crash the server
 
 ---
 
 ### Issue #12 — Build "Suggest a Name" backend endpoint
 
-**Labels:** `api`, `ai`, `live-demo`, `priority: critical`
+**Labels:** `api`, `ai`, `pre-built`, `priority: critical`
+
+**Dependencies:** Depends on Issue #14 (search service). Must be completed before demo Issue #13.
 
 **Description**
 
@@ -619,9 +656,17 @@ Implement the backend endpoint that queries Azure AI Search using the **hard-fil
 
 ---
 
+## B) Live Demo Build (Built on stage with GitHub Copilot Agent)
+
+These issues are built **live during the demo** using GitHub Copilot agent. The backend API (`POST /api/tags/suggest-name`) and vector search wiring are already pre-built and working — the live demo focuses on building the **frontend integration** that calls that API and the **language normalisation** enhancement.
+
+---
+
 ### Issue #13 — Build "Suggest a Name" frontend button and suggestion panel
 
 **Labels:** `frontend`, `ai`, `live-demo`, `priority: critical`
+
+**Dependencies:** Depends on pre-built Issue #12 (backend endpoint must be available at `POST /api/tags/suggest-name`).
 
 **Description**
 
@@ -662,45 +707,6 @@ Replace the stub placeholder on the tag create/edit form with a working "Suggest
 - Alternatives are selectable
 - Evidence text is visible and understandable
 - Feature is assistive only — never auto-applies or bypasses validation
-
----
-
-### Issue #14 — Wire vector search query logic in search service
-
-**Labels:** `azure`, `search`, `live-demo`, `priority: critical`
-
-**Description**
-
-Implement the search service module that encapsulates the Azure AI Search query logic used by the suggest-name endpoint.
-
-**Requirements**
-
-- [ ] Create `services/search/suggest_name.py` (or integrate into existing search service)
-- [ ] Function signature:
-  ```python
-  async def suggest_tag_name(
-      site: str,
-      line: str,
-      description: str,
-      equipment: str | None = None,
-      unit: str | None = None,
-      datatype: str | None = None,
-      top_k: int = 5,
-  ) -> SuggestionResult:
-      ...
-  ```
-- [ ] Build OData filter string from hard filter params
-- [ ] Generate embedding for semantic query text via Azure OpenAI
-- [ ] Execute hybrid query (vector + filters) against Azure AI Search
-- [ ] Map search results to `SuggestionResult` type
-- [ ] Handle: no results, API errors, timeout
-
-**Acceptance criteria**
-
-- Function correctly combines hard filters with vector search
-- Returns ranked results with scores
-- Gracefully handles missing optional parameters
-- Error handling doesn't crash the server
 
 ---
 
