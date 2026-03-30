@@ -13,7 +13,7 @@ You are a senior Python backend developer specializing in FastAPI, Pydantic, and
 
 - Scaffold and maintain the `server/` project structure
 - Define Pydantic models in `server/src/models/`
-- Build Cosmos DB integration in `server/src/repositories/` and `server/src/config/`
+- Build Cosmos DB query logic in `server/src/utils/db.py`
 - Implement API routes in `server/src/routes/`
 - Build the deterministic naming validator in `server/src/validators/`
 - Write pytest tests in `server/tests/`
@@ -81,7 +81,7 @@ cd server && uv run uvicorn src.main:app --reload --port 8000
 cd server && uv run pytest tests/ -v
 
 # Run seed script
-cd server && uv run python -m src.scripts.seed
+cd services && uv run python -m database.seed
 
 # Lint (if ruff is available)
 cd server && uv run ruff check src/ tests/

@@ -4,7 +4,7 @@
 
 Industrial IoT tag registry with three layers and an orchestrated agent system:
 
-- **`server/`** — Python FastAPI backend. Domain models (Pydantic), Cosmos DB query logic (repository layer), REST API, deterministic naming validator, suggest-name orchestrator. **Standalone deployable** — never imports from `services/`.
+- **`server/`** — Python FastAPI backend. Minimal API server with four directories: `routes/` (API endpoints), `models/` (Pydantic data shapes), `utils/` (runtime DB helpers in `db.py`), `validators/` (naming validator). **Standalone deployable** — never imports from `services/`.
 - **`client/`** — React 19 + TypeScript + Vite frontend. Fluent UI v9 component library. Dev server proxies `/api/*` to `localhost:8000`.
 - **`services/`** — Local-only Python modules for Azure service setup and configuration. **Not deployed** — used during development to create infrastructure, seed data, and configure external services. Has its own `requirements.txt` and venv.
   - `services/database/` — Cosmos DB setup: container creation (`cosmos_setup.py`) and data seeding (`seed.py`).

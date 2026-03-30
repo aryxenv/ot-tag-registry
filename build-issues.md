@@ -152,7 +152,7 @@ Wire up Azure Cosmos DB as the persistence layer using the `azure-cosmos` Python
 
 **Requirements**
 
-- [ ] Create `server/src/config/cosmos_client.py` — initialise Cosmos client from env vars (`COSMOS_ENDPOINT`, `COSMOS_KEY`, `COSMOS_DATABASE`)
+- [x] Create `server/src/utils/db.py` — Cosmos client from env vars (`COSMOS_ENDPOINT`, `COSMOS_KEY`, `COSMOS_DATABASE`), CRUD repository, and per-container factory functions
 - [ ] Create database initialisation logic (create DB + containers if not exist)
 - [ ] Containers to create:
   - `assets` (partition key: `/site`)
@@ -160,13 +160,13 @@ Wire up Azure Cosmos DB as the persistence layer using the `azure-cosmos` Python
   - `sources` (partition key: `/systemType`)
   - `l1Rules` (partition key: `/tagId`)
   - `l2Rules` (partition key: `/tagId`)
-- [ ] Create a generic CRUD repository helper (`server/src/repositories/cosmos_repository.py`) to reduce boilerplate
+- [x] Generic CRUD repository helper lives in `server/src/utils/db.py`
 - [ ] Add `.env.example` with all required environment variables
-- [ ] Seed script (`server/src/scripts/seed.py`) that populates realistic sample data (10+ assets, 30+ tags, sources, rules)
+- [ ] Seed script (`services/database/seed.py`) that populates realistic sample data (10+ assets, 30+ tags, sources, rules)
 
 **Acceptance criteria**
 
-- `uv run python -m src.scripts.seed` (or equivalent CLI command) creates all containers and inserts sample data
+- `cd services && uv run python -m database.seed` creates all containers and inserts sample data
 - Repository helper supports: `create`, `get_by_id`, `get_all`, `query`, `update`, `delete`
 - Connection errors produce clear log messages
 
@@ -523,7 +523,7 @@ Prepare a coherent seed dataset that tells a believable story during the demo.
   - Associated L1 and L2 rules
 - [ ] **Sources**: 3–5 different source configs (OPC-UA, MQTT, Modbus)
 - [ ] A few tags intentionally named **inconsistently** (to demonstrate the problem during the demo)
-- [ ] Script: `uv run python -m src.scripts.seed` from server directory seeds both Cosmos DB and Azure AI Search index
+- [ ] Script: `cd services && uv run python -m database.seed` seeds both Cosmos DB and Azure AI Search index
 
 **Acceptance criteria**
 

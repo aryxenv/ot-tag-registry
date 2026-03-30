@@ -41,7 +41,7 @@ from src.models import (
     OperationalState,
     ConditionOperator,
 )
-from src.repositories import (
+from src.utils.db import (
     get_assets_repo,
     get_tags_repo,
     get_sources_repo,

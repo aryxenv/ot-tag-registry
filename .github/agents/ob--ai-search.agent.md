@@ -113,7 +113,7 @@ cd services/search && uv run python create_index.py
 cd services/search && uv run python seed_index.py
 
 # Full seed (Cosmos + Search) from server
-cd server && uv run python -m src.scripts.seed
+cd services && uv run python -m database.seed
 ```
 
 # Boundaries
