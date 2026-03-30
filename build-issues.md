@@ -16,7 +16,7 @@ These issues must be completed and stable before the live demo session. They rep
 
 **Description**
 
-Scaffold the Python backend project from scratch. The `server/` directory is currently empty. This is a **hard prerequisite** for all backend issues (#1–#5, #10).
+Scaffold the Python backend project from scratch. The `server/` directory is currently empty. This is a **hard prerequisite** for all backend issues (#1–#5, #10). Also install Fluent UI React on the client as the UI component library.
 
 **Requirements**
 
@@ -57,6 +57,9 @@ Scaffold the Python backend project from scratch. The `server/` directory is cur
   - `SEARCH_ENDPOINT`, `SEARCH_API_KEY`, `SEARCH_INDEX_NAME`
   - `OPENAI_ENDPOINT`, `OPENAI_API_KEY`, `OPENAI_EMBEDDING_DEPLOYMENT`
 - [ ] Configure `client/vite.config.ts` with dev proxy: `/api` → `http://localhost:8000`
+- [ ] Install Fluent UI React on the client:
+  - `cd client && npm install @fluentui/react-components @fluentui/react-icons`
+  - Wrap the app root in `<FluentProvider theme={webLightTheme}>` in `main.tsx`
 - [ ] Verify end-to-end: `uv venv && uv run pip install -r requirements.txt && uv run uvicorn src.main:app --reload` serves both endpoints
 
 **Acceptance criteria**
@@ -65,6 +68,7 @@ Scaffold the Python backend project from scratch. The `server/` directory is cur
 - CORS headers allow requests from `http://localhost:5173`
 - All subdirectory packages are importable (no missing `__init__.py`)
 - Frontend dev server can proxy API calls to the backend
+- Fluent UI React is installed and `FluentProvider` wraps the app root
 
 ---
 
