@@ -63,6 +63,7 @@ Scaffold the Python backend project from scratch. The `server/` directory is cur
 - [ ] Verify end-to-end: `uv venv && uv run pip install -r requirements.txt && uv run uvicorn src.main:app --reload` serves both endpoints
 
 **Acceptance criteria**
+
 - `uv run uvicorn src.main:app --reload` starts the server on port 8000
 - `GET /` and `GET /api/test` return expected JSON responses
 - CORS headers allow requests from `http://localhost:5173`
@@ -532,7 +533,7 @@ Prepare a coherent seed dataset that tells a believable story during the demo.
 
 ---
 
-### Issue #14 — Wire vector search query logic in search service
+### Issue #12 — Wire vector search query logic in search service
 
 **Labels:** `azure`, `search`, `pre-built`, `priority: critical`
 
@@ -573,7 +574,7 @@ Implement the search service module that encapsulates the Azure AI Search query 
 
 ---
 
-### Issue #12 — Build "Suggest a Name" backend endpoint
+### Issue #13 — Build "Suggest a Name" backend endpoint
 
 **Labels:** `api`, `ai`, `pre-built`, `priority: critical`
 
@@ -662,7 +663,7 @@ These issues are built **live during the demo** using GitHub Copilot agent. The 
 
 ---
 
-### Issue #13 — Build "Suggest a Name" frontend button and suggestion panel
+### Issue #14 — Build "Suggest a Name" frontend button and suggestion panel
 
 **Labels:** `frontend`, `ai`, `live-demo`, `priority: critical`
 
