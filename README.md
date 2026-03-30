@@ -63,6 +63,30 @@ graph TD
 
 ## Getting Started
 
+### Prerequisites
+
+- **Python 3.12+** with [`uv`](https://docs.astral.sh/uv/) package manager
+- **Node.js 20+** with npm
+- **Azure Cosmos DB** account — the backend persists all data to a real Cosmos DB instance in your Azure subscription
+
+### Environment Setup
+
+Copy the example env file and fill in your Cosmos DB credentials:
+
+```bash
+cp server/.env.example server/.env
+```
+
+Required variables:
+
+| Variable | Description |
+|---|---|
+| `COSMOS_ENDPOINT` | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
+| `COSMOS_KEY` | Primary or secondary key from the Azure portal |
+| `COSMOS_DATABASE` | Database name (defaults to `ot-tag-registry`) |
+
+### Install & Run
+
 ```bash
 # Install dependencies
 cd server && uv venv && uv pip install -r requirements.txt
@@ -74,6 +98,21 @@ cd server && uv run uvicorn src.main:app --reload
 # Start frontend (port 5173)
 cd client && npm run dev
 ```
+
+### Seed Sample Data
+
+The seed script populates your Cosmos DB with realistic sample data for development and demo purposes:
+
+```bash
+cd server && uv run python -m src.scripts.seed
+```
+
+This will:
+
+1. **Create the database and 5 containers** (`assets`, `tags`, `sources`, `l1Rules`, `l2Rules`) if they don't already exist
+2. **Upsert sample documents** — 12 assets across 3 sites (Munich, Detroit, Shanghai), 6 data sources, 31 tags, 27 L1 rules, and 5 L2 rules
+
+> **⚠️ This writes to your live Azure Cosmos DB instance.** The script uses upsert operations, so it's safe to re-run — it will overwrite existing seed documents rather than create duplicates. Make sure your `server/.env` has valid credentials before running.
 
 ## Project Structure
 
