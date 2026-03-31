@@ -9,6 +9,8 @@ import {
 import './index.css'
 import App from './App'
 import TagListPage from './pages/TagListPage'
+import TagCreatePage from './pages/TagCreatePage'
+import TagEditPage from './pages/TagEditPage'
 
 // Aperam brand: purple #490B42, orange #F1511B
 const aperamBrand: BrandVariants = {
@@ -39,7 +41,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/tags" replace /> },
       { path: 'tags', element: <TagListPage /> },
+      { path: 'tags/new', element: <TagCreatePage /> },
       { path: 'tags/:id', element: <div>Tag detail (coming soon)</div> },
+      { path: 'tags/:id/edit', element: <TagEditPage /> },
     ],
   },
 ])
