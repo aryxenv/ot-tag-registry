@@ -5,9 +5,11 @@ from datetime import datetime, timezone
 
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from fastapi import APIRouter, HTTPException, Query, Response
+from pydantic import BaseModel
 
 from src.models import Tag, TagStatus, CreateTag, UpdateTag
 from src.utils.db import get_tags_repo
+from src.validators import validate_tag_name
 
 logger = logging.getLogger("routes.tags")
 router = APIRouter(prefix="/api/tags", tags=["tags"])
@@ -15,6 +17,42 @@ router = APIRouter(prefix="/api/tags", tags=["tags"])
 
 def _error(message: str, details: list[str] | None = None) -> dict:
     return {"error": message, "details": details}
+
+
+def _run_name_validation(name: str) -> None:
+    """Validate a tag name and raise HTTPException 400 if invalid."""
+    result = validate_tag_name(name)
+    if not result.valid:
+        details = [
+            f"[{e.segment}] {e.message} (got '{e.received}')"
+            for e in result.errors
+        ]
+        raise HTTPException(
+            status_code=400,
+            detail=_error("Invalid tag name", details),
+        )
+
+
+class ValidateNameRequest(BaseModel):
+    name: str
+
+
+@router.post("/validate-name")
+async def validate_name(body: ValidateNameRequest) -> dict:
+    """Validate a tag name against the naming schema without creating a tag."""
+    result = validate_tag_name(body.name)
+    return {
+        "valid": result.valid,
+        "errors": [
+            {
+                "segment": e.segment,
+                "message": e.message,
+                "received": e.received,
+                "expected": e.expected,
+            }
+            for e in result.errors
+        ],
+    }
 
 
 @router.get("")
@@ -73,6 +111,7 @@ async def get_tag(tag_id: str) -> dict:
 @router.post("", status_code=201)
 async def create_tag(body: CreateTag) -> dict:
     """Create a new tag. Status defaults to draft."""
+    _run_name_validation(body.name)
     repo = get_tags_repo()
     tag = Tag(**body.model_dump())
     return repo.create(tag.model_dump(mode="json"))
@@ -89,6 +128,10 @@ async def update_tag(tag_id: str, body: UpdateTag) -> dict:
             status_code=400,
             detail=_error("No fields to update"),
         )
+
+    # Validate name if it is being changed
+    if "name" in updates:
+        _run_name_validation(updates["name"])
 
     # Find the tag first (cross-partition)
     items = repo.query(

@@ -51,14 +51,14 @@ class TestListTags:
     def test_list_excludes_retired_by_default(self, client, tags_repo):
         # Create a draft and a retired tag
         client.post("/api/tags", json=VALID_TAG_PAYLOAD)
-        retired_payload = {**VALID_TAG_PAYLOAD, "name": "retired-tag"}
+        retired_payload = {**VALID_TAG_PAYLOAD, "name": "MUN.L2.PMP002.RetiredTag"}
         created = client.post("/api/tags", json=retired_payload).json()
         # Manually retire it in the fake repo
         tags_repo._store[created["id"]]["status"] = "retired"
 
         resp = client.get("/api/tags")
         names = [t["name"] for t in resp.json()]
-        assert "retired-tag" not in names
+        assert "MUN.L2.PMP002.RetiredTag" not in names
 
     def test_list_filter_by_status(self, client, tags_repo):
         created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
@@ -122,3 +122,62 @@ class TestRetireTag:
     def test_retire_nonexistent(self, client):
         resp = client.patch("/api/tags/no-such-id/retire")
         assert resp.status_code == 404
+
+
+class TestNameValidation:
+    """Integration tests: naming validator enforced on create/update."""
+
+    def test_create_rejects_invalid_name(self, client):
+        payload = {**VALID_TAG_PAYLOAD, "name": "bad-name"}
+        resp = client.post("/api/tags", json=payload)
+        assert resp.status_code == 400
+        detail = resp.json()["detail"]
+        assert detail["error"] == "Invalid tag name"
+        assert len(detail["details"]) >= 1
+
+    def test_create_rejects_too_few_segments(self, client):
+        payload = {**VALID_TAG_PAYLOAD, "name": "MUN.L2"}
+        resp = client.post("/api/tags", json=payload)
+        assert resp.status_code == 400
+
+    def test_update_validates_name_when_changed(self, client):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        resp = client.put(
+            f"/api/tags/{created['id']}", json={"name": "invalid!!"}
+        )
+        assert resp.status_code == 400
+
+    def test_update_skips_validation_for_other_fields(self, client):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        resp = client.put(f"/api/tags/{created['id']}", json={"unit": "psi"})
+        assert resp.status_code == 200
+
+
+class TestValidateNameEndpoint:
+    def test_valid_name(self, client):
+        resp = client.post(
+            "/api/tags/validate-name",
+            json={"name": "MUN.L2.PMP001.OutletPressure"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["valid"] is True
+        assert data["errors"] == []
+
+    def test_invalid_name(self, client):
+        resp = client.post(
+            "/api/tags/validate-name",
+            json={"name": "bad"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["valid"] is False
+        assert len(data["errors"]) >= 1
+
+    def test_five_segment_valid(self, client):
+        resp = client.post(
+            "/api/tags/validate-name",
+            json={"name": "Munich.Line2.Pump001.Pressure.Discharge"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["valid"] is True
