@@ -1,5 +1,5 @@
 from .asset import Asset, CreateAsset
-from .tag import Tag, DataType, Criticality, TagStatus, CreateTag, UpdateTag
+from .tag import Tag, DataType, Criticality, TagStatus, ApprovalStatus, CreateTag, UpdateTag
 from .source import Source, SystemType, CreateSource
 from .rules import (
     L1Rule,
@@ -21,6 +21,7 @@ __all__ = [
     "DataType",
     "Criticality",
     "TagStatus",
+    "ApprovalStatus",
     "CreateTag",
     "UpdateTag",
     "Source",

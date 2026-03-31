@@ -22,6 +22,7 @@ import type { Tag } from "../types/tag";
 import type { Asset } from "../types/asset";
 import StatusBadge from "./StatusBadge";
 import CriticalityBadge from "./CriticalityBadge";
+import ApprovalBadge from "./ApprovalBadge";
 
 const PAGE_SIZE = 15;
 
@@ -95,6 +96,15 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
       compare: (a, b) => a.status.localeCompare(b.status),
       renderHeaderCell: () => "Status",
       renderCell: (item) => <StatusBadge status={item.status} />,
+    }),
+    createTableColumn<Tag>({
+      columnId: "approval",
+      compare: (a, b) =>
+        (a.approvalStatus ?? "none").localeCompare(b.approvalStatus ?? "none"),
+      renderHeaderCell: () => "Approval",
+      renderCell: (item) => (
+        <ApprovalBadge approvalStatus={item.approvalStatus ?? "none"} />
+      ),
     }),
     createTableColumn<Tag>({
       columnId: "criticality",

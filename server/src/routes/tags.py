@@ -2,12 +2,13 @@
 
 import logging
 from datetime import datetime, timezone
+from typing import Any
 
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
 
-from src.models import Tag, TagStatus, CreateTag, UpdateTag
+from src.models import Tag, TagStatus, ApprovalStatus, CreateTag, UpdateTag
 from src.utils.db import get_tags_repo
 from src.validators import validate_tag_name
 
@@ -183,3 +184,98 @@ async def retire_tag(tag_id: str) -> Response:
     existing = items[0]
     repo.update(tag_id, existing["assetId"], {"status": TagStatus.RETIRED.value})
     return Response(status_code=204)
+
+
+class RejectRequest(BaseModel):
+    """Request body for POST /api/tags/{tag_id}/reject."""
+    rejectionReason: str | None = None
+
+
+@router.post("/{tag_id}/request-approval")
+async def request_approval(tag_id: str) -> dict:
+    """Request governance approval for a draft tag."""
+    repo = get_tags_repo()
+    items = repo.query(
+        "SELECT * FROM c WHERE c.id = @id",
+        parameters=[{"name": "@id", "value": tag_id}],
+    )
+    if not items:
+        raise HTTPException(status_code=404, detail=_error("Tag not found"))
+
+    existing = items[0]
+
+    # Guard: tag must be draft AND approvalStatus must be none or rejected
+    if existing.get("status") != TagStatus.DRAFT.value:
+        raise HTTPException(
+            status_code=400,
+            detail=_error("Only draft tags can request approval"),
+        )
+
+    current_approval = existing.get("approvalStatus", "none")
+    if current_approval not in (ApprovalStatus.NONE.value, ApprovalStatus.REJECTED.value):
+        raise HTTPException(
+            status_code=400,
+            detail=_error(
+                "Tag approval is already pending or approved",
+            ),
+        )
+
+    updates = {
+        "approvalStatus": ApprovalStatus.PENDING.value,
+        "rejectionReason": None,
+    }
+    return repo.update(tag_id, existing["assetId"], updates)
+
+
+@router.post("/{tag_id}/approve")
+async def approve_tag(tag_id: str) -> dict:
+    """Approve a pending tag — sets status to active."""
+    repo = get_tags_repo()
+    items = repo.query(
+        "SELECT * FROM c WHERE c.id = @id",
+        parameters=[{"name": "@id", "value": tag_id}],
+    )
+    if not items:
+        raise HTTPException(status_code=404, detail=_error("Tag not found"))
+
+    existing = items[0]
+
+    current_approval = existing.get("approvalStatus", "none")
+    if current_approval != ApprovalStatus.PENDING.value:
+        raise HTTPException(
+            status_code=400,
+            detail=_error("Only pending tags can be approved"),
+        )
+
+    updates = {
+        "approvalStatus": ApprovalStatus.APPROVED.value,
+        "status": TagStatus.ACTIVE.value,
+    }
+    return repo.update(tag_id, existing["assetId"], updates)
+
+
+@router.post("/{tag_id}/reject")
+async def reject_tag(tag_id: str, body: RejectRequest | None = None) -> dict:
+    """Reject a pending tag with an optional reason."""
+    repo = get_tags_repo()
+    items = repo.query(
+        "SELECT * FROM c WHERE c.id = @id",
+        parameters=[{"name": "@id", "value": tag_id}],
+    )
+    if not items:
+        raise HTTPException(status_code=404, detail=_error("Tag not found"))
+
+    existing = items[0]
+
+    current_approval = existing.get("approvalStatus", "none")
+    if current_approval != ApprovalStatus.PENDING.value:
+        raise HTTPException(
+            status_code=400,
+            detail=_error("Only pending tags can be rejected"),
+        )
+
+    updates: dict[str, Any] = {
+        "approvalStatus": ApprovalStatus.REJECTED.value,
+        "rejectionReason": body.rejectionReason if body else None,
+    }
+    return repo.update(tag_id, existing["assetId"], updates)

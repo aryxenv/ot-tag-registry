@@ -20,6 +20,12 @@ class TagStatus(str, Enum):
     RETIRED = "retired"
     DRAFT = "draft"
 
+class ApprovalStatus(str, Enum):
+    NONE = "none"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
 class Tag(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     name: str
@@ -29,6 +35,8 @@ class Tag(BaseModel):
     samplingFrequency: float   # seconds
     criticality: Criticality
     status: TagStatus = TagStatus.DRAFT
+    approvalStatus: ApprovalStatus = ApprovalStatus.NONE
+    rejectionReason: str | None = None
     assetId: str               # FK to Asset
     sourceId: str | None = None  # FK to Source, optional
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

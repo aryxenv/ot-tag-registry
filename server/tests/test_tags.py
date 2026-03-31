@@ -181,3 +181,78 @@ class TestValidateNameEndpoint:
         )
         assert resp.status_code == 200
         assert resp.json()["valid"] is True
+
+
+class TestApprovalWorkflow:
+    def test_request_approval_sets_pending(self, client):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        resp = client.post(f"/api/tags/{created['id']}/request-approval")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["approvalStatus"] == "pending"
+
+    def test_request_approval_rejects_active_tag(self, client, tags_repo):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        tags_repo._store[created["id"]]["status"] = "active"
+        resp = client.post(f"/api/tags/{created['id']}/request-approval")
+        assert resp.status_code == 400
+
+    def test_request_approval_rejects_already_pending(self, client, tags_repo):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        tags_repo._store[created["id"]]["approvalStatus"] = "pending"
+        resp = client.post(f"/api/tags/{created['id']}/request-approval")
+        assert resp.status_code == 400
+
+    def test_approve_sets_approved_and_active(self, client, tags_repo):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        tags_repo._store[created["id"]]["approvalStatus"] = "pending"
+        resp = client.post(f"/api/tags/{created['id']}/approve")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["approvalStatus"] == "approved"
+        assert data["status"] == "active"
+
+    def test_approve_rejects_non_pending(self, client):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        resp = client.post(f"/api/tags/{created['id']}/approve")
+        assert resp.status_code == 400
+
+    def test_reject_with_reason(self, client, tags_repo):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        tags_repo._store[created["id"]]["approvalStatus"] = "pending"
+        resp = client.post(
+            f"/api/tags/{created['id']}/reject",
+            json={"rejectionReason": "Missing calibration data"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["approvalStatus"] == "rejected"
+        assert data["rejectionReason"] == "Missing calibration data"
+
+    def test_reject_without_reason(self, client, tags_repo):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        tags_repo._store[created["id"]]["approvalStatus"] = "pending"
+        resp = client.post(f"/api/tags/{created['id']}/reject")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["approvalStatus"] == "rejected"
+
+    def test_re_request_after_rejection(self, client, tags_repo):
+        created = client.post("/api/tags", json=VALID_TAG_PAYLOAD).json()
+        tags_repo._store[created["id"]]["approvalStatus"] = "rejected"
+        resp = client.post(f"/api/tags/{created['id']}/request-approval")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["approvalStatus"] == "pending"
+
+    def test_request_approval_nonexistent(self, client):
+        resp = client.post("/api/tags/nonexistent-id/request-approval")
+        assert resp.status_code == 404
+
+    def test_approve_nonexistent(self, client):
+        resp = client.post("/api/tags/nonexistent-id/approve")
+        assert resp.status_code == 404
+
+    def test_reject_nonexistent(self, client):
+        resp = client.post("/api/tags/nonexistent-id/reject")
+        assert resp.status_code == 404
