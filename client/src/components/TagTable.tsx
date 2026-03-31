@@ -16,6 +16,7 @@ import type { TableColumnDefinition, DataGridProps } from "@fluentui/react-compo
 import {
   ChevronLeftRegular,
   ChevronRightRegular,
+  EditRegular,
 } from "@fluentui/react-icons";
 import type { Tag } from "../types/tag";
 import type { Asset } from "../types/asset";
@@ -54,9 +55,10 @@ interface TagTableProps {
   tags: Tag[];
   assets: Asset[];
   onTagClick: (tagId: string) => void;
+  onEditClick?: (tagId: string) => void;
 }
 
-export default function TagTable({ tags, assets, onTagClick }: TagTableProps) {
+export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagTableProps) {
   const styles = useStyles();
   const [page, setPage] = useState(0);
 
@@ -103,6 +105,25 @@ export default function TagTable({ tags, assets, onTagClick }: TagTableProps) {
       renderHeaderCell: () => "Criticality",
       renderCell: (item) => <CriticalityBadge criticality={item.criticality} />,
     }),
+    ...(onEditClick
+      ? [
+          createTableColumn<Tag>({
+            columnId: "actions",
+            renderHeaderCell: () => "",
+            renderCell: (item) => (
+              <Button
+                appearance="subtle"
+                icon={<EditRegular />}
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditClick(item.id);
+                }}
+              />
+            ),
+          }),
+        ]
+      : []),
   ];
 
   const totalPages = Math.max(1, Math.ceil(tags.length / PAGE_SIZE));
