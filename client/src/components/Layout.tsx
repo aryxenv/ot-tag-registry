@@ -1,0 +1,104 @@
+import {
+  makeStyles,
+  mergeClasses,
+  tokens,
+  Subtitle1,
+  Text,
+} from "@fluentui/react-components";
+import { TagRegular } from "@fluentui/react-icons";
+import { NavLink, Outlet } from "react-router-dom";
+
+const useStyles = makeStyles({
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100vh",
+  },
+  topbar: {
+    display: "flex",
+    alignItems: "center",
+    height: "48px",
+    paddingLeft: tokens.spacingHorizontalL,
+    paddingRight: tokens.spacingHorizontalL,
+    backgroundColor: tokens.colorBrandBackground,
+    flexShrink: "0",
+  },
+  topbarTitle: {
+    color: tokens.colorNeutralForegroundOnBrand,
+  },
+  body: {
+    display: "flex",
+    flexDirection: "row",
+    flexGrow: "1",
+    overflow: "hidden",
+  },
+  sidebar: {
+    display: "flex",
+    flexDirection: "column",
+    width: "220px",
+    backgroundColor: tokens.colorNeutralBackground2,
+    borderRight: `1px solid ${tokens.colorNeutralStroke1}`,
+    paddingTop: tokens.spacingVerticalS,
+    flexShrink: "0",
+  },
+  navLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalS,
+    paddingTop: tokens.spacingVerticalS,
+    paddingBottom: tokens.spacingVerticalS,
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    marginLeft: tokens.spacingHorizontalS,
+    marginRight: tokens.spacingHorizontalS,
+    textDecorationLine: "none",
+    color: tokens.colorNeutralForeground2,
+    borderRadius: tokens.borderRadiusMedium,
+    ":hover": {
+      backgroundColor: tokens.colorNeutralBackground3,
+      color: tokens.colorNeutralForeground1,
+    },
+  },
+  navLinkActive: {
+    backgroundColor: tokens.colorBrandBackground2,
+    color: tokens.colorBrandForeground1,
+    ":hover": {
+      backgroundColor: tokens.colorBrandBackground2,
+      color: tokens.colorBrandForeground1,
+    },
+  },
+  content: {
+    flexGrow: "1",
+    overflow: "auto",
+    padding: tokens.spacingHorizontalXXL,
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+});
+
+export default function Layout() {
+  const styles = useStyles();
+
+  return (
+    <div className={styles.root}>
+      <header className={styles.topbar}>
+        <Subtitle1 className={styles.topbarTitle}>OT Tag Registry</Subtitle1>
+      </header>
+      <div className={styles.body}>
+        <nav className={styles.sidebar}>
+          <NavLink
+            to="/tags"
+            className={({ isActive }) =>
+              mergeClasses(styles.navLink, isActive && styles.navLinkActive)
+            }
+          >
+            <TagRegular />
+            <Text>Tags</Text>
+          </NavLink>
+        </nav>
+        <main className={styles.content}>
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
