@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 
 class Asset(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
-    site: str          # e.g., "Plant-Munich"
+    site: str          # e.g., "Plant-Luxembourg"
     line: str          # e.g., "Line-2"
     equipment: str     # e.g., "Pump-001"
     hierarchy: str = "" # computed: site.line.equipment

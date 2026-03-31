@@ -129,7 +129,7 @@ cd services && uv run python -m database.seed
 This will:
 
 1. **Create the database and 5 containers** (`assets`, `tags`, `sources`, `l1Rules`, `l2Rules`) if they don't already exist
-2. **Upsert sample documents** — 12 assets across 3 sites (Munich, Detroit, Shanghai), 6 data sources, 31 tags, 27 L1 rules, and 5 L2 rules
+2. **Upsert sample documents** — ~20 assets across 3 sites (Luxembourg, Brussels, Amsterdam), 6 data sources, ~35 tags, 27 L1 rules, and 5 L2 rules
 
 > **⚠️ This writes to your live Azure Cosmos DB instance.** The script uses upsert operations, so it's safe to re-run — it will overwrite existing seed documents rather than create duplicates. Make sure your `server/.env` has valid credentials before running.
 

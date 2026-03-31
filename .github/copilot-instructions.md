@@ -100,7 +100,7 @@ A **tag** is a named data point from an industrial sensor. Factory equipment (pu
 
 | Segment | What it is | Pattern | Examples |
 |---------|-----------|---------|---------|
-| **SITE** | 3-letter plant location code | `^[A-Z][a-zA-Z0-9]*$` | `MUN` (Munich), `DET` (Detroit), `SHA` (Shanghai) |
+| **SITE** | 3-letter plant location code | `^[A-Z][a-zA-Z0-9]*$` | `LUX` (Luxembourg), `BEL` (Brussels), `NED` (Amsterdam) |
 | **LINE** | Production line identifier | `^[A-Z][a-zA-Z0-9]*$` | `L1`, `L2`, `L3`, `L4` |
 | **EQUIPMENT** | Device type abbreviation + number | `^[A-Z][a-zA-Z0-9]*$` | `PMP001` (Pump #1), `CMP003` (Compressor #3), `MOT004` (Motor #4) |
 | **MEASUREMENT** | PascalCase — what the sensor reads | `^[A-Z][a-zA-Z0-9]*$` | `OutletPressure`, `FlowRate`, `Speed`, `Temperature`, `VibrationLevel` |
@@ -112,9 +112,9 @@ Optional 5th segment **DETAIL** for disambiguation (e.g., `Pressure.Discharge` v
 **Common measurements**: OutletPressure, InletPressure, DischargeTemp, FlowRate, Speed, Temperature, VibrationLevel, MotorCurrent, PowerConsumption, BeltSpeed, LoadWeight, Position, Running (bool).
 
 **Examples**:
-- `MUN.L1.PMP001.OutletPressure` — Outlet pressure sensor on Pump 001, Line 1, Munich
-- `DET.L3.MOT004.Speed` — Speed sensor on Motor 004, Line 3, Detroit
-- `SHA.L2.CMP001.VibrationLevel` — Vibration sensor on Compressor 001, Line 2, Shanghai
+- `LUX.L1.PMP001.OutletPressure` — Outlet pressure sensor on Pump 001, Line 1, Luxembourg
+- `BEL.L2.MOT001.Speed` — Speed sensor on Motor 001, Line 2, Brussels
+- `NED.L4.CMP001.VibrationLevel` — Vibration sensor on Compressor 001, Line 4, Amsterdam
 
 The naming validator (`server/src/validators/`) enforces this schema. AI suggestions must pass validation before acceptance. **Tag names must be globally unique** — the API rejects creation/update if a tag with the same name already exists.
 
