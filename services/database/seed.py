@@ -1,11 +1,11 @@
 """Seed script — creates Cosmos DB containers and inserts realistic sample data.
 
 Populates:
-  • 12 assets across 3 sites (Munich, Detroit, Shanghai)
-  • 6  data sources (PLC, SCADA, Historian)
-  • 31 tags with deterministic names
-  • 26 L1 range-validation rules (one per numeric tag)
-  • 5  L2 state-profile rules (pump pressures, motor speeds)
+  * 21 assets across 3 sites (Luxembourg, Brussels, Amsterdam)
+  * 5  data sources (PLC, SCADA, Historian)
+  * 35 tags with deterministic names (including 4 intentionally inconsistent)
+  * L1 range-validation rules (one per numeric tag)
+  * 5  L2 state-profile rules (pump pressures, motor speeds)
 
 Usage:
     cd services
@@ -60,69 +60,108 @@ def _insert(repo, model, label: str) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# ASSETS
+# ASSETS — 21 pieces of equipment across LUX, BEL, NED
 # ──────────────────────────────────────────────────────────────────────
 def _build_assets() -> list[Asset]:
-    """Return 12 assets across Munich, Detroit, and Shanghai."""
+    """Return 21 assets across Luxembourg, Brussels, and Amsterdam."""
 
-    # --- Plant-Munich (MUN) ---
-    mun_pmp001 = Asset(
-        site="Plant-Munich", line="Line-1", equipment="Pump-001",
+    # --- Plant-Luxembourg (LUX) — Lines 1–3 ---
+    lux_l1_pmp001 = Asset(
+        site="Plant-Luxembourg", line="Line-1", equipment="Pump-001",
         description="Primary coolant circulation pump",
     )
-    mun_pmp002 = Asset(
-        site="Plant-Munich", line="Line-1", equipment="Pump-002",
-        description="Secondary coolant circulation pump (standby)",
+    lux_l1_mot001 = Asset(
+        site="Plant-Luxembourg", line="Line-1", equipment="Motor-001",
+        description="Coolant pump drive motor",
     )
-    mun_cmp003 = Asset(
-        site="Plant-Munich", line="Line-2", equipment="Compressor-003",
-        description="Instrument-air compressor unit 3",
+    lux_l2_cmp001 = Asset(
+        site="Plant-Luxembourg", line="Line-2", equipment="Compressor-001",
+        description="Instrument-air compressor unit 1",
     )
-    mun_mot004 = Asset(
-        site="Plant-Munich", line="Line-2", equipment="Motor-004",
-        description="Main drive motor for compressor 3",
+    lux_l2_hex001 = Asset(
+        site="Plant-Luxembourg", line="Line-2", equipment="HeatExchanger-001",
+        description="Process cooling heat exchanger",
     )
-
-    # --- Plant-Detroit (DET) ---
-    det_cnv001 = Asset(
-        site="Plant-Detroit", line="Line-1", equipment="Conveyor-001",
-        description="Raw-material intake belt conveyor",
-    )
-    det_vlv002 = Asset(
-        site="Plant-Detroit", line="Line-1", equipment="Valve-002",
-        description="Feed-water isolation valve",
-    )
-    det_pmp003 = Asset(
-        site="Plant-Detroit", line="Line-3", equipment="Pump-003",
-        description="Boiler feed-water pump",
-    )
-    det_mot004 = Asset(
-        site="Plant-Detroit", line="Line-3", equipment="Motor-004",
-        description="Variable-frequency drive motor for pump 3",
-    )
-
-    # --- Plant-Shanghai (SHA) ---
-    sha_cmp001 = Asset(
-        site="Plant-Shanghai", line="Line-2", equipment="Compressor-001",
-        description="Refrigerant compressor for chiller system",
-    )
-    sha_pmp002 = Asset(
-        site="Plant-Shanghai", line="Line-2", equipment="Pump-002",
-        description="Chilled-water recirculation pump",
-    )
-    sha_vlv003 = Asset(
-        site="Plant-Shanghai", line="Line-4", equipment="Valve-003",
+    lux_l3_vlv001 = Asset(
+        site="Plant-Luxembourg", line="Line-3", equipment="Valve-001",
         description="Steam header pressure-control valve",
     )
-    sha_cnv004 = Asset(
-        site="Plant-Shanghai", line="Line-4", equipment="Conveyor-004",
-        description="Finished-goods packaging conveyor",
+    lux_l3_tnk001 = Asset(
+        site="Plant-Luxembourg", line="Line-3", equipment="Tank-001",
+        description="Process liquid storage tank",
+    )
+    lux_l3_blr001 = Asset(
+        site="Plant-Luxembourg", line="Line-3", equipment="Boiler-001",
+        description="Steam generation boiler",
+    )
+
+    # --- Plant-Brussels (BEL) — Lines 1–3 ---
+    bel_l1_pmp001 = Asset(
+        site="Plant-Brussels", line="Line-1", equipment="Pump-001",
+        description="Process water circulation pump",
+    )
+    bel_l1_cnv001 = Asset(
+        site="Plant-Brussels", line="Line-1", equipment="Conveyor-001",
+        description="Raw-material intake belt conveyor",
+    )
+    bel_l2_mot001 = Asset(
+        site="Plant-Brussels", line="Line-2", equipment="Motor-001",
+        description="VFD motor for compressor drive",
+    )
+    bel_l2_cmp001 = Asset(
+        site="Plant-Brussels", line="Line-2", equipment="Compressor-001",
+        description="Refrigerant compressor for chiller system",
+    )
+    bel_l3_vlv001 = Asset(
+        site="Plant-Brussels", line="Line-3", equipment="Valve-001",
+        description="Cooling water isolation valve",
+    )
+    bel_l3_tnk001 = Asset(
+        site="Plant-Brussels", line="Line-3", equipment="Tank-001",
+        description="Chemical dosing tank",
+    )
+
+    # --- Plant-Amsterdam (NED) — Lines 1–4 ---
+    ned_l1_pmp001 = Asset(
+        site="Plant-Amsterdam", line="Line-1", equipment="Pump-001",
+        description="Boiler feed-water pump",
+    )
+    ned_l1_hex001 = Asset(
+        site="Plant-Amsterdam", line="Line-1", equipment="HeatExchanger-001",
+        description="Shell-and-tube heat exchanger",
+    )
+    ned_l2_mot001 = Asset(
+        site="Plant-Amsterdam", line="Line-2", equipment="Motor-001",
+        description="Compressor drive motor",
+    )
+    ned_l2_blr001 = Asset(
+        site="Plant-Amsterdam", line="Line-2", equipment="Boiler-001",
+        description="Natural gas fired boiler",
+    )
+    ned_l3_cnv001 = Asset(
+        site="Plant-Amsterdam", line="Line-3", equipment="Conveyor-001",
+        description="Raw-material intake conveyor",
+    )
+    ned_l3_vlv001 = Asset(
+        site="Plant-Amsterdam", line="Line-3", equipment="Valve-001",
+        description="Steam header control valve",
+    )
+    ned_l4_tnk001 = Asset(
+        site="Plant-Amsterdam", line="Line-4", equipment="Tank-001",
+        description="Raw-water storage tank",
+    )
+    ned_l4_cmp001 = Asset(
+        site="Plant-Amsterdam", line="Line-4", equipment="Compressor-001",
+        description="Air compressor unit 1",
     )
 
     return [
-        mun_pmp001, mun_pmp002, mun_cmp003, mun_mot004,
-        det_cnv001, det_vlv002, det_pmp003, det_mot004,
-        sha_cmp001, sha_pmp002, sha_vlv003, sha_cnv004,
+        lux_l1_pmp001, lux_l1_mot001, lux_l2_cmp001, lux_l2_hex001,
+        lux_l3_vlv001, lux_l3_tnk001, lux_l3_blr001,
+        bel_l1_pmp001, bel_l1_cnv001, bel_l2_mot001, bel_l2_cmp001,
+        bel_l3_vlv001, bel_l3_tnk001,
+        ned_l1_pmp001, ned_l1_hex001, ned_l2_mot001, ned_l2_blr001,
+        ned_l3_cnv001, ned_l3_vlv001, ned_l4_tnk001, ned_l4_cmp001,
     ]
 
 
@@ -130,308 +169,344 @@ def _build_assets() -> list[Asset]:
 # SOURCES
 # ──────────────────────────────────────────────────────────────────────
 def _build_sources() -> list[Source]:
-    """Return 6 data-source definitions."""
+    """Return 5 data-source definitions."""
 
     src_siemens = Source(
         systemType=SystemType.PLC,
         connectorType="OPC-UA",
-        topicOrPath="opc.tcp://mun-plc01:4840/ns=2;s=S7-1500",
-        description="Siemens S7-1500 PLC — Munich plant floor",
+        topicOrPath="opc.tcp://lux-plc01:4840/ns=2;s=S7-1500",
+        description="Siemens S7-1500 PLC — Luxembourg plant floor",
     )
-    src_ab = Source(
+    src_schneider = Source(
         systemType=SystemType.PLC,
         connectorType="OPC-UA",
-        topicOrPath="opc.tcp://det-plc01:4840/ns=2;s=ControlLogix",
-        description="Allen-Bradley ControlLogix PLC — Detroit plant floor",
+        topicOrPath="opc.tcp://bel-plc01:4840/ns=2;s=M340",
+        description="Schneider Modicon M340 PLC — Brussels plant floor",
     )
     src_ignition = Source(
         systemType=SystemType.SCADA,
         connectorType="MQTT",
-        topicOrPath="mqtt://mun-scada01:1883/plant-munich/#",
-        description="Ignition SCADA gateway — Munich",
+        topicOrPath="mqtt://lux-scada01:1883/plant-luxembourg/#",
+        description="Ignition SCADA gateway — Luxembourg",
     )
     src_wonderware = Source(
         systemType=SystemType.SCADA,
         connectorType="MQTT",
-        topicOrPath="mqtt://sha-scada01:1883/plant-shanghai/#",
-        description="Wonderware InTouch SCADA — Shanghai",
-    )
-    src_osisoft = Source(
-        systemType=SystemType.HISTORIAN,
-        connectorType="PI-SDK",
-        topicOrPath="pisrv://det-hist01:5450/piarchive",
-        description="OSIsoft PI Data Archive — Detroit",
+        topicOrPath="mqtt://ned-scada01:1883/plant-amsterdam/#",
+        description="Wonderware InTouch SCADA — Amsterdam",
     )
     src_aveva = Source(
         systemType=SystemType.HISTORIAN,
         connectorType="REST",
-        topicOrPath="https://sha-hist01:8443/aveva/historian/v2",
-        description="AVEVA Historian — Shanghai",
+        topicOrPath="https://ned-hist01:8443/aveva/historian/v2",
+        description="AVEVA Historian — Amsterdam",
     )
 
-    return [src_siemens, src_ab, src_ignition, src_wonderware, src_osisoft, src_aveva]
+    return [src_siemens, src_schneider, src_ignition, src_wonderware, src_aveva]
 
 
 # ──────────────────────────────────────────────────────────────────────
-# TAGS
+# TAGS — well-named tags matching golden tag vocabulary
 # ──────────────────────────────────────────────────────────────────────
 def _build_tags(assets: list[Asset], sources: list[Source]) -> list[Tag]:
-    """Return 31 tags wired to the given assets and sources."""
+    """Return ~35 tags wired to the given assets and sources."""
 
     # Destructure assets in creation order
     (
-        mun_pmp001, mun_pmp002, mun_cmp003, mun_mot004,
-        det_cnv001, det_vlv002, det_pmp003, det_mot004,
-        sha_cmp001, sha_pmp002, sha_vlv003, sha_cnv004,
+        lux_l1_pmp001, lux_l1_mot001, lux_l2_cmp001, lux_l2_hex001,
+        lux_l3_vlv001, lux_l3_tnk001, lux_l3_blr001,
+        bel_l1_pmp001, bel_l1_cnv001, bel_l2_mot001, bel_l2_cmp001,
+        bel_l3_vlv001, bel_l3_tnk001,
+        ned_l1_pmp001, ned_l1_hex001, ned_l2_mot001, ned_l2_blr001,
+        ned_l3_cnv001, ned_l3_vlv001, ned_l4_tnk001, ned_l4_cmp001,
     ) = assets
 
     # Destructure sources
-    (
-        src_siemens, src_ab, src_ignition,
-        src_wonderware, src_osisoft, src_aveva,
-    ) = sources
+    src_siemens, src_schneider, src_ignition, src_wonderware, src_aveva = sources
 
     tags: list[Tag] = []
 
-    # ── Munich Line-1 Pump-001 (3 tags) ─────────────────────────────
+    # ── LUX Line-1 Pump-001 (3 tags) ────────────────────────────────
     tags.append(Tag(
-        name="MUN.L1.PMP001.OutletPressure",
+        name="LUX.L1.PMP001.OutletPressure",
         description="Outlet pressure of primary coolant pump",
         unit="bar", datatype=DataType.FLOAT, samplingFrequency=1.0,
         criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=mun_pmp001.id, sourceId=src_siemens.id,
+        assetId=lux_l1_pmp001.id, sourceId=src_siemens.id,
     ))
     tags.append(Tag(
-        name="MUN.L1.PMP001.FlowRate",
+        name="LUX.L1.PMP001.FlowRate",
         description="Volumetric flow rate of primary coolant pump",
         unit="L/min", datatype=DataType.FLOAT, samplingFrequency=2.0,
         criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=mun_pmp001.id, sourceId=src_siemens.id,
+        assetId=lux_l1_pmp001.id, sourceId=src_siemens.id,
     ))
     tags.append(Tag(
-        name="MUN.L1.PMP001.MotorCurrent",
-        description="Motor winding current draw — pump 001",
+        name="LUX.L1.PMP001.MotorCurrent",
+        description="Motor winding current draw of pump 001",
         unit="A", datatype=DataType.FLOAT, samplingFrequency=1.0,
         criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=mun_pmp001.id, sourceId=src_siemens.id,
+        assetId=lux_l1_pmp001.id, sourceId=src_siemens.id,
     ))
 
-    # ── Munich Line-1 Pump-002 (2 tags) ─────────────────────────────
+    # ── LUX Line-1 Motor-001 (3 tags) ───────────────────────────────
     tags.append(Tag(
-        name="MUN.L1.PMP002.OutletPressure",
-        description="Outlet pressure of standby coolant pump",
-        unit="bar", datatype=DataType.FLOAT, samplingFrequency=1.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
-        assetId=mun_pmp002.id, sourceId=src_siemens.id,
-    ))
-    tags.append(Tag(
-        name="MUN.L1.PMP002.FlowRate",
-        description="Volumetric flow rate of standby coolant pump",
-        unit="L/min", datatype=DataType.FLOAT, samplingFrequency=2.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
-        assetId=mun_pmp002.id, sourceId=src_siemens.id,
-    ))
-
-    # ── Munich Line-2 Compressor-003 (3 tags) ───────────────────────
-    tags.append(Tag(
-        name="MUN.L2.CMP003.DischargeTemp",
-        description="Discharge temperature of instrument-air compressor 3",
-        unit="°C", datatype=DataType.FLOAT, samplingFrequency=5.0,
-        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=mun_cmp003.id, sourceId=src_ignition.id,
-    ))
-    tags.append(Tag(
-        name="MUN.L2.CMP003.InletPressure",
-        description="Inlet suction pressure of compressor 3",
-        unit="bar", datatype=DataType.FLOAT, samplingFrequency=5.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=mun_cmp003.id, sourceId=src_ignition.id,
-    ))
-    tags.append(Tag(
-        name="MUN.L2.CMP003.VibrationLevel",
-        description="Bearing vibration level — compressor 3",
-        unit="mm/s", datatype=DataType.FLOAT, samplingFrequency=0.5,
-        criticality=Criticality.CRITICAL, status=TagStatus.ACTIVE,
-        assetId=mun_cmp003.id, sourceId=src_ignition.id,
-    ))
-
-    # ── Munich Line-2 Motor-004 (3 tags) ────────────────────────────
-    tags.append(Tag(
-        name="MUN.L2.MOT004.Speed",
-        description="Rotational speed of compressor drive motor",
+        name="LUX.L1.MOT001.Speed",
+        description="Rotational speed of coolant pump drive motor",
         unit="RPM", datatype=DataType.FLOAT, samplingFrequency=1.0,
         criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=mun_mot004.id, sourceId=src_ignition.id,
+        assetId=lux_l1_mot001.id, sourceId=src_siemens.id,
     ))
     tags.append(Tag(
-        name="MUN.L2.MOT004.Temperature",
-        description="Stator winding temperature — motor 004",
+        name="LUX.L1.MOT001.Temperature",
+        description="Stator winding temperature of motor 001",
         unit="°C", datatype=DataType.FLOAT, samplingFrequency=10.0,
         criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=mun_mot004.id, sourceId=src_ignition.id,
+        assetId=lux_l1_mot001.id, sourceId=src_siemens.id,
     ))
     tags.append(Tag(
-        name="MUN.L2.MOT004.PowerConsumption",
-        description="Active power consumption of motor 004",
+        name="LUX.L1.MOT001.PowerConsumption",
+        description="Active power consumption of motor 001",
         unit="kW", datatype=DataType.FLOAT, samplingFrequency=5.0,
         criticality=Criticality.LOW, status=TagStatus.ACTIVE,
-        assetId=mun_mot004.id, sourceId=src_siemens.id,
+        assetId=lux_l1_mot001.id, sourceId=src_siemens.id,
     ))
 
-    # ── Detroit Line-1 Conveyor-001 (3 tags) ────────────────────────
+    # ── LUX Line-2 Compressor-001 (3 tags) ──────────────────────────
     tags.append(Tag(
-        name="DET.L1.CNV001.BeltSpeed",
+        name="LUX.L2.CMP001.DischargeTemp",
+        description="Discharge temperature of instrument-air compressor",
+        unit="°C", datatype=DataType.FLOAT, samplingFrequency=5.0,
+        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
+        assetId=lux_l2_cmp001.id, sourceId=src_ignition.id,
+    ))
+    tags.append(Tag(
+        name="LUX.L2.CMP001.InletPressure",
+        description="Inlet suction pressure of compressor 001",
+        unit="bar", datatype=DataType.FLOAT, samplingFrequency=5.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
+        assetId=lux_l2_cmp001.id, sourceId=src_ignition.id,
+    ))
+    tags.append(Tag(
+        name="LUX.L2.CMP001.VibrationLevel",
+        description="Bearing vibration level of compressor 001",
+        unit="mm/s", datatype=DataType.FLOAT, samplingFrequency=0.5,
+        criticality=Criticality.CRITICAL, status=TagStatus.ACTIVE,
+        assetId=lux_l2_cmp001.id, sourceId=src_ignition.id,
+    ))
+
+    # ── LUX Line-2 HeatExchanger-001 (1 tag — draft) ────────────────
+    tags.append(Tag(
+        name="LUX.L2.HEX001.InletTemp",
+        description="Hot-side inlet temperature of heat exchanger 001",
+        unit="°C", datatype=DataType.FLOAT, samplingFrequency=10.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
+        assetId=lux_l2_hex001.id, sourceId=src_ignition.id,
+    ))
+
+    # ── LUX Line-3 Boiler-001 (1 tag) ───────────────────────────────
+    tags.append(Tag(
+        name="LUX.L3.BLR001.SteamPressure",
+        description="Steam output pressure of boiler 001",
+        unit="bar", datatype=DataType.FLOAT, samplingFrequency=2.0,
+        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
+        assetId=lux_l3_blr001.id, sourceId=src_ignition.id,
+    ))
+
+    # ── BEL Line-1 Pump-001 (3 tags) ────────────────────────────────
+    tags.append(Tag(
+        name="BEL.L1.PMP001.OutletPressure",
+        description="Discharge pressure of process water pump",
+        unit="bar", datatype=DataType.FLOAT, samplingFrequency=1.0,
+        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
+        assetId=bel_l1_pmp001.id, sourceId=src_schneider.id,
+    ))
+    tags.append(Tag(
+        name="BEL.L1.PMP001.FlowRate",
+        description="Volumetric flow rate of process water pump",
+        unit="L/min", datatype=DataType.FLOAT, samplingFrequency=2.0,
+        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
+        assetId=bel_l1_pmp001.id, sourceId=src_schneider.id,
+    ))
+    tags.append(Tag(
+        name="BEL.L1.PMP001.BearingTemp",
+        description="Pump bearing temperature on drive-end",
+        unit="°C", datatype=DataType.FLOAT, samplingFrequency=10.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
+        assetId=bel_l1_pmp001.id, sourceId=src_schneider.id,
+    ))
+
+    # ── BEL Line-1 Conveyor-001 (2 tags) ────────────────────────────
+    tags.append(Tag(
+        name="BEL.L1.CNV001.BeltSpeed",
         description="Belt linear speed of intake conveyor",
         unit="m/s", datatype=DataType.FLOAT, samplingFrequency=2.0,
         criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=det_cnv001.id, sourceId=src_ab.id,
+        assetId=bel_l1_cnv001.id, sourceId=src_schneider.id,
     ))
     tags.append(Tag(
-        name="DET.L1.CNV001.LoadWeight",
-        description="Instantaneous belt load weight",
-        unit="kg", datatype=DataType.FLOAT, samplingFrequency=5.0,
-        criticality=Criticality.LOW, status=TagStatus.ACTIVE,
-        assetId=det_cnv001.id, sourceId=src_ab.id,
-    ))
-    tags.append(Tag(
-        name="DET.L1.CNV001.Running",
+        name="BEL.L1.CNV001.Running",
         description="Conveyor running status (true = running)",
         unit="-", datatype=DataType.BOOL, samplingFrequency=10.0,
         criticality=Criticality.LOW, status=TagStatus.ACTIVE,
-        assetId=det_cnv001.id, sourceId=src_ab.id,
+        assetId=bel_l1_cnv001.id, sourceId=src_schneider.id,
     ))
 
-    # ── Detroit Line-1 Valve-002 (2 tags) ───────────────────────────
+    # ── BEL Line-2 Motor-001 (2 tags) ───────────────────────────────
     tags.append(Tag(
-        name="DET.L1.VLV002.Position",
-        description="Valve stem position (0%=closed, 100%=open)",
-        unit="%", datatype=DataType.FLOAT, samplingFrequency=1.0,
-        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=det_vlv002.id, sourceId=src_ab.id,
-    ))
-    tags.append(Tag(
-        name="DET.L1.VLV002.OpenClose",
-        description="Discrete open/close limit-switch feedback",
-        unit="-", datatype=DataType.BOOL, samplingFrequency=10.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=det_vlv002.id, sourceId=src_ab.id,
-    ))
-
-    # ── Detroit Line-3 Pump-003 (3 tags) ────────────────────────────
-    tags.append(Tag(
-        name="DET.L3.PMP003.OutletPressure",
-        description="Discharge pressure of boiler feed-water pump",
-        unit="bar", datatype=DataType.FLOAT, samplingFrequency=1.0,
-        criticality=Criticality.CRITICAL, status=TagStatus.ACTIVE,
-        assetId=det_pmp003.id, sourceId=src_osisoft.id,
-    ))
-    tags.append(Tag(
-        name="DET.L3.PMP003.FlowRate",
-        description="Feed-water volumetric flow rate",
-        unit="L/min", datatype=DataType.FLOAT, samplingFrequency=2.0,
-        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=det_pmp003.id, sourceId=src_osisoft.id,
-    ))
-    tags.append(Tag(
-        name="DET.L3.PMP003.MotorCurrent",
-        description="Motor current draw — feed-water pump 003",
-        unit="A", datatype=DataType.FLOAT, samplingFrequency=1.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=det_pmp003.id, sourceId=src_osisoft.id,
-    ))
-
-    # ── Detroit Line-3 Motor-004 (2 tags) ───────────────────────────
-    tags.append(Tag(
-        name="DET.L3.MOT004.Speed",
-        description="VFD motor speed — feed-water pump drive",
+        name="BEL.L2.MOT001.Speed",
+        description="Rotational speed of VFD motor 001",
         unit="RPM", datatype=DataType.FLOAT, samplingFrequency=1.0,
         criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=det_mot004.id, sourceId=src_osisoft.id,
+        assetId=bel_l2_mot001.id, sourceId=src_schneider.id,
     ))
     tags.append(Tag(
-        name="DET.L3.MOT004.Temperature",
-        description="Stator temperature — motor 004 Detroit",
+        name="BEL.L2.MOT001.PowerConsumption",
+        description="Active power consumption of motor 001",
+        unit="kW", datatype=DataType.FLOAT, samplingFrequency=5.0,
+        criticality=Criticality.LOW, status=TagStatus.ACTIVE,
+        assetId=bel_l2_mot001.id, sourceId=src_schneider.id,
+    ))
+
+    # ── BEL Line-2 Compressor-001 (1 tag — retired) ─────────────────
+    tags.append(Tag(
+        name="BEL.L2.CMP001.DischargeTemp",
+        description="Discharge temperature of refrigerant compressor",
+        unit="°C", datatype=DataType.FLOAT, samplingFrequency=5.0,
+        criticality=Criticality.HIGH, status=TagStatus.RETIRED,
+        assetId=bel_l2_cmp001.id, sourceId=src_schneider.id,
+    ))
+
+    # ── BEL Line-3 Tank-001 (1 tag — draft) ─────────────────────────
+    tags.append(Tag(
+        name="BEL.L3.TNK001.Level",
+        description="Liquid level in chemical dosing tank",
+        unit="m", datatype=DataType.FLOAT, samplingFrequency=10.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
+        assetId=bel_l3_tnk001.id, sourceId=src_schneider.id,
+    ))
+
+    # ── NED Line-1 Pump-001 (3 tags) ────────────────────────────────
+    tags.append(Tag(
+        name="NED.L1.PMP001.OutletPressure",
+        description="Outlet pressure of boiler feed-water pump",
+        unit="bar", datatype=DataType.FLOAT, samplingFrequency=1.0,
+        criticality=Criticality.CRITICAL, status=TagStatus.ACTIVE,
+        assetId=ned_l1_pmp001.id, sourceId=src_aveva.id,
+    ))
+    tags.append(Tag(
+        name="NED.L1.PMP001.FlowRate",
+        description="Volumetric flow rate of boiler feed-water pump",
+        unit="L/min", datatype=DataType.FLOAT, samplingFrequency=2.0,
+        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
+        assetId=ned_l1_pmp001.id, sourceId=src_aveva.id,
+    ))
+    tags.append(Tag(
+        name="NED.L1.PMP001.MotorCurrent",
+        description="Motor current draw of feed-water pump 001",
+        unit="A", datatype=DataType.FLOAT, samplingFrequency=1.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
+        assetId=ned_l1_pmp001.id, sourceId=src_aveva.id,
+    ))
+
+    # ── NED Line-2 Motor-001 (2 tags, 1 retired) ────────────────────
+    tags.append(Tag(
+        name="NED.L2.MOT001.Speed",
+        description="Rotational speed of compressor drive motor",
+        unit="RPM", datatype=DataType.FLOAT, samplingFrequency=1.0,
+        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
+        assetId=ned_l2_mot001.id, sourceId=src_wonderware.id,
+    ))
+    tags.append(Tag(
+        name="NED.L2.MOT001.BearingTemp",
+        description="Drive-end bearing temperature of motor 001",
         unit="°C", datatype=DataType.FLOAT, samplingFrequency=10.0,
         criticality=Criticality.MEDIUM, status=TagStatus.RETIRED,
-        assetId=det_mot004.id, sourceId=src_osisoft.id,
+        assetId=ned_l2_mot001.id, sourceId=src_wonderware.id,
     ))
 
-    # ── Shanghai Line-2 Compressor-001 (3 tags) ─────────────────────
+    # ── NED Line-2 Boiler-001 (1 tag) ───────────────────────────────
     tags.append(Tag(
-        name="SHA.L2.CMP001.DischargeTemp",
-        description="Refrigerant discharge temperature — compressor 1",
-        unit="°C", datatype=DataType.FLOAT, samplingFrequency=5.0,
-        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=sha_cmp001.id, sourceId=src_wonderware.id,
-    ))
-    tags.append(Tag(
-        name="SHA.L2.CMP001.InletPressure",
-        description="Refrigerant suction pressure — compressor 1",
-        unit="bar", datatype=DataType.FLOAT, samplingFrequency=5.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=sha_cmp001.id, sourceId=src_wonderware.id,
-    ))
-    tags.append(Tag(
-        name="SHA.L2.CMP001.VibrationLevel",
-        description="Bearing vibration — compressor 1 Shanghai",
-        unit="mm/s", datatype=DataType.FLOAT, samplingFrequency=0.5,
-        criticality=Criticality.CRITICAL, status=TagStatus.ACTIVE,
-        assetId=sha_cmp001.id, sourceId=src_wonderware.id,
-    ))
-
-    # ── Shanghai Line-2 Pump-002 (2 tags) ───────────────────────────
-    tags.append(Tag(
-        name="SHA.L2.PMP002.OutletPressure",
-        description="Discharge pressure of chilled-water pump",
+        name="NED.L2.BLR001.SteamPressure",
+        description="Steam drum pressure of boiler 001",
         unit="bar", datatype=DataType.FLOAT, samplingFrequency=2.0,
         criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=sha_pmp002.id, sourceId=src_aveva.id,
-    ))
-    tags.append(Tag(
-        name="SHA.L2.PMP002.FlowRate",
-        description="Chilled-water volumetric flow rate",
-        unit="L/min", datatype=DataType.FLOAT, samplingFrequency=2.0,
-        criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=sha_pmp002.id, sourceId=src_aveva.id,
+        assetId=ned_l2_blr001.id, sourceId=src_wonderware.id,
     ))
 
-    # ── Shanghai Line-4 Valve-003 (2 tags) ──────────────────────────
+    # ── NED Line-3 Conveyor-001 (2 tags) ────────────────────────────
     tags.append(Tag(
-        name="SHA.L4.VLV003.Position",
-        description="Control-valve position — steam header",
-        unit="%", datatype=DataType.FLOAT, samplingFrequency=1.0,
-        criticality=Criticality.HIGH, status=TagStatus.ACTIVE,
-        assetId=sha_vlv003.id, sourceId=src_aveva.id,
-    ))
-    tags.append(Tag(
-        name="SHA.L4.VLV003.OpenClose",
-        description="Discrete open/close status — steam valve",
-        unit="-", datatype=DataType.BOOL, samplingFrequency=10.0,
-        criticality=Criticality.LOW, status=TagStatus.RETIRED,
-        assetId=sha_vlv003.id, sourceId=src_aveva.id,
-    ))
-
-    # ── Shanghai Line-4 Conveyor-004 (3 tags) ───────────────────────
-    tags.append(Tag(
-        name="SHA.L4.CNV004.BeltSpeed",
-        description="Belt speed of packaging conveyor",
+        name="NED.L3.CNV001.BeltSpeed",
+        description="Belt speed of raw-material intake conveyor",
         unit="m/s", datatype=DataType.FLOAT, samplingFrequency=2.0,
         criticality=Criticality.MEDIUM, status=TagStatus.ACTIVE,
-        assetId=sha_cnv004.id, sourceId=src_wonderware.id,
+        assetId=ned_l3_cnv001.id, sourceId=src_wonderware.id,
     ))
     tags.append(Tag(
-        name="SHA.L4.CNV004.LoadWeight",
-        description="Instantaneous belt load — packaging conveyor",
+        name="NED.L3.CNV001.LoadWeight",
+        description="Instantaneous belt load weight of conveyor",
         unit="kg", datatype=DataType.FLOAT, samplingFrequency=5.0,
         criticality=Criticality.LOW, status=TagStatus.DRAFT,
-        assetId=sha_cnv004.id, sourceId=src_wonderware.id,
+        assetId=ned_l3_cnv001.id, sourceId=src_wonderware.id,
     ))
+
+    # ── NED Line-4 Compressor-001 (1 tag) ────────────────────────────
     tags.append(Tag(
-        name="SHA.L4.CNV004.Running",
-        description="Conveyor running status (true = running)",
-        unit="-", datatype=DataType.BOOL, samplingFrequency=10.0,
-        criticality=Criticality.LOW, status=TagStatus.ACTIVE,
-        assetId=sha_cnv004.id, sourceId=src_wonderware.id,
+        name="NED.L4.CMP001.VibrationLevel",
+        description="Bearing vibration of air compressor 001",
+        unit="mm/s", datatype=DataType.FLOAT, samplingFrequency=0.5,
+        criticality=Criticality.CRITICAL, status=TagStatus.ACTIVE,
+        assetId=ned_l4_cmp001.id, sourceId=src_aveva.id,
+    ))
+
+    # ── NED Line-4 Tank-001 (1 tag — draft) ──────────────────────────
+    tags.append(Tag(
+        name="NED.L4.TNK001.Level",
+        description="Liquid level in raw-water storage tank",
+        unit="m", datatype=DataType.FLOAT, samplingFrequency=10.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
+        assetId=ned_l4_tnk001.id, sourceId=src_aveva.id,
+    ))
+
+    # ══════════════════════════════════════════════════════════════════
+    # INTENTIONALLY INCONSISTENT TAGS — demo the naming problem
+    # These bypass API validation (inserted directly via repository).
+    # ══════════════════════════════════════════════════════════════════
+
+    # 1) Underscores instead of dots
+    tags.append(Tag(
+        name="LUX_L2_CMP001_InletPressure",
+        description="Suction inlet pressure of compressor 001",
+        unit="bar", datatype=DataType.FLOAT, samplingFrequency=5.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
+        assetId=lux_l2_cmp001.id, sourceId=src_ignition.id,
+    ))
+
+    # 2) All lowercase
+    tags.append(Tag(
+        name="brussels.line2.motor001.speed",
+        description="Rotational speed of motor in Brussels plant",
+        unit="RPM", datatype=DataType.FLOAT, samplingFrequency=1.0,
+        criticality=Criticality.HIGH, status=TagStatus.DRAFT,
+        assetId=bel_l2_mot001.id, sourceId=src_schneider.id,
+    ))
+
+    # 3) Hyphens instead of dots
+    tags.append(Tag(
+        name="NED-L3-CNV001-BeltSpeed",
+        description="Belt speed of raw-material intake conveyor",
+        unit="m/s", datatype=DataType.FLOAT, samplingFrequency=2.0,
+        criticality=Criticality.MEDIUM, status=TagStatus.DRAFT,
+        assetId=ned_l3_cnv001.id, sourceId=src_wonderware.id,
+    ))
+
+    # 4) Wrong segment order + underscores + informal naming
+    tags.append(Tag(
+        name="Vibration_CMP001_Amsterdam",
+        description="Vibration sensor on air compressor in Amsterdam",
+        unit="mm/s", datatype=DataType.FLOAT, samplingFrequency=0.5,
+        criticality=Criticality.CRITICAL, status=TagStatus.DRAFT,
+        assetId=ned_l4_cmp001.id, sourceId=src_aveva.id,
     ))
 
     return tags
@@ -442,18 +517,22 @@ def _build_tags(assets: list[Asset], sources: list[Source]) -> list[Tag]:
 # ──────────────────────────────────────────────────────────────────────
 # Physical-range lookup keyed by the measurement suffix of a tag name.
 _L1_RANGES: dict[str, dict] = {
-    "OutletPressure": dict(min=0.0, max=16.0, spikeThreshold=5.0),
-    "InletPressure":  dict(min=0.0, max=16.0, spikeThreshold=5.0),
-    "DischargeTemp":  dict(min=-20.0, max=200.0, spikeThreshold=30.0),
-    "Temperature":    dict(min=-20.0, max=200.0, spikeThreshold=30.0),
-    "FlowRate":       dict(min=0.0, max=500.0, spikeThreshold=100.0),
-    "MotorCurrent":   dict(min=0.0, max=100.0, spikeThreshold=20.0),
-    "Speed":          dict(min=0.0, max=3600.0, spikeThreshold=500.0),
+    "OutletPressure":   dict(min=0.0, max=16.0, spikeThreshold=5.0),
+    "InletPressure":    dict(min=0.0, max=16.0, spikeThreshold=5.0),
+    "SteamPressure":    dict(min=0.0, max=25.0, spikeThreshold=8.0),
+    "DischargeTemp":    dict(min=-20.0, max=200.0, spikeThreshold=30.0),
+    "Temperature":      dict(min=-20.0, max=200.0, spikeThreshold=30.0),
+    "InletTemp":        dict(min=-20.0, max=200.0, spikeThreshold=30.0),
+    "BearingTemp":      dict(min=0.0, max=150.0, spikeThreshold=20.0),
+    "FlowRate":         dict(min=0.0, max=500.0, spikeThreshold=100.0),
+    "MotorCurrent":     dict(min=0.0, max=100.0, spikeThreshold=20.0),
+    "Speed":            dict(min=0.0, max=3600.0, spikeThreshold=500.0),
     "PowerConsumption": dict(min=0.0, max=500.0, spikeThreshold=100.0),
-    "VibrationLevel": dict(min=0.0, max=25.0, spikeThreshold=10.0),
-    "BeltSpeed":      dict(min=0.0, max=5.0, spikeThreshold=2.0),
-    "LoadWeight":     dict(min=0.0, max=2000.0, spikeThreshold=500.0),
-    "Position":       dict(min=0.0, max=100.0, spikeThreshold=30.0),
+    "VibrationLevel":   dict(min=0.0, max=25.0, spikeThreshold=10.0),
+    "BeltSpeed":        dict(min=0.0, max=5.0, spikeThreshold=2.0),
+    "LoadWeight":       dict(min=0.0, max=2000.0, spikeThreshold=500.0),
+    "Position":         dict(min=0.0, max=100.0, spikeThreshold=30.0),
+    "Level":            dict(min=0.0, max=20.0, spikeThreshold=5.0),
 }
 
 # Rotate policies so the seed data exercises all four variants.
@@ -472,7 +551,14 @@ def _build_l1_rules(tags: list[Tag]) -> list[L1Rule]:
     for tag in tags:
         if tag.datatype == DataType.BOOL:
             continue  # booleans don't have numeric ranges
+        # Extract the final segment after the last separator (or use full name
+        # for inconsistently-named tags where rsplit may not find a dot).
         measurement = tag.name.rsplit(".", maxsplit=1)[-1]
+        # Also try splitting on underscores/hyphens for inconsistent names
+        if measurement == tag.name:
+            measurement = tag.name.rsplit("_", maxsplit=1)[-1]
+        if measurement == tag.name:
+            measurement = tag.name.rsplit("-", maxsplit=1)[-1]
         ranges = _L1_RANGES.get(measurement, dict(min=0.0, max=100.0, spikeThreshold=25.0))
         rules.append(L1Rule(
             tagId=tag.id,
@@ -491,32 +577,31 @@ def _build_l1_rules(tags: list[Tag]) -> list[L1Rule]:
 def _build_l2_rules(tags: list[Tag]) -> list[L2Rule]:
     """Create L2 state-profile rules for 5 critical tags."""
 
-    # Build a quick lookup: tag name → Tag object
     by_name: dict[str, Tag] = {t.name: t for t in tags}
 
     rules: list[L2Rule] = []
 
-    # 1) Munich Pump-001 outlet pressure — Running / Idle / Stop
+    # 1) LUX Pump-001 outlet pressure — Running / Idle / Stop
     rules.append(L2Rule(
-        tagId=by_name["MUN.L1.PMP001.OutletPressure"].id,
+        tagId=by_name["LUX.L1.PMP001.OutletPressure"].id,
         stateMapping=[
             StateMapping(
                 state=OperationalState.RUNNING,
-                conditionField="MUN.L1.PMP001.MotorCurrent",
+                conditionField="LUX.L1.PMP001.MotorCurrent",
                 conditionOperator=ConditionOperator.GT,
                 conditionValue=5.0,
                 rangeMin=4.0, rangeMax=14.0,
             ),
             StateMapping(
                 state=OperationalState.IDLE,
-                conditionField="MUN.L1.PMP001.MotorCurrent",
+                conditionField="LUX.L1.PMP001.MotorCurrent",
                 conditionOperator=ConditionOperator.BETWEEN,
                 conditionValue=[0.5, 5.0],
                 rangeMin=0.5, rangeMax=4.0,
             ),
             StateMapping(
                 state=OperationalState.STOP,
-                conditionField="MUN.L1.PMP001.MotorCurrent",
+                conditionField="LUX.L1.PMP001.MotorCurrent",
                 conditionOperator=ConditionOperator.LTE,
                 conditionValue=0.5,
                 rangeMin=None, rangeMax=0.5,
@@ -524,27 +609,27 @@ def _build_l2_rules(tags: list[Tag]) -> list[L2Rule]:
         ],
     ))
 
-    # 2) Munich Motor-004 speed — Running / Idle / Stop
+    # 2) LUX Motor-001 speed — Running / Idle / Stop
     rules.append(L2Rule(
-        tagId=by_name["MUN.L2.MOT004.Speed"].id,
+        tagId=by_name["LUX.L1.MOT001.Speed"].id,
         stateMapping=[
             StateMapping(
                 state=OperationalState.RUNNING,
-                conditionField="MUN.L2.MOT004.PowerConsumption",
+                conditionField="LUX.L1.MOT001.PowerConsumption",
                 conditionOperator=ConditionOperator.GT,
                 conditionValue=10.0,
                 rangeMin=900.0, rangeMax=3600.0,
             ),
             StateMapping(
                 state=OperationalState.IDLE,
-                conditionField="MUN.L2.MOT004.PowerConsumption",
+                conditionField="LUX.L1.MOT001.PowerConsumption",
                 conditionOperator=ConditionOperator.BETWEEN,
                 conditionValue=[1.0, 10.0],
                 rangeMin=50.0, rangeMax=900.0,
             ),
             StateMapping(
                 state=OperationalState.STOP,
-                conditionField="MUN.L2.MOT004.PowerConsumption",
+                conditionField="LUX.L1.MOT001.PowerConsumption",
                 conditionOperator=ConditionOperator.LTE,
                 conditionValue=1.0,
                 rangeMin=None, rangeMax=50.0,
@@ -552,55 +637,27 @@ def _build_l2_rules(tags: list[Tag]) -> list[L2Rule]:
         ],
     ))
 
-    # 3) Detroit Pump-003 outlet pressure — Running / Idle / Stop
+    # 3) BEL Pump-001 outlet pressure — Running / Idle / Stop
     rules.append(L2Rule(
-        tagId=by_name["DET.L3.PMP003.OutletPressure"].id,
+        tagId=by_name["BEL.L1.PMP001.OutletPressure"].id,
         stateMapping=[
             StateMapping(
                 state=OperationalState.RUNNING,
-                conditionField="DET.L3.PMP003.MotorCurrent",
-                conditionOperator=ConditionOperator.GT,
-                conditionValue=8.0,
-                rangeMin=6.0, rangeMax=15.0,
-            ),
-            StateMapping(
-                state=OperationalState.IDLE,
-                conditionField="DET.L3.PMP003.MotorCurrent",
-                conditionOperator=ConditionOperator.BETWEEN,
-                conditionValue=[1.0, 8.0],
-                rangeMin=1.0, rangeMax=6.0,
-            ),
-            StateMapping(
-                state=OperationalState.STOP,
-                conditionField="DET.L3.PMP003.MotorCurrent",
-                conditionOperator=ConditionOperator.LTE,
-                conditionValue=1.0,
-                rangeMin=None, rangeMax=1.0,
-            ),
-        ],
-    ))
-
-    # 4) Shanghai Pump-002 outlet pressure — Running / Idle / Stop
-    rules.append(L2Rule(
-        tagId=by_name["SHA.L2.PMP002.OutletPressure"].id,
-        stateMapping=[
-            StateMapping(
-                state=OperationalState.RUNNING,
-                conditionField="SHA.L2.PMP002.FlowRate",
+                conditionField="BEL.L1.PMP001.FlowRate",
                 conditionOperator=ConditionOperator.GT,
                 conditionValue=50.0,
-                rangeMin=3.0, rangeMax=12.0,
+                rangeMin=4.0, rangeMax=14.0,
             ),
             StateMapping(
                 state=OperationalState.IDLE,
-                conditionField="SHA.L2.PMP002.FlowRate",
+                conditionField="BEL.L1.PMP001.FlowRate",
                 conditionOperator=ConditionOperator.BETWEEN,
                 conditionValue=[5.0, 50.0],
-                rangeMin=0.5, rangeMax=3.0,
+                rangeMin=0.5, rangeMax=4.0,
             ),
             StateMapping(
                 state=OperationalState.STOP,
-                conditionField="SHA.L2.PMP002.FlowRate",
+                conditionField="BEL.L1.PMP001.FlowRate",
                 conditionOperator=ConditionOperator.LTE,
                 conditionValue=5.0,
                 rangeMin=None, rangeMax=0.5,
@@ -608,29 +665,57 @@ def _build_l2_rules(tags: list[Tag]) -> list[L2Rule]:
         ],
     ))
 
-    # 5) Detroit Motor-004 speed — Running / Idle / Stop
+    # 4) NED Pump-001 outlet pressure — Running / Idle / Stop
     rules.append(L2Rule(
-        tagId=by_name["DET.L3.MOT004.Speed"].id,
+        tagId=by_name["NED.L1.PMP001.OutletPressure"].id,
         stateMapping=[
             StateMapping(
                 state=OperationalState.RUNNING,
-                conditionField="DET.L3.MOT004.Temperature",
+                conditionField="NED.L1.PMP001.MotorCurrent",
                 conditionOperator=ConditionOperator.GT,
-                conditionValue=40.0,
+                conditionValue=8.0,
+                rangeMin=6.0, rangeMax=15.0,
+            ),
+            StateMapping(
+                state=OperationalState.IDLE,
+                conditionField="NED.L1.PMP001.MotorCurrent",
+                conditionOperator=ConditionOperator.BETWEEN,
+                conditionValue=[1.0, 8.0],
+                rangeMin=1.0, rangeMax=6.0,
+            ),
+            StateMapping(
+                state=OperationalState.STOP,
+                conditionField="NED.L1.PMP001.MotorCurrent",
+                conditionOperator=ConditionOperator.LTE,
+                conditionValue=1.0,
+                rangeMin=None, rangeMax=1.0,
+            ),
+        ],
+    ))
+
+    # 5) BEL Motor-001 speed — Running / Idle / Stop
+    rules.append(L2Rule(
+        tagId=by_name["BEL.L2.MOT001.Speed"].id,
+        stateMapping=[
+            StateMapping(
+                state=OperationalState.RUNNING,
+                conditionField="BEL.L2.MOT001.PowerConsumption",
+                conditionOperator=ConditionOperator.GT,
+                conditionValue=10.0,
                 rangeMin=600.0, rangeMax=3000.0,
             ),
             StateMapping(
                 state=OperationalState.IDLE,
-                conditionField="DET.L3.MOT004.Temperature",
+                conditionField="BEL.L2.MOT001.PowerConsumption",
                 conditionOperator=ConditionOperator.BETWEEN,
-                conditionValue=[25.0, 40.0],
+                conditionValue=[1.0, 10.0],
                 rangeMin=50.0, rangeMax=600.0,
             ),
             StateMapping(
                 state=OperationalState.STOP,
-                conditionField="DET.L3.MOT004.Temperature",
+                conditionField="BEL.L2.MOT001.PowerConsumption",
                 conditionOperator=ConditionOperator.LTE,
-                conditionValue=25.0,
+                conditionValue=1.0,
                 rangeMin=None, rangeMax=50.0,
             ),
         ],
@@ -659,14 +744,14 @@ def seed() -> None:
     l2_repo = get_l2_rules_repo()
 
     # ── Assets ───────────────────────────────────────────────────────
-    print("\n🏭 Seeding assets (12) ...")
     assets = _build_assets()
+    print(f"\n🏭 Seeding assets ({len(assets)}) ...")
     for asset in assets:
         _insert(assets_repo, asset, f"Asset  {asset.hierarchy}")
 
     # ── Sources ──────────────────────────────────────────────────────
-    print("\n🔗 Seeding sources (6) ...")
     sources = _build_sources()
+    print(f"\n🔗 Seeding sources ({len(sources)}) ...")
     for source in sources:
         _insert(sources_repo, source, f"Source {source.description}")
 
@@ -680,7 +765,6 @@ def seed() -> None:
     l1_rules = _build_l1_rules(tags)
     print(f"\n📏 Seeding L1 rules ({len(l1_rules)}) ...")
     for rule in l1_rules:
-        # Resolve the tag name for display
         tag_name = next(t.name for t in tags if t.id == rule.tagId)
         _insert(l1_repo, rule, f"L1Rule {tag_name}  [{rule.min}..{rule.max}]")
 
