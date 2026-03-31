@@ -17,3 +17,11 @@ class Source(BaseModel):
     description: str | None = None
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CreateSource(BaseModel):
+    """Request body for POST /api/sources."""
+    systemType: SystemType
+    connectorType: str
+    topicOrPath: str
+    description: str | None = None
