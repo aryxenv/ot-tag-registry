@@ -4,7 +4,7 @@ Each entry represents an *approved* tag name in the naming registry.  The
 ``seed_index.py`` script reads these, generates embeddings, and uploads them
 to the ``golden-tags`` Azure AI Search index.
 
-Sites: Luxembourg (LUX), Belgium (BEL), France (FRA)
+Sites: Luxembourg (LUX), Belgium (BEL), Netherlands (NED)
 """
 
 GOLDEN_TAGS: list[dict] = [
@@ -379,227 +379,227 @@ GOLDEN_TAGS: list[dict] = [
     },
 
     # ╔═══════════════════════════════════════════════════════════════════╗
-    # ║  FRA — France                                                    ║
+    # ║  NED — Netherlands                                                    ║
     # ╚═══════════════════════════════════════════════════════════════════╝
 
-    # ── FRA Line-1 Pump-001 ─────────────────────────────────────────────
+    # ── NED Line-1 Pump-001 ─────────────────────────────────────────────
     {
-        "tagName": "FRA.L1.PMP001.OutletPressure",
-        "site": "FRA", "line": "L1", "equipment": "PMP001",
+        "tagName": "NED.L1.PMP001.OutletPressure",
+        "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "bar", "datatype": "float",
         "description": "Outlet pressure of boiler feed-water pump",
         "measurementTokens": "outlet pressure discharge",
         "synonyms": "pump discharge pressure head pressure",
     },
     {
-        "tagName": "FRA.L1.PMP001.FlowRate",
-        "site": "FRA", "line": "L1", "equipment": "PMP001",
+        "tagName": "NED.L1.PMP001.FlowRate",
+        "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "L/min", "datatype": "float",
         "description": "Volumetric flow rate of boiler feed-water pump",
         "measurementTokens": "flow rate volume throughput",
         "synonyms": "volumetric flow pump output feed water flow",
     },
     {
-        "tagName": "FRA.L1.PMP001.MotorCurrent",
-        "site": "FRA", "line": "L1", "equipment": "PMP001",
+        "tagName": "NED.L1.PMP001.MotorCurrent",
+        "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "A", "datatype": "float",
         "description": "Motor current draw of feed-water pump 001",
         "measurementTokens": "motor current amperage draw",
         "synonyms": "winding current amp draw electrical current",
     },
     {
-        "tagName": "FRA.L1.PMP001.VibrationLevel",
-        "site": "FRA", "line": "L1", "equipment": "PMP001",
+        "tagName": "NED.L1.PMP001.VibrationLevel",
+        "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "mm/s", "datatype": "float",
         "description": "Pump casing vibration level on drive-end",
         "measurementTokens": "vibration casing level",
         "synonyms": "vibration amplitude oscillation pump vibration",
     },
 
-    # ── FRA Line-1 HeatExchanger-001 ────────────────────────────────────
+    # ── NED Line-1 HeatExchanger-001 ────────────────────────────────────
     {
-        "tagName": "FRA.L1.HEX001.InletTemp",
-        "site": "FRA", "line": "L1", "equipment": "HEX001",
+        "tagName": "NED.L1.HEX001.InletTemp",
+        "site": "NED", "line": "L1", "equipment": "HEX001",
         "unit": "°C", "datatype": "float",
         "description": "Shell-side inlet temperature of heat exchanger",
         "measurementTokens": "inlet temperature shell side",
         "synonyms": "entry temperature incoming temp feed temperature",
     },
     {
-        "tagName": "FRA.L1.HEX001.OutletTemp",
-        "site": "FRA", "line": "L1", "equipment": "HEX001",
+        "tagName": "NED.L1.HEX001.OutletTemp",
+        "site": "NED", "line": "L1", "equipment": "HEX001",
         "unit": "°C", "datatype": "float",
         "description": "Shell-side outlet temperature of heat exchanger",
         "measurementTokens": "outlet temperature shell side exit",
         "synonyms": "exit temperature outgoing temp return temperature",
     },
     {
-        "tagName": "FRA.L1.HEX001.FlowRate",
-        "site": "FRA", "line": "L1", "equipment": "HEX001",
+        "tagName": "NED.L1.HEX001.FlowRate",
+        "site": "NED", "line": "L1", "equipment": "HEX001",
         "unit": "L/min", "datatype": "float",
         "description": "Tube-side flow rate through heat exchanger",
         "measurementTokens": "flow rate tube side throughput",
         "synonyms": "heat exchanger flow cooling flow process flow",
     },
 
-    # ── FRA Line-2 Motor-001 ────────────────────────────────────────────
+    # ── NED Line-2 Motor-001 ────────────────────────────────────────────
     {
-        "tagName": "FRA.L2.MOT001.Speed",
-        "site": "FRA", "line": "L2", "equipment": "MOT001",
+        "tagName": "NED.L2.MOT001.Speed",
+        "site": "NED", "line": "L2", "equipment": "MOT001",
         "unit": "RPM", "datatype": "float",
         "description": "Rotational speed of compressor drive motor",
         "measurementTokens": "speed rpm rotational",
         "synonyms": "motor speed rotation shaft speed revolutions",
     },
     {
-        "tagName": "FRA.L2.MOT001.BearingTemp",
-        "site": "FRA", "line": "L2", "equipment": "MOT001",
+        "tagName": "NED.L2.MOT001.BearingTemp",
+        "site": "NED", "line": "L2", "equipment": "MOT001",
         "unit": "°C", "datatype": "float",
         "description": "Drive-end bearing temperature of motor 001",
         "measurementTokens": "bearing temperature drive end",
         "synonyms": "bearing temp DE bearing motor bearing thermal",
     },
     {
-        "tagName": "FRA.L2.MOT001.MotorCurrent",
-        "site": "FRA", "line": "L2", "equipment": "MOT001",
+        "tagName": "NED.L2.MOT001.MotorCurrent",
+        "site": "NED", "line": "L2", "equipment": "MOT001",
         "unit": "A", "datatype": "float",
         "description": "Phase current of motor 001",
         "measurementTokens": "motor current amperage phase",
         "synonyms": "winding current amp draw phase current",
     },
 
-    # ── FRA Line-2 Boiler-001 ───────────────────────────────────────────
+    # ── NED Line-2 Boiler-001 ───────────────────────────────────────────
     {
-        "tagName": "FRA.L2.BLR001.SteamPressure",
-        "site": "FRA", "line": "L2", "equipment": "BLR001",
+        "tagName": "NED.L2.BLR001.SteamPressure",
+        "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "bar", "datatype": "float",
         "description": "Steam drum pressure of boiler 001",
         "measurementTokens": "steam pressure drum",
         "synonyms": "boiler pressure steam header drum pressure",
     },
     {
-        "tagName": "FRA.L2.BLR001.ExhaustTemp",
-        "site": "FRA", "line": "L2", "equipment": "BLR001",
+        "tagName": "NED.L2.BLR001.ExhaustTemp",
+        "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "°C", "datatype": "float",
         "description": "Flue gas exhaust temperature of boiler 001",
         "measurementTokens": "exhaust temperature flue gas",
         "synonyms": "stack temperature flue temp combustion exhaust",
     },
     {
-        "tagName": "FRA.L2.BLR001.FeedWaterTemp",
-        "site": "FRA", "line": "L2", "equipment": "BLR001",
+        "tagName": "NED.L2.BLR001.FeedWaterTemp",
+        "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "°C", "datatype": "float",
         "description": "Feed-water inlet temperature of boiler 001",
         "measurementTokens": "feed water temperature inlet",
         "synonyms": "make-up water temp boiler feed temperature",
     },
     {
-        "tagName": "FRA.L2.BLR001.FuelFlowRate",
-        "site": "FRA", "line": "L2", "equipment": "BLR001",
+        "tagName": "NED.L2.BLR001.FuelFlowRate",
+        "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "m³/h", "datatype": "float",
         "description": "Natural gas fuel flow rate to boiler 001",
         "measurementTokens": "fuel flow rate gas consumption",
         "synonyms": "gas flow fuel consumption burner flow rate",
     },
 
-    # ── FRA Line-3 Conveyor-001 ─────────────────────────────────────────
+    # ── NED Line-3 Conveyor-001 ─────────────────────────────────────────
     {
-        "tagName": "FRA.L3.CNV001.BeltSpeed",
-        "site": "FRA", "line": "L3", "equipment": "CNV001",
+        "tagName": "NED.L3.CNV001.BeltSpeed",
+        "site": "NED", "line": "L3", "equipment": "CNV001",
         "unit": "m/s", "datatype": "float",
         "description": "Belt speed of raw-material intake conveyor",
         "measurementTokens": "belt speed linear velocity",
         "synonyms": "conveyor speed belt velocity line speed",
     },
     {
-        "tagName": "FRA.L3.CNV001.LoadWeight",
-        "site": "FRA", "line": "L3", "equipment": "CNV001",
+        "tagName": "NED.L3.CNV001.LoadWeight",
+        "site": "NED", "line": "L3", "equipment": "CNV001",
         "unit": "kg", "datatype": "float",
         "description": "Instantaneous belt load weight of conveyor",
         "measurementTokens": "load weight mass belt",
         "synonyms": "belt load material weight conveyor weight",
     },
     {
-        "tagName": "FRA.L3.CNV001.MotorCurrent",
-        "site": "FRA", "line": "L3", "equipment": "CNV001",
+        "tagName": "NED.L3.CNV001.MotorCurrent",
+        "site": "NED", "line": "L3", "equipment": "CNV001",
         "unit": "A", "datatype": "float",
         "description": "Drive motor current of conveyor 001",
         "measurementTokens": "motor current amperage draw",
         "synonyms": "drive current amp draw electrical current",
     },
 
-    # ── FRA Line-3 Valve-001 ────────────────────────────────────────────
+    # ── NED Line-3 Valve-001 ────────────────────────────────────────────
     {
-        "tagName": "FRA.L3.VLV001.Position",
-        "site": "FRA", "line": "L3", "equipment": "VLV001",
+        "tagName": "NED.L3.VLV001.Position",
+        "site": "NED", "line": "L3", "equipment": "VLV001",
         "unit": "%", "datatype": "float",
         "description": "Control valve stem position — steam header",
         "measurementTokens": "position opening percentage",
         "synonyms": "valve opening stroke position travel",
     },
 
-    # ── FRA Line-4 Tank-001 ─────────────────────────────────────────────
+    # ── NED Line-4 Tank-001 ─────────────────────────────────────────────
     {
-        "tagName": "FRA.L4.TNK001.Level",
-        "site": "FRA", "line": "L4", "equipment": "TNK001",
+        "tagName": "NED.L4.TNK001.Level",
+        "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "m", "datatype": "float",
         "description": "Liquid level in raw-water storage tank",
         "measurementTokens": "level height fill",
         "synonyms": "tank level fill level liquid height water level",
     },
     {
-        "tagName": "FRA.L4.TNK001.Temperature",
-        "site": "FRA", "line": "L4", "equipment": "TNK001",
+        "tagName": "NED.L4.TNK001.Temperature",
+        "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "°C", "datatype": "float",
         "description": "Water temperature in raw-water tank",
         "measurementTokens": "temperature water tank",
         "synonyms": "tank temperature water temp process temperature",
     },
     {
-        "tagName": "FRA.L4.TNK001.Pressure",
-        "site": "FRA", "line": "L4", "equipment": "TNK001",
+        "tagName": "NED.L4.TNK001.Pressure",
+        "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "bar", "datatype": "float",
         "description": "Headspace pressure of raw-water tank",
         "measurementTokens": "pressure headspace tank",
         "synonyms": "vessel pressure tank pressure internal pressure",
     },
     {
-        "tagName": "FRA.L4.TNK001.Humidity",
-        "site": "FRA", "line": "L4", "equipment": "TNK001",
+        "tagName": "NED.L4.TNK001.Humidity",
+        "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "%RH", "datatype": "float",
         "description": "Relative humidity in tank enclosure area",
         "measurementTokens": "humidity relative moisture",
         "synonyms": "relative humidity moisture content RH ambient humidity",
     },
 
-    # ── FRA Line-4 Compressor-001 ───────────────────────────────────────
+    # ── NED Line-4 Compressor-001 ───────────────────────────────────────
     {
-        "tagName": "FRA.L4.CMP001.DischargeTemp",
-        "site": "FRA", "line": "L4", "equipment": "CMP001",
+        "tagName": "NED.L4.CMP001.DischargeTemp",
+        "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "°C", "datatype": "float",
         "description": "Discharge temperature of air compressor",
         "measurementTokens": "discharge temperature outlet temp",
         "synonyms": "outlet temperature exhaust temp air compressor discharge",
     },
     {
-        "tagName": "FRA.L4.CMP001.InletPressure",
-        "site": "FRA", "line": "L4", "equipment": "CMP001",
+        "tagName": "NED.L4.CMP001.InletPressure",
+        "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "bar", "datatype": "float",
         "description": "Suction inlet pressure of air compressor",
         "measurementTokens": "inlet pressure suction",
         "synonyms": "suction pressure intake pressure atmospheric pressure",
     },
     {
-        "tagName": "FRA.L4.CMP001.VibrationLevel",
-        "site": "FRA", "line": "L4", "equipment": "CMP001",
+        "tagName": "NED.L4.CMP001.VibrationLevel",
+        "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "mm/s", "datatype": "float",
         "description": "Bearing vibration of air compressor 001",
         "measurementTokens": "vibration bearing level",
         "synonyms": "vibration amplitude oscillation compressor vibration",
     },
     {
-        "tagName": "FRA.L4.CMP001.Running",
-        "site": "FRA", "line": "L4", "equipment": "CMP001",
+        "tagName": "NED.L4.CMP001.Running",
+        "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "-", "datatype": "bool",
         "description": "Compressor running status (true = running)",
         "measurementTokens": "running status active",

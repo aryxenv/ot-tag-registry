@@ -94,7 +94,7 @@ async def suggest_tag_name(
 
 # Golden Tag Dataset Requirements
 
-- At least **50 tags** across **3+ sites** (e.g., Munich, Austin, Shanghai)
+- At least **50 tags** across **3+ sites** (e.g., Luxembourg, Brussels, Amsterdam)
 - Cover common OT measurements: pressure, temperature, flow, vibration, speed, level, current, voltage
 - Realistic names following `<site>.<line>.<equipment>.<measurementType>.<qualifier>` schema
 - Rich descriptions with natural language variation (different wording for similar measurements)
