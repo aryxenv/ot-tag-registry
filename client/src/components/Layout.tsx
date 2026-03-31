@@ -13,6 +13,21 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     height: "100vh",
+    position: "relative" as const,
+    "::after": {
+      content: '""',
+      position: "fixed",
+      bottom: "-400px",
+      right: "-400px",
+      width: "800px",
+      height: "800px",
+      borderRadius: "50%",
+      background:
+        "radial-gradient(circle, #d0672a 0%, #4e1045 40%, transparent 70%)",
+      pointerEvents: "none",
+      opacity: 0.45,
+      zIndex: 0,
+    },
   },
   topbar: {
     display: "flex",
