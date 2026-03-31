@@ -1,6 +1,6 @@
 # Custom Agents — OT Tag Registry
 
-Agents that orchestrate the build of the OT Tag Registry application. See `build-issues.md` for the full issue backlog.
+Agents that orchestrate the build of the OT Tag Registry application.
 
 ## Agents
 

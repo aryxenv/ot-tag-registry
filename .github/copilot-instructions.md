@@ -144,7 +144,7 @@ Each agent owns specific directories — respect these when making changes:
 - **`ob--backend-api`** owns `server/` — never modifies `client/` or `services/`.
 - **`ob--frontend`** owns `client/` — never modifies `server/` or `services/`.
 - **`ob--ai-search`** owns `services/` — never modifies `client/`; coordinates with backend for the `/api/tags/suggest-name` endpoint.
-- **`ot-builder`** orchestrates across all three; see `build-issues.md` for the issue backlog and dependency DAG.
+- **`ot-builder`** orchestrates across all three.
 
 ## Domain Model Quick Reference
 

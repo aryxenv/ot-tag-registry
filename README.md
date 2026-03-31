@@ -239,7 +239,3 @@ ot-tag-registry/
 ├── skills/          # Copilot agent skill definitions
 └── excalidraw/      # Architecture diagrams
 ```
-
-## Roadmap
-
-See [build-issues.md](./build-issues.md) for the full technical issue backlog.
