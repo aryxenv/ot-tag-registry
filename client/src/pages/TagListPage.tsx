@@ -3,9 +3,11 @@ import {
   Title2,
   Spinner,
   Text,
+  Button,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
+import { AddRegular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useTags } from "../hooks/useTags";
 import { useAssets } from "../hooks/useAssets";
@@ -15,8 +17,10 @@ import type { TagFilterValues } from "../components/TagFilters";
 import type { TagStatus } from "../types/tag";
 
 const useStyles = makeStyles({
-  header: {
-    display: "block",
+  headerRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: "16px",
   },
   center: {
@@ -69,9 +73,22 @@ export default function TagListPage() {
     navigate(`/tags/${tagId}`);
   };
 
+  const handleEditClick = (tagId: string) => {
+    navigate(`/tags/${tagId}/edit`);
+  };
+
   return (
     <div>
-      <Title2 className={styles.header}>Tags</Title2>
+      <div className={styles.headerRow}>
+        <Title2>Tags</Title2>
+        <Button
+          appearance="primary"
+          icon={<AddRegular />}
+          onClick={() => navigate("/tags/new")}
+        >
+          Create Tag
+        </Button>
+      </div>
       <TagFilters filters={filters} onFiltersChange={setFilters} assets={assets} />
 
       {tagsLoading || assetsLoading ? (
@@ -83,7 +100,7 @@ export default function TagListPage() {
           <Text>No tags found. Try adjusting your filters.</Text>
         </div>
       ) : (
-        <TagTable tags={tags} assets={assets} onTagClick={handleTagClick} />
+        <TagTable tags={tags} assets={assets} onTagClick={handleTagClick} onEditClick={handleEditClick} />
       )}
     </div>
   );

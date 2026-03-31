@@ -48,10 +48,18 @@ export interface UpdateTag {
   sourceId?: string | null;
 }
 
+/** A single validation error from the naming validator */
+export interface NameValidationError {
+  segment: string;
+  message: string;
+  received: string;
+  expected: string | null;
+}
+
 /** Response from POST /api/tags/validate-name */
 export interface ValidateNameResponse {
   valid: boolean;
-  reason?: string;
+  errors: NameValidationError[];
 }
 
 /** Response from POST /api/tags/suggest-name */
