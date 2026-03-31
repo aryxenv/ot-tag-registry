@@ -70,7 +70,7 @@ class TestListTags:
 
     def test_list_filter_by_asset_id(self, client):
         client.post("/api/tags", json=VALID_TAG_PAYLOAD)
-        other = {**VALID_TAG_PAYLOAD, "assetId": "asset-999"}
+        other = {**VALID_TAG_PAYLOAD, "name": "MUN.L2.PMP002.InletPressure", "assetId": "asset-999"}
         client.post("/api/tags", json=other)
 
         resp = client.get("/api/tags?assetId=asset-001")
