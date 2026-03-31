@@ -33,3 +33,27 @@ class Tag(BaseModel):
     sourceId: str | None = None  # FK to Source, optional
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CreateTag(BaseModel):
+    """Request body for POST /api/tags."""
+    name: str
+    description: str
+    unit: str
+    datatype: DataType
+    samplingFrequency: float
+    criticality: Criticality
+    assetId: str
+    sourceId: str | None = None
+
+
+class UpdateTag(BaseModel):
+    """Request body for PUT /api/tags/{id}. All fields optional for partial updates."""
+    name: str | None = None
+    description: str | None = None
+    unit: str | None = None
+    datatype: DataType | None = None
+    samplingFrequency: float | None = None
+    criticality: Criticality | None = None
+    status: TagStatus | None = None
+    sourceId: str | None = None

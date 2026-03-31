@@ -22,3 +22,11 @@ class Asset(BaseModel):
             if site and line and equipment:
                 data["hierarchy"] = f"{site}.{line}.{equipment}"
         return data
+
+
+class CreateAsset(BaseModel):
+    """Request body for POST /api/assets."""
+    site: str
+    line: str
+    equipment: str
+    description: str | None = None
