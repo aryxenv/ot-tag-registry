@@ -64,6 +64,10 @@ class FakeRepository:
         if "@assetId" in params:
             items = [i for i in items if i.get("assetId") == params["@assetId"]]
 
+        # Filter by name
+        if "@name" in params:
+            items = [i for i in items if i.get("name") == params["@name"]]
+
         # Filter by search
         if "@search" in params:
             term = params["@search"].lower()

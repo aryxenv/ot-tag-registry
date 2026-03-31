@@ -33,6 +33,21 @@ def _run_name_validation(name: str) -> None:
         )
 
 
+def _check_name_unique(name: str, exclude_id: str | None = None) -> None:
+    """Raise HTTPException 400 if a tag with this name already exists."""
+    repo = get_tags_repo()
+    existing = repo.query(
+        "SELECT c.id FROM c WHERE c.name = @name",
+        parameters=[{"name": "@name", "value": name}],
+    )
+    for item in existing:
+        if item["id"] != exclude_id:
+            raise HTTPException(
+                status_code=400,
+                detail=_error("A tag with this name already exists"),
+            )
+
+
 class ValidateNameRequest(BaseModel):
     name: str
 
@@ -112,6 +127,7 @@ async def get_tag(tag_id: str) -> dict:
 async def create_tag(body: CreateTag) -> dict:
     """Create a new tag. Status defaults to draft."""
     _run_name_validation(body.name)
+    _check_name_unique(body.name)
     repo = get_tags_repo()
     tag = Tag(**body.model_dump())
     return repo.create(tag.model_dump(mode="json"))
@@ -132,6 +148,7 @@ async def update_tag(tag_id: str, body: UpdateTag) -> dict:
     # Validate name if it is being changed
     if "name" in updates:
         _run_name_validation(updates["name"])
+        _check_name_unique(updates["name"], exclude_id=tag_id)
 
     # Find the tag first (cross-partition)
     items = repo.query(
