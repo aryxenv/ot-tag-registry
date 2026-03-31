@@ -50,6 +50,10 @@ cd server && uv run pytest tests/test_tags.py -v  # Single file
 cd server && uv run pytest tests/ -k "test_name"  # Single test by name
 ```
 
+## Git Workflow
+
+- **Never squash merge.** Always use regular merge commits (`gh pr merge --merge`) to preserve individual commit history.
+
 ## Key Conventions
 
 ### Server vs. Services Separation
