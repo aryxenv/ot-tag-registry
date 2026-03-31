@@ -25,7 +25,7 @@ const useStyles = makeStyles({
       background:
         "radial-gradient(circle, #d0672a 0%, #4e1045 40%, transparent 70%)",
       pointerEvents: "none",
-      opacity: 0.45,
+      opacity: 0.3,
       zIndex: 0,
     },
   },
