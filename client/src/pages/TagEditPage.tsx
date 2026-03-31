@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Title2,
+  Subtitle2,
   Spinner,
   Text,
   Dialog,
@@ -11,10 +12,13 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Divider,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
 import TagForm from "../components/TagForm";
+import L1RulePanel from "../components/L1RulePanel";
+import L2RulePanel from "../components/L2RulePanel";
 import { useTag } from "../hooks/useTag";
 import type { CreateTag } from "../types/tag";
 
@@ -29,6 +33,16 @@ const useStyles = makeStyles({
   },
   errorText: {
     color: tokens.colorPaletteRedForeground1,
+  },
+  rulesSection: {
+    maxWidth: "720px",
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalM,
+    paddingTop: tokens.spacingVerticalXXL,
+  },
+  rulesSectionHeader: {
+    marginBottom: tokens.spacingVerticalXS,
   },
 });
 
@@ -118,6 +132,15 @@ export default function TagEditPage() {
         onCancel={() => navigate("/tags")}
         onRetire={() => setRetireOpen(true)}
       />
+
+      <div className={styles.rulesSection}>
+        <Divider />
+        <Subtitle2 className={styles.rulesSectionHeader}>
+          Rules Configuration
+        </Subtitle2>
+        <L1RulePanel tagId={id!} />
+        <L2RulePanel tagId={id!} />
+      </div>
 
       <Dialog
         open={retireOpen}
