@@ -256,6 +256,23 @@ class CosmosRepository:
             )
             raise
 
+    def hard_delete(self, item_id: str, partition_key: str) -> None:
+        """Permanently remove a document from the container."""
+        try:
+            self._container.delete_item(item=item_id, partition_key=partition_key)
+            self._logger.info("Hard-deleted item id=%s", item_id)
+        except CosmosResourceNotFoundError:
+            self._logger.error("Cannot hard_delete – item id=%s not found", item_id)
+            raise
+        except CosmosHttpResponseError as exc:
+            self._logger.error(
+                "Failed to hard_delete item id=%s: %s (status %s)",
+                item_id,
+                exc.message,
+                exc.status_code,
+            )
+            raise
+
 
 # ---------------------------------------------------------------------------
 # Per-container repository factories

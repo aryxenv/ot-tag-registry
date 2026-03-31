@@ -36,6 +36,7 @@ class FakeRepository:
                 if i.get("site") == partition_key
                 or i.get("assetId") == partition_key
                 or i.get("systemType") == partition_key
+                or i.get("tagId") == partition_key
             ]
         return items
 
@@ -90,11 +91,19 @@ class FakeRepository:
         if item is not None:
             item["status"] = "retired"
 
+    def hard_delete(self, item_id: str, partition_key: str) -> None:
+        if item_id not in self._store:
+            from azure.cosmos.exceptions import CosmosResourceNotFoundError
+            raise CosmosResourceNotFoundError(status_code=404, message="Not found")
+        del self._store[item_id]
+
 
 # Shared fake repo instances — reset per test via fixtures
 _fake_tags_repo = FakeRepository()
 _fake_assets_repo = FakeRepository()
 _fake_sources_repo = FakeRepository()
+_fake_l1_rules_repo = FakeRepository()
+_fake_l2_rules_repo = FakeRepository()
 
 
 @pytest.fixture(autouse=True)
@@ -103,6 +112,8 @@ def _reset_repos():
     _fake_tags_repo._store.clear()
     _fake_assets_repo._store.clear()
     _fake_sources_repo._store.clear()
+    _fake_l1_rules_repo._store.clear()
+    _fake_l2_rules_repo._store.clear()
 
 
 @pytest.fixture()
@@ -112,6 +123,9 @@ def client():
         patch("src.routes.tags.get_tags_repo", return_value=_fake_tags_repo),
         patch("src.routes.assets.get_assets_repo", return_value=_fake_assets_repo),
         patch("src.routes.sources.get_sources_repo", return_value=_fake_sources_repo),
+        patch("src.routes.rules.get_tags_repo", return_value=_fake_tags_repo),
+        patch("src.routes.rules.get_l1_rules_repo", return_value=_fake_l1_rules_repo),
+        patch("src.routes.rules.get_l2_rules_repo", return_value=_fake_l2_rules_repo),
         patch("src.main.get_cosmos_client", return_value=MagicMock()),
     ):
         from src.main import app
@@ -132,6 +146,16 @@ def assets_repo() -> FakeRepository:
 @pytest.fixture()
 def sources_repo() -> FakeRepository:
     return _fake_sources_repo
+
+
+@pytest.fixture()
+def l1_rules_repo() -> FakeRepository:
+    return _fake_l1_rules_repo
+
+
+@pytest.fixture()
+def l2_rules_repo() -> FakeRepository:
+    return _fake_l2_rules_repo
 
 
 # -- Helpers -----------------------------------------------------------------
@@ -158,4 +182,30 @@ VALID_SOURCE_PAYLOAD: dict[str, Any] = {
     "connectorType": "OPC-UA",
     "topicOrPath": "ns=2;s=Pump001.Pressure",
     "description": "Pressure sensor PLC",
+}
+
+VALID_L1_RULE_PAYLOAD: dict[str, Any] = {
+    "min": 0.0,
+    "max": 100.0,
+    "spikeThreshold": 25.0,
+    "missingDataPolicy": "alert",
+}
+
+VALID_L2_RULE_PAYLOAD: dict[str, Any] = {
+    "stateMapping": [
+        {
+            "state": "Running",
+            "conditionField": "speed",
+            "conditionOperator": ">",
+            "conditionValue": 100.0,
+            "rangeMin": 50.0,
+            "rangeMax": 200.0,
+        },
+        {
+            "state": "Idle",
+            "conditionField": "speed",
+            "conditionOperator": "<=",
+            "conditionValue": 10.0,
+        },
+    ],
 }
