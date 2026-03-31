@@ -1,0 +1,35 @@
+{
+  "separator": ".",
+  "segments": [
+    {
+      "name": "site",
+      "required": true,
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "allowed_values": null
+    },
+    {
+      "name": "line",
+      "required": true,
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "allowed_values": null
+    },
+    {
+      "name": "equipment",
+      "required": true,
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "allowed_values": null
+    },
+    {
+      "name": "measurement",
+      "required": true,
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "allowed_values": null
+    },
+    {
+      "name": "detail",
+      "required": false,
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "allowed_values": null
+    }
+  ]
+}
