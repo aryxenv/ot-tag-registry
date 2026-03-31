@@ -68,6 +68,8 @@ graph TD
 - **Python 3.12+** with [`uv`](https://docs.astral.sh/uv/) package manager
 - **Node.js 20+** with npm
 - **Azure Cosmos DB** account — the backend persists all data to a real Cosmos DB instance in your Azure subscription
+- **Azure AI Search** service — powers the "Suggest a Name" vector search feature
+- **Azure AI Foundry** project — provides `text-embedding-3-large` embeddings for semantic search
 
 ### Environment Setup
 
@@ -84,6 +86,22 @@ Required variables:
 | `COSMOS_ENDPOINT` | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
 | `COSMOS_KEY` | Primary or secondary key from the Azure portal |
 | `COSMOS_DATABASE` | Database name (defaults to `ot-tag-registry`) |
+
+The **services** layer needs its own env file for AI Search and embedding configuration:
+
+```bash
+cp services/.env.example services/.env
+```
+
+| Variable | Description |
+|---|---|
+| `COSMOS_ENDPOINT` | Same Cosmos DB URI as above |
+| `COSMOS_KEY` | Same key (optional if using DefaultAzureCredential) |
+| `SEARCH_ENDPOINT` | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`) |
+| `SEARCH_API_KEY` | Search admin key (optional if using DefaultAzureCredential) |
+| `SEARCH_INDEX_NAME` | Index name (defaults to `golden-tags`) |
+| `PROJECT_ENDPOINT` | Azure AI Foundry project endpoint |
+| `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`) |
 
 ### Install & Run
 
@@ -114,6 +132,25 @@ This will:
 2. **Upsert sample documents** — 12 assets across 3 sites (Munich, Detroit, Shanghai), 6 data sources, 31 tags, 27 L1 rules, and 5 L2 rules
 
 > **⚠️ This writes to your live Azure Cosmos DB instance.** The script uses upsert operations, so it's safe to re-run — it will overwrite existing seed documents rather than create duplicates. Make sure your `server/.env` has valid credentials before running.
+
+### Seed Azure AI Search Index
+
+The AI Search index powers the "Suggest a Name" feature. Two scripts set up and populate the `golden-tags` vector index:
+
+```bash
+# 1. Create the index schema (run once)
+cd services && uv run python -m search.create_index
+
+# 2. Generate embeddings and upload golden tags
+cd services && uv run python -m search.seed_index
+```
+
+This will:
+
+1. **Create the `golden-tags` index** with HNSW vector search (3072 dimensions, cosine metric) configured for `text-embedding-3-large`
+2. **Seed 68 golden tags** across 3 sites (Luxembourg, Belgium, France), 8 equipment types, and 29 measurement types — each with a vector embedding generated via Azure AI Foundry
+
+> **Requires** `SEARCH_ENDPOINT`, `PROJECT_ENDPOINT`, and `PROJECT_EMBEDDING_DEPLOYMENT` to be set in `services/.env`.
 
 ## Project Structure
 
