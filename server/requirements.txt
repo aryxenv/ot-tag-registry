@@ -2,5 +2,7 @@ fastapi
 uvicorn[standard]
 azure-cosmos
 azure-identity
+azure-search-documents
+azure-ai-projects
 python-dotenv
 pydantic
