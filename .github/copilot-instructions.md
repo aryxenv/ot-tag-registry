@@ -94,7 +94,40 @@ cd server && uv run pytest tests/ -k "test_name"  # Single test by name
 
 ### Tag Naming Schema
 
-Deterministic format: `<SITE>.<LINE>.<EQUIPMENT>.<MEASUREMENT>` — e.g., `MUN.L2.PMP001.OutletPressure`. The naming validator enforces this schema; AI suggestions are always optional and must pass the validator before acceptance.
+A **tag** is a named data point from an industrial sensor. Factory equipment (pumps, compressors, motors) has sensors attached; each sensor reading is a "tag." The tag name uniquely identifies which sensor, on which machine, at which location.
+
+#### Format: `<SITE>.<LINE>.<EQUIPMENT>.<MEASUREMENT>`
+
+| Segment | What it is | Pattern | Examples |
+|---------|-----------|---------|---------|
+| **SITE** | 3-letter plant location code | `^[A-Z][a-zA-Z0-9]*$` | `MUN` (Munich), `DET` (Detroit), `SHA` (Shanghai) |
+| **LINE** | Production line identifier | `^[A-Z][a-zA-Z0-9]*$` | `L1`, `L2`, `L3`, `L4` |
+| **EQUIPMENT** | Device type abbreviation + number | `^[A-Z][a-zA-Z0-9]*$` | `PMP001` (Pump #1), `CMP003` (Compressor #3), `MOT004` (Motor #4) |
+| **MEASUREMENT** | PascalCase — what the sensor reads | `^[A-Z][a-zA-Z0-9]*$` | `OutletPressure`, `FlowRate`, `Speed`, `Temperature`, `VibrationLevel` |
+
+Optional 5th segment **DETAIL** for disambiguation (e.g., `Pressure.Discharge` vs `Pressure.Inlet`).
+
+**Equipment type codes**: PMP = Pump, CMP = Compressor, MOT = Motor, CNV = Conveyor, VLV = Valve, HEX = Heat Exchanger.
+
+**Common measurements**: OutletPressure, InletPressure, DischargeTemp, FlowRate, Speed, Temperature, VibrationLevel, MotorCurrent, PowerConsumption, BeltSpeed, LoadWeight, Position, Running (bool).
+
+**Examples**:
+- `MUN.L1.PMP001.OutletPressure` — Outlet pressure sensor on Pump 001, Line 1, Munich
+- `DET.L3.MOT004.Speed` — Speed sensor on Motor 004, Line 3, Detroit
+- `SHA.L2.CMP001.VibrationLevel` — Vibration sensor on Compressor 001, Line 2, Shanghai
+
+The naming validator (`server/src/validators/`) enforces this schema. AI suggestions must pass validation before acceptance. **Tag names must be globally unique** — the API rejects creation/update if a tag with the same name already exists.
+
+### Tag Create Form UX
+
+The form is **description-driven**: business users provide context, AI derives technical details.
+
+- **User provides** (primary form fields): Site (dropdown), Line (dropdown), Description (free text — should include both the equipment context and what it measures, e.g. "outlet pressure sensor on the main cooling pump"), Criticality (dropdown), Equipment (dropdown)
+- **AI derives** (via vector search on golden tags): Tag name, equipment suggestion, unit, datatype
+- **Auto-defaulted** (not shown on form): Datatype (`float`), Sampling Frequency (`1.0`), Source (`null`)
+- **Suggest a Name** is the primary workflow — user describes the sensor (including equipment context), AI suggests matching tag names from the golden index
+- **Auto-numbering**: If a suggested name is already taken, the suggest-name endpoint should offer the next available equipment number variant (e.g., PMP002 if PMP001.OutletPressure exists). This is handled by the suggest-name backend, not the form.
+- The form should be understandable by business users, not just engineers
 
 ### AI Search (suggest-name)
 
