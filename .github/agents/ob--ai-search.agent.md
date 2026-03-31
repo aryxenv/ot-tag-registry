@@ -3,6 +3,7 @@ name: ob--ai-search
 description: "Builds Azure AI Search integration: vector index setup, golden tag seeding, embedding generation, suggest-name query logic, and language normalisation."
 tools: [read, edit, search, terminal]
 user-invokable: false
+model: Claude Opus 4.6 (1M context)(Internal only) (copilot)
 ---
 
 # Role
@@ -53,20 +54,20 @@ server/src/
 
 Index name: `golden-tags`
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `id` | `Edm.String` | Document key |
-| `tagName` | `Edm.String` | Canonical tag name (searchable, retrievable) |
-| `site` | `Edm.String` | Site code (filterable, retrievable) |
-| `line` | `Edm.String` | Line identifier (filterable, retrievable) |
-| `equipment` | `Edm.String` | Equipment identifier (filterable, retrievable) |
-| `unit` | `Edm.String` | Measurement unit (filterable, retrievable) |
-| `datatype` | `Edm.String` | Data type (filterable, retrievable) |
-| `description` | `Edm.String` | Human-readable description (searchable, retrievable) |
-| `measurementTokens` | `Edm.String` | Normalised measurement keywords (searchable, retrievable) |
-| `synonyms` | `Edm.String` | Alternative wordings (searchable, retrievable) |
-| `semanticText` | `Edm.String` | Combined field for embedding |
-| `semanticVector` | `Collection(Edm.Single)` | Vector embedding (1536 dims, HNSW, cosine) |
+| Field               | Type                     | Purpose                                                   |
+| ------------------- | ------------------------ | --------------------------------------------------------- |
+| `id`                | `Edm.String`             | Document key                                              |
+| `tagName`           | `Edm.String`             | Canonical tag name (searchable, retrievable)              |
+| `site`              | `Edm.String`             | Site code (filterable, retrievable)                       |
+| `line`              | `Edm.String`             | Line identifier (filterable, retrievable)                 |
+| `equipment`         | `Edm.String`             | Equipment identifier (filterable, retrievable)            |
+| `unit`              | `Edm.String`             | Measurement unit (filterable, retrievable)                |
+| `datatype`          | `Edm.String`             | Data type (filterable, retrievable)                       |
+| `description`       | `Edm.String`             | Human-readable description (searchable, retrievable)      |
+| `measurementTokens` | `Edm.String`             | Normalised measurement keywords (searchable, retrievable) |
+| `synonyms`          | `Edm.String`             | Alternative wordings (searchable, retrievable)            |
+| `semanticText`      | `Edm.String`             | Combined field for embedding                              |
+| `semanticVector`    | `Collection(Edm.Single)` | Vector embedding (1536 dims, HNSW, cosine)                |
 
 # Suggest-Name Query Pattern
 

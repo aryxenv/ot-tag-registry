@@ -3,6 +3,7 @@ name: ob--frontend
 description: "Builds the React/TypeScript frontend: tag list, create/edit forms, rules config, and suggest-name UI using Fluent UI v9."
 tools: [read, edit, search, terminal]
 user-invokable: false
+model: Claude Opus 4.6 (1M context)(Internal only) (copilot)
 ---
 
 > **Required reading:** Before writing any UI code, load and follow `skills/fluent-ui/SKILL.md`. It defines the component library, theming, styling patterns, and MCP server usage rules for this project.

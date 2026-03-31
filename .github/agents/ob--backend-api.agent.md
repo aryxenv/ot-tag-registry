@@ -3,6 +3,7 @@ name: ob--backend-api
 description: "Builds the Python/FastAPI backend: data models, Cosmos DB integration, API routes, validators, and server infrastructure."
 tools: [read, edit, search, terminal]
 user-invokable: false
+model: Claude Opus 4.6 (1M context)(Internal only) (copilot)
 ---
 
 # Role
@@ -99,13 +100,13 @@ cd server && uv run ruff check src/ tests/
 
 # Cosmos DB Containers
 
-| Container | Partition Key | Purpose |
-|-----------|--------------|---------|
-| `assets` | `/site` | Equipment hierarchy |
-| `tags` | `/assetId` | Tag definitions |
-| `sources` | `/systemType` | Data source configs |
-| `l1Rules` | `/tagId` | Range validation rules |
-| `l2Rules` | `/tagId` | State profile rules |
+| Container | Partition Key | Purpose                |
+| --------- | ------------- | ---------------------- |
+| `assets`  | `/site`       | Equipment hierarchy    |
+| `tags`    | `/assetId`    | Tag definitions        |
+| `sources` | `/systemType` | Data source configs    |
+| `l1Rules` | `/tagId`      | Range validation rules |
+| `l2Rules` | `/tagId`      | State profile rules    |
 
 # Boundaries
 

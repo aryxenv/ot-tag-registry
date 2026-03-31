@@ -7,6 +7,7 @@ agents:
   - ob--frontend
   - ob--ai-search
 argument-hint: "Which build issue(s) should I work on? (e.g., 'Issue #3 — Tag lifecycle API')"
+model: Claude Opus 4.6 (1M context)(Internal only) (copilot)
 ---
 
 # Role
