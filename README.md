@@ -84,24 +84,21 @@ Required variables:
 | Variable | Description |
 |---|---|
 | `COSMOS_ENDPOINT` | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
-| `COSMOS_KEY` | Primary or secondary key from the Azure portal |
+| `COSMOS_KEY` | Primary or secondary key — *optional if using `DefaultAzureCredential`* |
 | `COSMOS_DATABASE` | Database name (defaults to `ot-tag-registry`) |
+| `SEARCH_ENDPOINT` | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`) |
+| `SEARCH_API_KEY` | Search admin key — *optional if using `DefaultAzureCredential`* |
+| `SEARCH_INDEX_NAME` | Index name (defaults to `golden-tags`) |
+| `PROJECT_ENDPOINT` | Azure AI Foundry project endpoint |
+| `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`) |
 
-The **services** layer needs its own env file for AI Search and embedding configuration:
+> **Authentication:** `DefaultAzureCredential` is used by default (managed identity in Azure, Azure CLI / VS Code locally). API keys are optional fallbacks.
+
+The **services** layer needs its own env file with the same variables for setup scripts:
 
 ```bash
 cp services/.env.example services/.env
 ```
-
-| Variable | Description |
-|---|---|
-| `COSMOS_ENDPOINT` | Same Cosmos DB URI as above |
-| `COSMOS_KEY` | Same key (optional if using DefaultAzureCredential) |
-| `SEARCH_ENDPOINT` | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`) |
-| `SEARCH_API_KEY` | Search admin key (optional if using DefaultAzureCredential) |
-| `SEARCH_INDEX_NAME` | Index name (defaults to `golden-tags`) |
-| `PROJECT_ENDPOINT` | Azure AI Foundry project endpoint |
-| `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`) |
 
 ### Install & Run
 
@@ -152,16 +149,95 @@ This will:
 
 > **Requires** `SEARCH_ENDPOINT`, `PROJECT_ENDPOINT`, and `PROJECT_EMBEDDING_DEPLOYMENT` to be set in `services/.env`.
 
+## API Reference
+
+All endpoints are prefixed with `/api`.
+
+### Tags
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/tags` | List tags (query params: `status`, `assetId`, `search`) |
+| `GET` | `/api/tags/{id}` | Get a single tag |
+| `POST` | `/api/tags` | Create a new tag (defaults to `draft` status) |
+| `PUT` | `/api/tags/{id}` | Partial update — only provided fields change |
+| `PATCH` | `/api/tags/{id}/retire` | Soft-delete (sets status to `retired`) |
+| `POST` | `/api/tags/validate-name` | Validate a name against the naming schema |
+| `POST` | `/api/tags/suggest-name` | AI-powered name suggestions via hybrid vector search |
+| `POST` | `/api/tags/{id}/request-approval` | Submit tag for governance approval |
+| `POST` | `/api/tags/{id}/approve` | Approve a pending tag |
+| `POST` | `/api/tags/{id}/reject` | Reject a pending tag (optional reason) |
+
+### Assets
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/assets` | List all assets |
+| `POST` | `/api/assets` | Create a new asset |
+
+### Sources
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/sources` | List all sources |
+| `POST` | `/api/sources` | Create a new source |
+
+### Rules
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/tags/{id}/rules/l1` | Get L1 (range) rule |
+| `POST` | `/api/tags/{id}/rules/l1` | Create or replace L1 rule |
+| `PUT` | `/api/tags/{id}/rules/l1` | Partial update L1 rule |
+| `DELETE` | `/api/tags/{id}/rules/l1` | Delete L1 rule |
+| `GET` | `/api/tags/{id}/rules/l2` | Get L2 (state profile) rule |
+| `POST` | `/api/tags/{id}/rules/l2` | Create or replace L2 rule |
+| `PUT` | `/api/tags/{id}/rules/l2` | Partial update L2 rule |
+| `DELETE` | `/api/tags/{id}/rules/l2` | Delete L2 rule |
+
+## Testing & Linting
+
+```bash
+# Backend tests (pytest)
+cd server && uv run pytest tests/ -v
+
+# Frontend lint
+cd client && npm run lint
+
+# Frontend type-check + build
+cd client && npm run build
+```
+
+## Deployment
+
+The project includes Azure Developer CLI (`azd`) configuration for deploying to Azure:
+
+```bash
+azd up        # Provision infrastructure + deploy app
+azd deploy    # Deploy code changes only (infra already exists)
+```
+
+Infrastructure is defined as **Bicep** templates in `azure/`. See `azure.yaml` for the full configuration.
+
 ## Project Structure
 
 ```
 ot-tag-registry/
+├── azure/           # Bicep infrastructure-as-code templates
 ├── client/          # React + Vite + TypeScript frontend
 ├── server/          # Python (FastAPI) backend API (standalone deployable)
-└── services/        # Local-only setup tools (not deployed)
-    ├── database/    # Cosmos DB container creation + data seeding
-    ├── search/      # Azure AI Search (vector index)
-    └── language/    # Language normalisation (optional)
+│   ├── src/
+│   │   ├── routes/      # API endpoints (tags, assets, sources, rules, suggest-name)
+│   │   ├── models/      # Pydantic data models
+│   │   ├── utils/       # Cosmos DB client (db.py) + AI Search client (search.py)
+│   │   └── validators/  # Naming schema validator
+│   └── tests/           # Pytest suite with mocked Cosmos repos
+├── services/        # Local-only setup tools (not deployed)
+│   ├── database/    # Cosmos DB container creation + data seeding
+│   ├── search/      # Azure AI Search index creation + golden tag seeding
+│   └── language/    # Language normalisation
+├── skills/          # Copilot agent skill definitions
+└── excalidraw/      # Architecture diagrams
 ```
 
 ## Roadmap
