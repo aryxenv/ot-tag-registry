@@ -9,6 +9,8 @@ export type Criticality = "low" | "medium" | "high" | "critical";
 
 export type TagStatus = "active" | "retired" | "draft";
 
+export type ApprovalStatus = "none" | "pending" | "approved" | "rejected";
+
 export interface Tag {
   id: string;
   name: string;
@@ -20,6 +22,8 @@ export interface Tag {
   status: TagStatus;
   assetId: string;
   sourceId: string | null;
+  approvalStatus: ApprovalStatus;
+  rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
 }
