@@ -3,12 +3,16 @@ import {
   Input,
   Dropdown,
   Option,
+  Button,
+  Tooltip,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { SearchRegular } from "@fluentui/react-icons";
+import { SearchRegular, ArrowClockwiseRegular } from "@fluentui/react-icons";
 import type { TagStatus } from "../types/tag";
 import type { Asset } from "../types/asset";
+
+const ALL_SENTINEL = "__all__";
 
 export interface TagFilterValues {
   search: string;
@@ -21,6 +25,7 @@ export interface TagFilterValues {
 interface TagFiltersProps {
   filters: TagFilterValues;
   onFiltersChange: (filters: TagFilterValues) => void;
+  onRefresh: () => void;
   assets: Asset[];
 }
 
@@ -37,14 +42,14 @@ const useStyles = makeStyles({
   },
 });
 
-const STATUS_OPTIONS: { value: TagStatus | ""; label: string }[] = [
-  { value: "", label: "All statuses" },
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: ALL_SENTINEL, label: "All statuses" },
   { value: "active", label: "Active" },
   { value: "draft", label: "Draft" },
   { value: "retired", label: "Retired" },
 ];
 
-export default function TagFilters({ filters, onFiltersChange, assets }: TagFiltersProps) {
+export default function TagFilters({ filters, onFiltersChange, onRefresh, assets }: TagFiltersProps) {
   const styles = useStyles();
   const [searchInput, setSearchInput] = useState(filters.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,11 +92,11 @@ export default function TagFilters({ filters, onFiltersChange, assets }: TagFilt
       <Dropdown
         className={styles.field}
         placeholder="All statuses"
-        value={STATUS_OPTIONS.find((o) => o.value === filters.status)?.label ?? "All statuses"}
-        selectedOptions={[filters.status]}
-        onOptionSelect={(_e, data) =>
-          onFiltersChange({ ...filters, status: (data.optionValue as TagStatus | "") ?? "" })
-        }
+        selectedOptions={[filters.status || ALL_SENTINEL]}
+        onOptionSelect={(_e, data) => {
+          const val = data.optionValue === ALL_SENTINEL ? "" : (data.optionValue as TagStatus | "");
+          onFiltersChange({ ...filters, status: val ?? "" });
+        }}
       >
         {STATUS_OPTIONS.map((opt) => (
           <Option key={opt.value} value={opt.value}>
@@ -103,18 +108,17 @@ export default function TagFilters({ filters, onFiltersChange, assets }: TagFilt
       <Dropdown
         className={styles.field}
         placeholder="All sites"
-        value={filters.site || "All sites"}
-        selectedOptions={[filters.site]}
+        selectedOptions={[filters.site || ALL_SENTINEL]}
         onOptionSelect={(_e, data) =>
           onFiltersChange({
             ...filters,
-            site: data.optionValue ?? "",
+            site: data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
             line: "",
             equipment: "",
           })
         }
       >
-        <Option value="">All sites</Option>
+        <Option value={ALL_SENTINEL}>All sites</Option>
         {uniqueSites.map((site) => (
           <Option key={site} value={site}>
             {site}
@@ -126,17 +130,16 @@ export default function TagFilters({ filters, onFiltersChange, assets }: TagFilt
         className={styles.field}
         placeholder="All lines"
         disabled={!filters.site}
-        value={filters.line || "All lines"}
-        selectedOptions={[filters.line]}
+        selectedOptions={[filters.line || ALL_SENTINEL]}
         onOptionSelect={(_e, data) =>
           onFiltersChange({
             ...filters,
-            line: data.optionValue ?? "",
+            line: data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
             equipment: "",
           })
         }
       >
-        <Option value="">All lines</Option>
+        <Option value={ALL_SENTINEL}>All lines</Option>
         {uniqueLines.map((line) => (
           <Option key={line} value={line}>
             {line}
@@ -148,22 +151,29 @@ export default function TagFilters({ filters, onFiltersChange, assets }: TagFilt
         className={styles.field}
         placeholder="All equipment"
         disabled={!filters.line}
-        value={filters.equipment || "All equipment"}
-        selectedOptions={[filters.equipment]}
+        selectedOptions={[filters.equipment || ALL_SENTINEL]}
         onOptionSelect={(_e, data) =>
           onFiltersChange({
             ...filters,
-            equipment: data.optionValue ?? "",
+            equipment: data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
           })
         }
       >
-        <Option value="">All equipment</Option>
+        <Option value={ALL_SENTINEL}>All equipment</Option>
         {uniqueEquipment.map((eq) => (
           <Option key={eq} value={eq}>
             {eq}
           </Option>
         ))}
       </Dropdown>
+
+      <Tooltip content="Refresh" relationship="label">
+        <Button
+          appearance="subtle"
+          icon={<ArrowClockwiseRegular />}
+          onClick={onRefresh}
+        />
+      </Tooltip>
     </div>
   );
 }
