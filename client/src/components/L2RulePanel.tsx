@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import {
   makeStyles,
   tokens,
-  Field,
-  Input,
-  Dropdown,
-  Option,
   Button,
   Accordion,
   AccordionItem,
@@ -21,62 +17,25 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
 } from "@fluentui/react-components";
 import {
-  AddRegular,
   DeleteRegular,
-  DismissRegular,
   SaveRegular,
   DataUsageRegular,
 } from "@fluentui/react-icons";
 import { useL2Rule } from "../hooks/useL2Rule";
-import type {
-  OperationalState,
-  ConditionOperator,
-  StateMapping,
-  CreateL2Rule,
-} from "../types/rule";
+import { useSaveL2Rule, useDeleteL2Rule } from "../hooks/useSaveL2Rule";
+import type { CreateL2Rule, StateMapping } from "../types/rule";
+import L2RuleFields, {
+  type RowState,
+  EMPTY_ROW,
+  rowFromMapping,
+  rowToMapping,
+} from "./L2RuleFields";
 
 interface L2RulePanelProps {
   tagId: string;
 }
-
-const STATE_OPTIONS: { value: OperationalState; label: string }[] = [
-  { value: "Running", label: "Running" },
-  { value: "Idle", label: "Idle" },
-  { value: "Stop", label: "Stop" },
-];
-
-const OPERATOR_OPTIONS: { value: ConditionOperator; label: string }[] = [
-  { value: ">", label: ">" },
-  { value: ">=", label: "≥" },
-  { value: "<", label: "<" },
-  { value: "<=", label: "≤" },
-  { value: "==", label: "==" },
-  { value: "!=", label: "!=" },
-  { value: "between", label: "Between" },
-];
-
-interface RowState {
-  state: OperationalState;
-  conditionField: string;
-  conditionOperator: ConditionOperator;
-  conditionValue: string;
-  conditionValueHigh: string; // second value for "between"
-  rangeMin: string;
-  rangeMax: string;
-}
-
-const EMPTY_ROW: RowState = {
-  state: "Running",
-  conditionField: "",
-  conditionOperator: ">",
-  conditionValue: "",
-  conditionValueHigh: "",
-  rangeMin: "",
-  rangeMax: "",
-};
 
 const useStyles = makeStyles({
   panel: {
@@ -85,31 +44,6 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalM,
     paddingTop: tokens.spacingVerticalM,
     paddingBottom: tokens.spacingVerticalM,
-  },
-  mappingCard: {
-    display: "flex",
-    flexDirection: "column",
-    gap: tokens.spacingVerticalS,
-    padding: tokens.spacingHorizontalM,
-    borderRadius: tokens.borderRadiusMedium,
-    backgroundColor: tokens.colorNeutralBackground2,
-  },
-  mappingHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  row: {
-    display: "flex",
-    gap: tokens.spacingHorizontalM,
-  },
-  field: {
-    flex: 1,
-    minWidth: 0,
-  },
-  narrowField: {
-    flex: 0,
-    minWidth: "120px",
   },
   actions: {
     display: "flex",
@@ -129,51 +63,11 @@ const useStyles = makeStyles({
   },
 });
 
-function rowFromMapping(m: StateMapping): RowState {
-  const isBetween = m.conditionOperator === "between";
-  return {
-    state: m.state,
-    conditionField: m.conditionField,
-    conditionOperator: m.conditionOperator,
-    conditionValue: isBetween
-      ? String((m.conditionValue as [number, number])[0])
-      : String(m.conditionValue),
-    conditionValueHigh: isBetween
-      ? String((m.conditionValue as [number, number])[1])
-      : "",
-    rangeMin: m.rangeMin != null ? String(m.rangeMin) : "",
-    rangeMax: m.rangeMax != null ? String(m.rangeMax) : "",
-  };
-}
-
-function rowToMapping(r: RowState): StateMapping | null {
-  if (!r.conditionField.trim()) return null;
-  const val = Number(r.conditionValue);
-  if (isNaN(val) && r.conditionOperator !== "between") return null;
-
-  let conditionValue: number | [number, number];
-  if (r.conditionOperator === "between") {
-    const low = Number(r.conditionValue);
-    const high = Number(r.conditionValueHigh);
-    if (isNaN(low) || isNaN(high)) return null;
-    conditionValue = [low, high];
-  } else {
-    conditionValue = val;
-  }
-
-  return {
-    state: r.state,
-    conditionField: r.conditionField.trim(),
-    conditionOperator: r.conditionOperator,
-    conditionValue,
-    rangeMin: r.rangeMin.trim() !== "" ? Number(r.rangeMin) : null,
-    rangeMax: r.rangeMax.trim() !== "" ? Number(r.rangeMax) : null,
-  };
-}
-
 export default function L2RulePanel({ tagId }: L2RulePanelProps) {
   const styles = useStyles();
-  const { rule, loading, error, refetch } = useL2Rule(tagId);
+  const { rule, loading, error } = useL2Rule(tagId);
+  const saveL2Rule = useSaveL2Rule();
+  const deleteL2Rule = useDeleteL2Rule();
 
   const [rows, setRows] = useState<RowState[]>([{ ...EMPTY_ROW }]);
   const [saving, setSaving] = useState(false);
@@ -191,22 +85,6 @@ export default function L2RulePanel({ tagId }: L2RulePanelProps) {
       setAttempted(false);
     }
   }, [rule]);
-
-  const updateRow = (
-    index: number,
-    field: keyof RowState,
-    value: string,
-  ) => {
-    setRows((prev) =>
-      prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)),
-    );
-  };
-
-  const addRow = () => setRows((prev) => [...prev, { ...EMPTY_ROW }]);
-
-  const removeRow = (index: number) => {
-    setRows((prev) => prev.filter((_, i) => i !== index));
-  };
 
   const validateRows = (): StateMapping[] | null => {
     const mappings: StateMapping[] = [];
@@ -236,19 +114,8 @@ export default function L2RulePanel({ tagId }: L2RulePanelProps) {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/tags/${tagId}/rules/l2`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => null);
-        throw new Error(
-          errBody?.detail?.error ?? errBody?.detail ?? "Failed to save L2 rule",
-        );
-      }
+      await saveL2Rule.mutateAsync({ tagId, data: body });
       setFeedback({ intent: "success", message: "L2 rule saved." });
-      refetch();
     } catch (err: unknown) {
       setFeedback({
         intent: "error",
@@ -264,16 +131,10 @@ export default function L2RulePanel({ tagId }: L2RulePanelProps) {
     setFeedback(null);
     setSaving(true);
     try {
-      const res = await fetch(`/api/tags/${tagId}/rules/l2`, {
-        method: "DELETE",
-      });
-      if (!res.ok && res.status !== 204) {
-        throw new Error("Failed to delete L2 rule");
-      }
+      await deleteL2Rule.mutateAsync(tagId);
       setRows([{ ...EMPTY_ROW }]);
       setAttempted(false);
       setFeedback({ intent: "success", message: "L2 rule deleted." });
-      refetch();
     } catch (err: unknown) {
       setFeedback({
         intent: "error",
@@ -318,189 +179,11 @@ export default function L2RulePanel({ tagId }: L2RulePanelProps) {
                 </Text>
               )}
 
-              {rows.map((row, index) => (
-                <div key={index}>
-                  {index > 0 && <Divider />}
-                  <div className={styles.mappingCard}>
-                    <div className={styles.mappingHeader}>
-                      <Text weight="semibold">
-                        State mapping {index + 1}
-                      </Text>
-                      {rows.length > 1 && (
-                        <Button
-                          appearance="subtle"
-                          icon={<DismissRegular />}
-                          size="small"
-                          onClick={() => removeRow(index)}
-                        />
-                      )}
-                    </div>
-
-                    {/* Row 1: State + Condition field */}
-                    <div className={styles.row}>
-                      <Field className={styles.narrowField} label="State">
-                        <Dropdown
-                          value={
-                            STATE_OPTIONS.find((o) => o.value === row.state)
-                              ?.label ?? "Running"
-                          }
-                          selectedOptions={[row.state]}
-                          onOptionSelect={(_e, data) =>
-                            updateRow(
-                              index,
-                              "state",
-                              data.optionValue ?? "Running",
-                            )
-                          }
-                        >
-                          {STATE_OPTIONS.map((opt) => (
-                            <Option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </Option>
-                          ))}
-                        </Dropdown>
-                      </Field>
-                      <Field
-                        className={styles.field}
-                        label="Condition field"
-                        validationState={
-                          attempted && !row.conditionField.trim()
-                            ? "error"
-                            : undefined
-                        }
-                        validationMessage={
-                          attempted && !row.conditionField.trim()
-                            ? "Required"
-                            : undefined
-                        }
-                      >
-                        <Input
-                          value={row.conditionField}
-                          onChange={(_e, data) =>
-                            updateRow(index, "conditionField", data.value)
-                          }
-                          placeholder="e.g. SpindleSpeed"
-                        />
-                      </Field>
-                    </div>
-
-                    {/* Row 2: Operator + Condition value(s) */}
-                    <div className={styles.row}>
-                      <Field className={styles.narrowField} label="Operator">
-                        <Dropdown
-                          value={
-                            OPERATOR_OPTIONS.find(
-                              (o) => o.value === row.conditionOperator,
-                            )?.label ?? ">"
-                          }
-                          selectedOptions={[row.conditionOperator]}
-                          onOptionSelect={(_e, data) =>
-                            updateRow(
-                              index,
-                              "conditionOperator",
-                              data.optionValue ?? ">",
-                            )
-                          }
-                        >
-                          {OPERATOR_OPTIONS.map((opt) => (
-                            <Option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </Option>
-                          ))}
-                        </Dropdown>
-                      </Field>
-                      <Field
-                        className={styles.field}
-                        label={
-                          row.conditionOperator === "between"
-                            ? "Low value"
-                            : "Value"
-                        }
-                        validationState={
-                          attempted && !row.conditionValue.trim()
-                            ? "error"
-                            : undefined
-                        }
-                        validationMessage={
-                          attempted && !row.conditionValue.trim()
-                            ? "Required"
-                            : undefined
-                        }
-                      >
-                        <Input
-                          type="number"
-                          value={row.conditionValue}
-                          onChange={(_e, data) =>
-                            updateRow(index, "conditionValue", data.value)
-                          }
-                          placeholder="e.g. 500"
-                        />
-                      </Field>
-                      {row.conditionOperator === "between" && (
-                        <Field
-                          className={styles.field}
-                          label="High value"
-                          validationState={
-                            attempted && !row.conditionValueHigh.trim()
-                              ? "error"
-                              : undefined
-                          }
-                          validationMessage={
-                            attempted && !row.conditionValueHigh.trim()
-                              ? "Required"
-                              : undefined
-                          }
-                        >
-                          <Input
-                            type="number"
-                            value={row.conditionValueHigh}
-                            onChange={(_e, data) =>
-                              updateRow(
-                                index,
-                                "conditionValueHigh",
-                                data.value,
-                              )
-                            }
-                            placeholder="e.g. 1500"
-                          />
-                        </Field>
-                      )}
-                    </div>
-
-                    {/* Row 3: Range min + Range max */}
-                    <div className={styles.row}>
-                      <Field className={styles.field} label="Range min">
-                        <Input
-                          type="number"
-                          value={row.rangeMin}
-                          onChange={(_e, data) =>
-                            updateRow(index, "rangeMin", data.value)
-                          }
-                          placeholder="Expected min"
-                        />
-                      </Field>
-                      <Field className={styles.field} label="Range max">
-                        <Input
-                          type="number"
-                          value={row.rangeMax}
-                          onChange={(_e, data) =>
-                            updateRow(index, "rangeMax", data.value)
-                          }
-                          placeholder="Expected max"
-                        />
-                      </Field>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                appearance="outline"
-                icon={<AddRegular />}
-                onClick={addRow}
-              >
-                Add State Mapping
-              </Button>
+              <L2RuleFields
+                rows={rows}
+                onRowsChange={setRows}
+                attempted={attempted}
+              />
 
               <div className={styles.actions}>
                 <Button

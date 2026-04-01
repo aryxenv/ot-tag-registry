@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import {
   makeStyles,
   tokens,
-  Field,
-  Input,
-  Dropdown,
-  Option,
   Button,
   Accordion,
   AccordionItem,
@@ -28,18 +24,13 @@ import {
   ShieldCheckmarkRegular,
 } from "@fluentui/react-icons";
 import { useL1Rule } from "../hooks/useL1Rule";
+import { useSaveL1Rule, useDeleteL1Rule } from "../hooks/useSaveL1Rule";
 import type { MissingDataPolicy, CreateL1Rule } from "../types/rule";
+import L1RuleFields from "./L1RuleFields";
 
 interface L1RulePanelProps {
   tagId: string;
 }
-
-const MISSING_DATA_OPTIONS: { value: MissingDataPolicy; label: string }[] = [
-  { value: "alert", label: "Alert" },
-  { value: "ignore", label: "Ignore" },
-  { value: "interpolate", label: "Interpolate" },
-  { value: "last-known", label: "Last Known" },
-];
 
 const useStyles = makeStyles({
   panel: {
@@ -48,14 +39,6 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalM,
     paddingTop: tokens.spacingVerticalM,
     paddingBottom: tokens.spacingVerticalM,
-  },
-  row: {
-    display: "flex",
-    gap: tokens.spacingHorizontalL,
-  },
-  halfField: {
-    flex: 1,
-    minWidth: 0,
   },
   actions: {
     display: "flex",
@@ -77,7 +60,9 @@ const useStyles = makeStyles({
 
 export default function L1RulePanel({ tagId }: L1RulePanelProps) {
   const styles = useStyles();
-  const { rule, loading, error, refetch } = useL1Rule(tagId);
+  const { rule, loading, error } = useL1Rule(tagId);
+  const saveL1Rule = useSaveL1Rule();
+  const deleteL1Rule = useDeleteL1Rule();
 
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
@@ -141,19 +126,8 @@ export default function L1RulePanel({ tagId }: L1RulePanelProps) {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/tags/${tagId}/rules/l1`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => null);
-        throw new Error(
-          errBody?.detail?.error ?? errBody?.detail ?? "Failed to save L1 rule",
-        );
-      }
+      await saveL1Rule.mutateAsync({ tagId, data: body });
       setFeedback({ intent: "success", message: "L1 rule saved." });
-      refetch();
     } catch (err: unknown) {
       setFeedback({
         intent: "error",
@@ -169,19 +143,13 @@ export default function L1RulePanel({ tagId }: L1RulePanelProps) {
     setFeedback(null);
     setSaving(true);
     try {
-      const res = await fetch(`/api/tags/${tagId}/rules/l1`, {
-        method: "DELETE",
-      });
-      if (!res.ok && res.status !== 204) {
-        throw new Error("Failed to delete L1 rule");
-      }
+      await deleteL1Rule.mutateAsync(tagId);
       setMin("");
       setMax("");
       setSpikeThreshold("");
       setMissingDataPolicy("alert");
       setAttempted(false);
       setFeedback({ intent: "success", message: "L1 rule deleted." });
-      refetch();
     } catch (err: unknown) {
       setFeedback({
         intent: "error",
@@ -226,82 +194,17 @@ export default function L1RulePanel({ tagId }: L1RulePanelProps) {
                 </Text>
               )}
 
-              <div className={styles.row}>
-                <Field
-                  className={styles.halfField}
-                  label="Min value"
-                  validationState={
-                    attempted && !hasAtLeastOneThreshold ? "error" : undefined
-                  }
-                >
-                  <Input
-                    type="number"
-                    value={min}
-                    onChange={(_e, data) => setMin(data.value)}
-                    placeholder="e.g. 0"
-                  />
-                </Field>
-                <Field
-                  className={styles.halfField}
-                  label="Max value"
-                  validationState={
-                    attempted && !hasAtLeastOneThreshold ? "error" : undefined
-                  }
-                >
-                  <Input
-                    type="number"
-                    value={max}
-                    onChange={(_e, data) => setMax(data.value)}
-                    placeholder="e.g. 100"
-                  />
-                </Field>
-              </div>
-
-              <div className={styles.row}>
-                <Field
-                  className={styles.halfField}
-                  label="Spike threshold"
-                  validationState={
-                    attempted && !hasAtLeastOneThreshold ? "error" : undefined
-                  }
-                  validationMessage={
-                    attempted && !hasAtLeastOneThreshold
-                      ? "Set at least one threshold"
-                      : undefined
-                  }
-                >
-                  <Input
-                    type="number"
-                    value={spikeThreshold}
-                    onChange={(_e, data) => setSpikeThreshold(data.value)}
-                    placeholder="e.g. 10"
-                  />
-                </Field>
-                <Field
-                  className={styles.halfField}
-                  label="Missing data policy"
-                >
-                  <Dropdown
-                    value={
-                      MISSING_DATA_OPTIONS.find(
-                        (o) => o.value === missingDataPolicy,
-                      )?.label ?? "Alert"
-                    }
-                    selectedOptions={[missingDataPolicy]}
-                    onOptionSelect={(_e, data) =>
-                      setMissingDataPolicy(
-                        (data.optionValue as MissingDataPolicy) ?? "alert",
-                      )
-                    }
-                  >
-                    {MISSING_DATA_OPTIONS.map((opt) => (
-                      <Option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </Option>
-                    ))}
-                  </Dropdown>
-                </Field>
-              </div>
+              <L1RuleFields
+                min={min}
+                max={max}
+                spikeThreshold={spikeThreshold}
+                missingDataPolicy={missingDataPolicy}
+                onMinChange={setMin}
+                onMaxChange={setMax}
+                onSpikeThresholdChange={setSpikeThreshold}
+                onMissingDataPolicyChange={setMissingDataPolicy}
+                attempted={attempted}
+              />
 
               <div className={styles.actions}>
                 <Button
