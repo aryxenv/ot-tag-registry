@@ -2,5 +2,6 @@ azure-cosmos
 azure-identity
 azure-search-documents
 azure-ai-projects
+openai
 python-dotenv
 pydantic
