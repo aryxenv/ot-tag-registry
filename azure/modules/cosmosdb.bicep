@@ -7,6 +7,9 @@ param accountName string
 @description('Database name')
 param databaseName string
 
+@description('Principal ID to assign Cosmos DB data plane access')
+param principalId string
+
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   name: accountName
   location: location
@@ -62,6 +65,17 @@ resource sqlContainers 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/conta
     }
   }
 ]
+
+// Cosmos DB Built-in Data Contributor — data plane access via DefaultAzureCredential
+resource cosmosDataContributor 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  parent: cosmosAccount
+  name: guid(cosmosAccount.id, principalId, '00000000-0000-0000-0000-000000000002')
+  properties: {
+    principalId: principalId
+    roleDefinitionId: '${cosmosAccount.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+    scope: cosmosAccount.id
+  }
+}
 
 output endpoint string = cosmosAccount.properties.documentEndpoint
 output databaseName string = databaseName
