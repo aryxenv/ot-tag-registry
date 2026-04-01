@@ -77,6 +77,11 @@ class FakeRepository:
                 or term in i.get("description", "").lower()
             ]
 
+        # Filter by STARTSWITH on name (for next-available-name)
+        if "@prefix" in params:
+            prefix = params["@prefix"]
+            items = [i for i in items if i.get("name", "").startswith(prefix)]
+
         return items
 
     def update(self, item_id: str, partition_key: str, updates: dict) -> dict:
@@ -130,6 +135,7 @@ def client():
         patch("src.routes.rules.get_tags_repo", return_value=_fake_tags_repo),
         patch("src.routes.rules.get_l1_rules_repo", return_value=_fake_l1_rules_repo),
         patch("src.routes.rules.get_l2_rules_repo", return_value=_fake_l2_rules_repo),
+        patch("src.routes.tag_names.get_tags_repo", return_value=_fake_tags_repo),
         patch("src.main.get_cosmos_client", return_value=MagicMock()),
     ):
         from src.main import app
@@ -165,7 +171,7 @@ def l2_rules_repo() -> FakeRepository:
 # -- Helpers -----------------------------------------------------------------
 
 VALID_TAG_PAYLOAD: dict[str, Any] = {
-    "name": "MUN.L2.PMP001.OutletPressure",
+    "name": "MUN.L2.PMP001.Pressure.Bar.1",
     "description": "Outlet pressure of pump 001",
     "unit": "bar",
     "datatype": "float",

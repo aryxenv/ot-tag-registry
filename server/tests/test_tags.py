@@ -51,7 +51,7 @@ class TestListTags:
     def test_list_excludes_retired_by_default(self, client, tags_repo):
         # Create a draft and a retired tag
         client.post("/api/tags", json=VALID_TAG_PAYLOAD)
-        retired_payload = {**VALID_TAG_PAYLOAD, "name": "MUN.L2.PMP002.RetiredTag"}
+        retired_payload = {**VALID_TAG_PAYLOAD, "name": "MUN.L2.PMP002.Pressure.Bar.1"}
         created = client.post("/api/tags", json=retired_payload).json()
         # Manually retire it in the fake repo
         tags_repo._store[created["id"]]["status"] = "retired"
@@ -70,7 +70,7 @@ class TestListTags:
 
     def test_list_filter_by_asset_id(self, client):
         client.post("/api/tags", json=VALID_TAG_PAYLOAD)
-        other = {**VALID_TAG_PAYLOAD, "name": "MUN.L2.PMP002.InletPressure", "assetId": "asset-999"}
+        other = {**VALID_TAG_PAYLOAD, "name": "MUN.L2.PMP002.Pressure.Pa.1", "assetId": "asset-999"}
         client.post("/api/tags", json=other)
 
         resp = client.get("/api/tags?assetId=asset-001")
@@ -157,7 +157,7 @@ class TestValidateNameEndpoint:
     def test_valid_name(self, client):
         resp = client.post(
             "/api/tags/validate-name",
-            json={"name": "MUN.L2.PMP001.OutletPressure"},
+            json={"name": "MUN.L2.PMP001.Pressure.Bar.1"},
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -177,7 +177,7 @@ class TestValidateNameEndpoint:
     def test_five_segment_valid(self, client):
         resp = client.post(
             "/api/tags/validate-name",
-            json={"name": "Munich.Line2.Pump001.Pressure.Discharge"},
+            json={"name": "Munich.Line2.Pump001.Pressure.Bar.1"},
         )
         assert resp.status_code == 200
         assert resp.json()["valid"] is True
