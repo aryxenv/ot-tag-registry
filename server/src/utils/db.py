@@ -27,6 +27,9 @@ COSMOS_DATABASE = os.environ.get("COSMOS_DATABASE", "ot-tag-registry")
 
 
 _cached_credential: DefaultAzureCredential | None = None
+_cached_client: CosmosClient | None = None
+_cached_database: DatabaseProxy | None = None
+_cached_containers: dict[str, ContainerProxy] = {}
 
 
 def _get_credential() -> DefaultAzureCredential:
@@ -39,31 +42,45 @@ def _get_credential() -> DefaultAzureCredential:
 
 
 def get_cosmos_client() -> CosmosClient:
-    """Create and return a Cosmos DB client.
+    """Return a cached Cosmos DB client.
 
     Uses ``DefaultAzureCredential`` by default (managed identity in Azure,
     Azure CLI / VS Code locally).  Falls back to ``COSMOS_KEY`` if set.
     """
+    global _cached_client
+    if _cached_client is not None:
+        return _cached_client
     if not COSMOS_ENDPOINT:
         logger.error("COSMOS_ENDPOINT must be set (endpoint=%r)", COSMOS_ENDPOINT)
         raise ValueError("COSMOS_ENDPOINT must be set")
     try:
         credential = _get_credential()
-        return CosmosClient(COSMOS_ENDPOINT, credential=credential)
+        _cached_client = CosmosClient(COSMOS_ENDPOINT, credential=credential)
+        return _cached_client
     except Exception as e:
         logger.error("Failed to connect to Cosmos DB at %s: %s", COSMOS_ENDPOINT, e)
         raise
 
 
 def get_database(client: CosmosClient | None = None) -> DatabaseProxy:
+    """Return a cached DatabaseProxy (ignores *client* when cache is warm)."""
+    global _cached_database
+    if _cached_database is not None:
+        return _cached_database
     if client is None:
         client = get_cosmos_client()
-    return client.get_database_client(COSMOS_DATABASE)
+    _cached_database = client.get_database_client(COSMOS_DATABASE)
+    return _cached_database
 
 
-def get_container(container_name: str, client: CosmosClient | None = None):
+def get_container(container_name: str, client: CosmosClient | None = None) -> ContainerProxy:
+    """Return a cached ContainerProxy for *container_name*."""
+    if container_name in _cached_containers:
+        return _cached_containers[container_name]
     db = get_database(client)
-    return db.get_container_client(container_name)
+    proxy = db.get_container_client(container_name)
+    _cached_containers[container_name] = proxy
+    return proxy
 
 
 # ---------------------------------------------------------------------------
