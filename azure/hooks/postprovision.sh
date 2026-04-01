@@ -3,6 +3,9 @@
 
 set -euo pipefail
 
+# Force Python to use UTF-8 on Windows (avoids cp1252 encoding errors)
+export PYTHONUTF8=1
+
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 # ---------------------------------------------------------------------------

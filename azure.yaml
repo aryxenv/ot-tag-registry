@@ -7,8 +7,16 @@ infra:
   path: azure
 hooks:
   preprovision:
-    shell: sh
-    run: azure/hooks/preprovision.sh
+    windows:
+      shell: pwsh
+      run: '& "C:/Program Files/Git/bin/bash.exe" azure/hooks/preprovision.sh'
+    posix:
+      shell: sh
+      run: azure/hooks/preprovision.sh
   postprovision:
-    shell: sh
-    run: azure/hooks/postprovision.sh
+    windows:
+      shell: pwsh
+      run: '& "C:/Program Files/Git/bin/bash.exe" azure/hooks/postprovision.sh'
+    posix:
+      shell: sh
+      run: azure/hooks/postprovision.sh
