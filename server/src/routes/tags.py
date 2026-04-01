@@ -166,7 +166,17 @@ async def update_tag(tag_id: str, body: UpdateTag) -> dict:
         if hasattr(value, "value"):
             updates[key] = value.value
 
-    return repo.update(tag_id, existing["assetId"], updates)
+    new_asset_id = updates.get("assetId")
+    old_asset_id = existing["assetId"]
+
+    # Partition key change: delete old doc and create new one
+    if new_asset_id and new_asset_id != old_asset_id:
+        existing.update(updates)
+        existing["updatedAt"] = datetime.now(timezone.utc).isoformat()
+        repo.hard_delete(tag_id, old_asset_id)
+        return repo.create(existing)
+
+    return repo.update(tag_id, old_asset_id, updates)
 
 
 @router.patch("/{tag_id}/retire", status_code=204)
