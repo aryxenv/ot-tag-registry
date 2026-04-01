@@ -14,7 +14,6 @@ Optional:
 import logging
 import os
 
-from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
@@ -45,10 +44,7 @@ class SearchServiceError(Exception):
 
 
 def _get_search_credential():
-    """Return AzureKeyCredential if SEARCH_API_KEY is set, else DefaultAzureCredential."""
-    api_key = os.environ.get("SEARCH_API_KEY", "")
-    if api_key:
-        return AzureKeyCredential(api_key)
+    """Return DefaultAzureCredential for AI Search access."""
     return DefaultAzureCredential()
 
 

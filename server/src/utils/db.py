@@ -23,27 +23,18 @@ from azure.identity import DefaultAzureCredential
 logger = logging.getLogger("cosmos")
 
 COSMOS_ENDPOINT = os.environ.get("COSMOS_ENDPOINT", "")
-COSMOS_KEY = os.environ.get("COSMOS_KEY", "")
 COSMOS_DATABASE = os.environ.get("COSMOS_DATABASE", "ot-tag-registry")
 
 
-_cached_credential: DefaultAzureCredential | str | None = None
+_cached_credential: DefaultAzureCredential | None = None
 
 
-def _get_credential() -> DefaultAzureCredential | str:
-    """Return an API key if COSMOS_KEY is set, otherwise DefaultAzureCredential.
-
-    The result is cached at module level so ``DefaultAzureCredential`` (which
-    probes multiple providers on first use) is only instantiated once.
-    """
+def _get_credential() -> DefaultAzureCredential:
+    """Return a cached DefaultAzureCredential instance."""
     global _cached_credential
     if _cached_credential is None:
-        if COSMOS_KEY:
-            logger.info("Using API key credential (COSMOS_KEY is set)")
-            _cached_credential = COSMOS_KEY
-        else:
-            logger.info("Using DefaultAzureCredential (managed identity)")
-            _cached_credential = DefaultAzureCredential()
+        logger.info("Using DefaultAzureCredential (managed identity / Azure CLI)")
+        _cached_credential = DefaultAzureCredential()
     return _cached_credential
 
 
