@@ -37,6 +37,7 @@ module cosmosDb 'modules/cosmosdb.bicep' = {
     location: location
     accountName: 'cosmos-${environmentName}'
     databaseName: cosmosDatabaseName
+    principalId: principalId
   }
 }
 
