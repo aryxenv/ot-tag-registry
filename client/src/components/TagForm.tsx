@@ -198,13 +198,13 @@ export default function TagForm({
     setForm((prev) => ({ ...prev, line: value, equipment: "" }));
   };
 
-  // --- Name validation on blur ---
-  const validateName = async () => {
+  // --- Name validation (called on blur and before submit) ---
+  const validateName = async (): Promise<boolean> => {
     const name = form.name.trim();
     if (!name) {
       setNameErrors([]);
       setNameValid(null);
-      return;
+      return false;
     }
     setNameValidating(true);
     try {
@@ -216,6 +216,7 @@ export default function TagForm({
       const data: ValidateNameResponse = await res.json();
       setNameValid(data.valid);
       setNameErrors(data.errors);
+      return data.valid;
     } catch {
       setNameErrors([
         {
@@ -226,6 +227,7 @@ export default function TagForm({
         },
       ]);
       setNameValid(false);
+      return false;
     } finally {
       setNameValidating(false);
     }
@@ -234,7 +236,9 @@ export default function TagForm({
   // --- Submit ---
   const handleSubmit = async () => {
     setAttempted(true);
+    setSubmitError(null);
 
+    // 1. Check required fields
     if (
       !form.name ||
       !form.description ||
@@ -245,10 +249,6 @@ export default function TagForm({
       setSubmitError("Please fill in all required fields.");
       return;
     }
-    if (nameValid === false) {
-      setSubmitError("Please fix the tag name errors before submitting.");
-      return;
-    }
     if (mode === "create" && !resolvedAsset) {
       setSubmitError(
         "Please select a valid asset (site, line, and equipment).",
@@ -256,11 +256,19 @@ export default function TagForm({
       return;
     }
 
+    // 2. Always validate the tag name before submitting
+    setSubmitting(true);
+    const isNameValid = await validateName();
+    if (!isNameValid) {
+      setSubmitError("Please fix the tag name errors before submitting.");
+      setSubmitting(false);
+      return;
+    }
+
+    // 3. Submit
     const assetId =
       mode === "edit" ? initialData!.assetId : resolvedAsset!.id;
 
-    setSubmitting(true);
-    setSubmitError(null);
     try {
       await onSubmit({
         name: form.name,
