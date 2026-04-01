@@ -4,11 +4,13 @@ import {
   Spinner,
   Text,
   Button,
+  ProgressBar,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
 import { AddRegular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTags } from "../hooks/useTags";
 import { useAssets } from "../hooks/useAssets";
 import TagFilters from "../components/TagFilters";
@@ -47,12 +49,25 @@ const initialFilters: TagFilterValues = {
 export default function TagListPage() {
   const styles = useStyles();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<TagFilterValues>(initialFilters);
 
-  const { assets, loading: assetsLoading } = useAssets();
+  const { assets, loading: assetsLoading, refreshing: assetsRefreshing } = useAssets();
 
-  // Derive assetId from site/line/equipment selection
-  const matchedAsset =
+  // Find all assets matching the current site/line/equipment filters
+  const matchedAssetIds = new Set(
+    assets
+      .filter((a) => {
+        if (filters.site && a.site !== filters.site) return false;
+        if (filters.line && a.line !== filters.line) return false;
+        if (filters.equipment && a.equipment !== filters.equipment) return false;
+        return true;
+      })
+      .map((a) => a.id),
+  );
+
+  // When all three are selected, pass the single assetId for an efficient partition-scoped query
+  const exactAsset =
     filters.site && filters.line && filters.equipment
       ? assets.find(
           (a) =>
@@ -64,17 +79,24 @@ export default function TagListPage() {
 
   const apiFilters: { status?: TagStatus; assetId?: string; search?: string } = {};
   if (filters.status) apiFilters.status = filters.status;
-  if (matchedAsset) apiFilters.assetId = matchedAsset.id;
+  if (exactAsset) apiFilters.assetId = exactAsset.id;
   if (filters.search) apiFilters.search = filters.search;
 
-  const { tags, loading: tagsLoading } = useTags(apiFilters);
+  const { tags: fetchedTags, loading: tagsLoading, refreshing: tagsRefreshing } = useTags(apiFilters);
+
+  // Client-side filtering for partial site/line/equipment selection
+  const hasPartialAssetFilter = !!(filters.site || filters.line || filters.equipment) && !exactAsset;
+  const tags = hasPartialAssetFilter
+    ? fetchedTags.filter((t) => matchedAssetIds.has(t.assetId))
+    : fetchedTags;
 
   const handleTagClick = (tagId: string) => {
-    navigate(`/tags/${tagId}`);
+    navigate(`/tags/${tagId}/edit`);
   };
 
-  const handleEditClick = (tagId: string) => {
-    navigate(`/tags/${tagId}/edit`);
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["tags"] });
+    queryClient.invalidateQueries({ queryKey: ["assets"] });
   };
 
   return (
@@ -89,7 +111,9 @@ export default function TagListPage() {
           Create Tag
         </Button>
       </div>
-      <TagFilters filters={filters} onFiltersChange={setFilters} assets={assets} />
+      <TagFilters filters={filters} onFiltersChange={setFilters} onRefresh={handleRefresh} assets={assets} />
+
+      {(tagsRefreshing || assetsRefreshing) && <ProgressBar />}
 
       {tagsLoading || assetsLoading ? (
         <div className={styles.center}>
@@ -100,7 +124,7 @@ export default function TagListPage() {
           <Text>No tags found. Try adjusting your filters.</Text>
         </div>
       ) : (
-        <TagTable tags={tags} assets={assets} onTagClick={handleTagClick} onEditClick={handleEditClick} />
+        <TagTable tags={tags} assets={assets} onTagClick={handleTagClick} />
       )}
     </div>
   );
