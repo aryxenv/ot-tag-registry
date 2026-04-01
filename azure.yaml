@@ -7,8 +7,8 @@ infra:
   path: azure
 hooks:
   preprovision:
-    shell: pwsh
-    run: azure/hooks/preprovision.ps1
+    shell: sh
+    run: azure/hooks/preprovision.sh
   postprovision:
-    shell: pwsh
-    run: azure/hooks/postprovision.ps1
+    shell: sh
+    run: azure/hooks/postprovision.sh
