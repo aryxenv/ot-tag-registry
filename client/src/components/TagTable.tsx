@@ -33,11 +33,18 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
   },
-  description: {
+  truncateCell: {
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    maxWidth: "250px",
+    display: "block",
+  },
+  nameCell: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    display: "block",
+    fontWeight: tokens.fontWeightSemibold,
   },
   pagination: {
     display: "flex",
@@ -46,9 +53,6 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalM,
     paddingTop: tokens.spacingVerticalM,
     paddingBottom: tokens.spacingVerticalM,
-  },
-  nameCell: {
-    fontWeight: tokens.fontWeightSemibold,
   },
 });
 
@@ -71,14 +75,14 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
       compare: (a, b) => a.name.localeCompare(b.name),
       renderHeaderCell: () => "Name",
       renderCell: (item) => (
-        <span className={styles.nameCell}>{item.name}</span>
+        <span className={styles.nameCell} title={item.name}>{item.name}</span>
       ),
     }),
     createTableColumn<Tag>({
       columnId: "description",
       renderHeaderCell: () => "Description",
       renderCell: (item) => (
-        <span className={styles.description} title={item.description}>
+        <span className={styles.truncateCell} title={item.description}>
           {item.description}
         </span>
       ),
@@ -88,7 +92,8 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
       renderHeaderCell: () => "Asset",
       renderCell: (item) => {
         const asset = assetMap.get(item.assetId);
-        return asset ? asset.hierarchy : item.assetId;
+        const text = asset ? asset.hierarchy : item.assetId;
+        return <span className={styles.truncateCell} title={text}>{text}</span>;
       },
     }),
     createTableColumn<Tag>({
@@ -136,6 +141,16 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
       : []),
   ];
 
+  const columnSizingOptions = {
+    name: { idealWidth: 240, minWidth: 150 },
+    description: { idealWidth: 280, minWidth: 150 },
+    asset: { idealWidth: 200, minWidth: 120 },
+    status: { idealWidth: 90, minWidth: 80 },
+    approval: { idealWidth: 100, minWidth: 80 },
+    criticality: { idealWidth: 100, minWidth: 80 },
+    actions: { idealWidth: 48, minWidth: 48 },
+  };
+
   const totalPages = Math.max(1, Math.ceil(tags.length / PAGE_SIZE));
   const pagedTags = tags.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -149,6 +164,8 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
         items={pagedTags}
         columns={columns}
         sortable
+        resizableColumns
+        columnSizingOptions={columnSizingOptions}
         onSortChange={handleSortChange}
         getRowId={(item) => item.id}
       >
