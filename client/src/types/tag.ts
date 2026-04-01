@@ -65,8 +65,3 @@ export interface ValidateNameResponse {
   valid: boolean;
   errors: NameValidationError[];
 }
-
-/** Response from POST /api/tags/suggest-name */
-export interface SuggestNameResponse {
-  suggestions: string[];
-}
