@@ -82,15 +82,13 @@ Required variables:
 | Variable                       | Description                                                                    |
 | ------------------------------ | ------------------------------------------------------------------------------ |
 | `COSMOS_ENDPOINT`              | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
-| `COSMOS_KEY`                   | Primary or secondary key — _optional if using `DefaultAzureCredential`_        |
 | `COSMOS_DATABASE`              | Database name (defaults to `ot-tag-registry`)                                  |
 | `SEARCH_ENDPOINT`              | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`)      |
-| `SEARCH_API_KEY`               | Search admin key — _optional if using `DefaultAzureCredential`_                |
 | `SEARCH_INDEX_NAME`            | Index name (defaults to `golden-tags`)                                         |
 | `PROJECT_ENDPOINT`             | Azure AI Foundry project endpoint                                              |
 | `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`)                |
 
-> **Authentication:** `DefaultAzureCredential` is used by default (managed identity in Azure, Azure CLI / VS Code locally). API keys are optional fallbacks.
+> **Authentication:** All services use `DefaultAzureCredential` (managed identity in Azure, Azure CLI / VS Code locally). No API keys are needed.
 
 The **services** layer needs its own env file with the same variables for setup scripts:
 
