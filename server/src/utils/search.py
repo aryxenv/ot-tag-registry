@@ -43,26 +43,41 @@ class SearchServiceError(Exception):
 # ---------------------------------------------------------------------------
 
 
-def _get_search_credential():
-    """Return DefaultAzureCredential for AI Search access."""
-    return DefaultAzureCredential()
+_cached_search_credential: DefaultAzureCredential | None = None
+_cached_search_client: SearchClient | None = None
+_cached_embeddings_client = None
+
+
+def _get_search_credential() -> DefaultAzureCredential:
+    """Return a cached DefaultAzureCredential for AI Search access."""
+    global _cached_search_credential
+    if _cached_search_credential is None:
+        _cached_search_credential = DefaultAzureCredential()
+    return _cached_search_credential
 
 
 def _get_search_client() -> SearchClient:
-    """Return a ``SearchClient`` pointed at the golden-tags index."""
+    """Return a cached ``SearchClient`` pointed at the golden-tags index."""
+    global _cached_search_client
+    if _cached_search_client is not None:
+        return _cached_search_client
     endpoint = os.environ.get("SEARCH_ENDPOINT", "")
     index_name = os.environ.get("SEARCH_INDEX_NAME", "golden-tags")
     if not endpoint:
         raise ValueError("SEARCH_ENDPOINT environment variable must be set")
-    return SearchClient(
+    _cached_search_client = SearchClient(
         endpoint=endpoint,
         index_name=index_name,
         credential=_get_search_credential(),
     )
+    return _cached_search_client
 
 
 def _get_embeddings_client():
-    """Return an Azure AI Foundry embeddings client."""
+    """Return a cached Azure AI Foundry embeddings client."""
+    global _cached_embeddings_client
+    if _cached_embeddings_client is not None:
+        return _cached_embeddings_client
     from azure.ai.projects import AIProjectClient
 
     project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
@@ -76,7 +91,8 @@ def _get_embeddings_client():
         endpoint=project_endpoint,
         credential=DefaultAzureCredential(),
     )
-    return project.inference.get_embeddings_client()
+    _cached_embeddings_client = project.inference.get_embeddings_client()
+    return _cached_embeddings_client
 
 
 # ---------------------------------------------------------------------------
