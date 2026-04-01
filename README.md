@@ -16,19 +16,19 @@ In most industrial operations, tag definitions — the names, rules, and metadat
 
 The OT Tag Registry gives **Site OT engineers** a single, governed application to:
 
-| Capability | Business Value |
-|---|---|
-| **Create / update / retire tags** | Every tag has a single source of truth with full lifecycle tracking |
-| **Define physical-truth rules as configuration** | L1 range checks (min/max, spike, missing-data) and L2 state profiles (Running/Idle/Stop) are set by engineers — no code changes needed |
-| **Enforce consistent naming automatically** | A deterministic validator ensures every tag follows the site naming schema — no more "creative" tag names |
-| **Get AI-powered name suggestions** | When creating a tag, the system suggests canonical names based on what already exists for that site/line/equipment — aligning new tags with established standards instantly |
-| **Request validation & approval** | Governance workflows ensure changes are reviewed before going live |
+| Capability                                       | Business Value                                                                                                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Create / update / retire tags**                | Every tag has a single source of truth with full lifecycle tracking                                                                                                         |
+| **Define physical-truth rules as configuration** | L1 range checks (min/max, spike, missing-data) and L2 state profiles (Running/Idle/Stop) are set by engineers — no code changes needed                                      |
+| **Enforce consistent naming automatically**      | A deterministic validator ensures every tag follows the site naming schema — no more "creative" tag names                                                                   |
+| **Get AI-powered name suggestions**              | When creating a tag, the system suggests canonical names based on what already exists for that site/line/equipment — aligning new tags with established standards instantly |
+| **Request validation & approval**                | Governance workflows ensure changes are reviewed before going live                                                                                                          |
 
 ## How AI Adds Value (Without Replacing Governance)
 
 The **"Suggest a Name"** feature uses **Azure AI Search** to recommend tag names based on semantic similarity to approved tags — filtered by the correct site, line, and equipment context. This means:
 
-- A new engineer typing *"outlet pressure sensor on main pump"* instantly sees the canonical name used across the organisation.
+- A new engineer typing _"outlet pressure sensor on main pump"_ instantly sees the canonical name used across the organisation.
 - Descriptions in different languages or wordings still map to the right standard name.
 - **AI assists; rules enforce.** Suggestions are always optional — the deterministic naming validator remains the final gate.
 
@@ -36,13 +36,13 @@ The **"Suggest a Name"** feature uses **Azure AI Search** to recommend tag names
 
 ## Key Data Objects
 
-| Object | Purpose |
-|---|---|
-| **Asset** | Organisational hierarchy — site → line → equipment |
-| **Tag** | The core entity — name, description, unit, datatype, sampling frequency, criticality |
-| **Source** | Where the data comes from — PLC, SCADA, Historian, connector, topic/path |
-| **L1 Rules (Range)** | Physical boundary checks — min/max, missing-data policy, spike threshold |
-| **L2 Rules (State Profile)** | Operational state mapping — Running/Idle/Stop with state-dependent ranges |
+| Object                       | Purpose                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| **Asset**                    | Organisational hierarchy — site → line → equipment                                   |
+| **Tag**                      | The core entity — name, description, unit, datatype, sampling frequency, criticality |
+| **Source**                   | Where the data comes from — PLC, SCADA, Historian, connector, topic/path             |
+| **L1 Rules (Range)**         | Physical boundary checks — min/max, missing-data policy, spike threshold             |
+| **L2 Rules (State Profile)** | Operational state mapping — Running/Idle/Stop with state-dependent ranges            |
 
 ## Architecture
 
@@ -81,16 +81,16 @@ cp server/.env.example server/.env
 
 Required variables:
 
-| Variable | Description |
-|---|---|
-| `COSMOS_ENDPOINT` | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
-| `COSMOS_KEY` | Primary or secondary key — *optional if using `DefaultAzureCredential`* |
-| `COSMOS_DATABASE` | Database name (defaults to `ot-tag-registry`) |
-| `SEARCH_ENDPOINT` | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`) |
-| `SEARCH_API_KEY` | Search admin key — *optional if using `DefaultAzureCredential`* |
-| `SEARCH_INDEX_NAME` | Index name (defaults to `golden-tags`) |
-| `PROJECT_ENDPOINT` | Azure AI Foundry project endpoint |
-| `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`) |
+| Variable                       | Description                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `COSMOS_ENDPOINT`              | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
+| `COSMOS_KEY`                   | Primary or secondary key — _optional if using `DefaultAzureCredential`_        |
+| `COSMOS_DATABASE`              | Database name (defaults to `ot-tag-registry`)                                  |
+| `SEARCH_ENDPOINT`              | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`)      |
+| `SEARCH_API_KEY`               | Search admin key — _optional if using `DefaultAzureCredential`_                |
+| `SEARCH_INDEX_NAME`            | Index name (defaults to `golden-tags`)                                         |
+| `PROJECT_ENDPOINT`             | Azure AI Foundry project endpoint                                              |
+| `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`)                |
 
 > **Authentication:** `DefaultAzureCredential` is used by default (managed identity in Azure, Azure CLI / VS Code locally). API keys are optional fallbacks.
 
@@ -128,7 +128,8 @@ This will:
 1. **Create the database and 5 containers** (`assets`, `tags`, `sources`, `l1Rules`, `l2Rules`) if they don't already exist
 2. **Upsert sample documents** — ~20 assets across 3 sites (Luxembourg, Brussels, Amsterdam), 6 data sources, ~35 tags, 27 L1 rules, and 5 L2 rules
 
-> **⚠️ This writes to your live Azure Cosmos DB instance.** The script uses upsert operations, so it's safe to re-run — it will overwrite existing seed documents rather than create duplicates. Make sure your `server/.env` has valid credentials before running.
+> [!WARNING]
+> This writes to your live Azure Cosmos DB instance. The script uses upsert operations, so it's safe to re-run — it will overwrite existing seed documents rather than create duplicates. Make sure your `server/.env` has valid credentials before running.
 
 ### Seed Azure AI Search Index
 
@@ -155,45 +156,45 @@ All endpoints are prefixed with `/api`.
 
 ### Tags
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/tags` | List tags (query params: `status`, `assetId`, `search`) |
-| `GET` | `/api/tags/{id}` | Get a single tag |
-| `POST` | `/api/tags` | Create a new tag (defaults to `draft` status) |
-| `PUT` | `/api/tags/{id}` | Partial update — only provided fields change |
-| `PATCH` | `/api/tags/{id}/retire` | Soft-delete (sets status to `retired`) |
-| `POST` | `/api/tags/validate-name` | Validate a name against the naming schema |
-| `POST` | `/api/tags/suggest-name` | AI-powered name suggestions via hybrid vector search |
-| `POST` | `/api/tags/{id}/request-approval` | Submit tag for governance approval |
-| `POST` | `/api/tags/{id}/approve` | Approve a pending tag |
-| `POST` | `/api/tags/{id}/reject` | Reject a pending tag (optional reason) |
+| Method  | Path                              | Description                                             |
+| ------- | --------------------------------- | ------------------------------------------------------- |
+| `GET`   | `/api/tags`                       | List tags (query params: `status`, `assetId`, `search`) |
+| `GET`   | `/api/tags/{id}`                  | Get a single tag                                        |
+| `POST`  | `/api/tags`                       | Create a new tag (defaults to `draft` status)           |
+| `PUT`   | `/api/tags/{id}`                  | Partial update — only provided fields change            |
+| `PATCH` | `/api/tags/{id}/retire`           | Soft-delete (sets status to `retired`)                  |
+| `POST`  | `/api/tags/validate-name`         | Validate a name against the naming schema               |
+| `POST`  | `/api/tags/suggest-name`          | AI-powered name suggestions via hybrid vector search    |
+| `POST`  | `/api/tags/{id}/request-approval` | Submit tag for governance approval                      |
+| `POST`  | `/api/tags/{id}/approve`          | Approve a pending tag                                   |
+| `POST`  | `/api/tags/{id}/reject`           | Reject a pending tag (optional reason)                  |
 
 ### Assets
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/assets` | List all assets |
+| Method | Path          | Description        |
+| ------ | ------------- | ------------------ |
+| `GET`  | `/api/assets` | List all assets    |
 | `POST` | `/api/assets` | Create a new asset |
 
 ### Sources
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/sources` | List all sources |
+| Method | Path           | Description         |
+| ------ | -------------- | ------------------- |
+| `GET`  | `/api/sources` | List all sources    |
 | `POST` | `/api/sources` | Create a new source |
 
 ### Rules
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/tags/{id}/rules/l1` | Get L1 (range) rule |
-| `POST` | `/api/tags/{id}/rules/l1` | Create or replace L1 rule |
-| `PUT` | `/api/tags/{id}/rules/l1` | Partial update L1 rule |
-| `DELETE` | `/api/tags/{id}/rules/l1` | Delete L1 rule |
-| `GET` | `/api/tags/{id}/rules/l2` | Get L2 (state profile) rule |
-| `POST` | `/api/tags/{id}/rules/l2` | Create or replace L2 rule |
-| `PUT` | `/api/tags/{id}/rules/l2` | Partial update L2 rule |
-| `DELETE` | `/api/tags/{id}/rules/l2` | Delete L2 rule |
+| Method   | Path                      | Description                 |
+| -------- | ------------------------- | --------------------------- |
+| `GET`    | `/api/tags/{id}/rules/l1` | Get L1 (range) rule         |
+| `POST`   | `/api/tags/{id}/rules/l1` | Create or replace L1 rule   |
+| `PUT`    | `/api/tags/{id}/rules/l1` | Partial update L1 rule      |
+| `DELETE` | `/api/tags/{id}/rules/l1` | Delete L1 rule              |
+| `GET`    | `/api/tags/{id}/rules/l2` | Get L2 (state profile) rule |
+| `POST`   | `/api/tags/{id}/rules/l2` | Create or replace L2 rule   |
+| `PUT`    | `/api/tags/{id}/rules/l2` | Partial update L2 rule      |
+| `DELETE` | `/api/tags/{id}/rules/l2` | Delete L2 rule              |
 
 ## Testing & Linting
 
