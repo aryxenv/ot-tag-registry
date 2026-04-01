@@ -35,20 +35,13 @@ logger = logging.getLogger("search.create_index")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
 SEARCH_ENDPOINT = os.environ.get("SEARCH_ENDPOINT", "")
-SEARCH_API_KEY = os.environ.get("SEARCH_API_KEY", "")
 SEARCH_INDEX_NAME = os.environ.get("SEARCH_INDEX_NAME", "golden-tags")
 
 VECTOR_DIMENSIONS = 3072  # text-embedding-3-large
 
 
 def _get_credential():
-    """Return AzureKeyCredential if SEARCH_API_KEY is set, else DefaultAzureCredential."""
-    if SEARCH_API_KEY:
-        from azure.core.credentials import AzureKeyCredential
-
-        logger.info("Using API key credential (SEARCH_API_KEY is set)")
-        return AzureKeyCredential(SEARCH_API_KEY)
-    logger.info("Using DefaultAzureCredential (managed identity)")
+    """Return DefaultAzureCredential for AI Search access."""
     return DefaultAzureCredential()
 
 

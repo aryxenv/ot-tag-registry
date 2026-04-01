@@ -7,7 +7,7 @@ the index.
 Prerequisites:
     1. Run ``create_index.py`` first to create the index schema.
     2. Set environment variables in ``services/.env``:
-       SEARCH_ENDPOINT, SEARCH_API_KEY (optional), SEARCH_INDEX_NAME,
+       SEARCH_ENDPOINT, SEARCH_INDEX_NAME,
        PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT
 
 Usage:
@@ -20,7 +20,6 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-from azure.core.credentials import AzureKeyCredential
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from dotenv import load_dotenv
@@ -32,7 +31,6 @@ logger = logging.getLogger("search.seed_index")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
 SEARCH_ENDPOINT = os.environ.get("SEARCH_ENDPOINT", "")
-SEARCH_API_KEY = os.environ.get("SEARCH_API_KEY", "")
 SEARCH_INDEX_NAME = os.environ.get("SEARCH_INDEX_NAME", "golden-tags")
 PROJECT_ENDPOINT = os.environ.get("PROJECT_ENDPOINT", "")
 PROJECT_EMBEDDING_DEPLOYMENT = os.environ.get("PROJECT_EMBEDDING_DEPLOYMENT", "")
@@ -42,9 +40,7 @@ _EMBED_BATCH_SIZE = 16
 
 
 def _get_search_credential():
-    """Return AzureKeyCredential if SEARCH_API_KEY is set, else DefaultAzureCredential."""
-    if SEARCH_API_KEY:
-        return AzureKeyCredential(SEARCH_API_KEY)
+    """Return DefaultAzureCredential for AI Search access."""
     return DefaultAzureCredential()
 
 

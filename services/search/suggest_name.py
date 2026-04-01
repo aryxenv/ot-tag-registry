@@ -21,7 +21,6 @@ import logging
 import os
 from pathlib import Path
 
-from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
@@ -36,7 +35,6 @@ logger = logging.getLogger("search.suggest_name")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
 SEARCH_ENDPOINT = os.environ.get("SEARCH_ENDPOINT", "")
-SEARCH_API_KEY = os.environ.get("SEARCH_API_KEY", "")
 SEARCH_INDEX_NAME = os.environ.get("SEARCH_INDEX_NAME", "golden-tags")
 PROJECT_ENDPOINT = os.environ.get("PROJECT_ENDPOINT", "")
 PROJECT_EMBEDDING_DEPLOYMENT = os.environ.get("PROJECT_EMBEDDING_DEPLOYMENT", "")
@@ -93,9 +91,7 @@ class SearchServiceError(Exception):
 
 
 def _get_search_credential():
-    """Return AzureKeyCredential if SEARCH_API_KEY is set, else DefaultAzureCredential."""
-    if SEARCH_API_KEY:
-        return AzureKeyCredential(SEARCH_API_KEY)
+    """Return DefaultAzureCredential for AI Search access."""
     return DefaultAzureCredential()
 
 
