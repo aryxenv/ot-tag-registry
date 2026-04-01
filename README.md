@@ -2,8 +2,6 @@
 
 **One place to create, govern, and standardise every sensor tag across your industrial sites.**
 
----
-
 ## The Problem
 
 In most industrial operations, tag definitions — the names, rules, and metadata that describe every sensor, actuator, and data point — live in **Excel sheets, email threads, and tribal knowledge**. This leads to:
@@ -240,3 +238,12 @@ ot-tag-registry/
 ├── skills/          # Copilot agent skill definitions
 └── excalidraw/      # Architecture diagrams
 ```
+
+## Disclaimer
+
+> [!WARNING]
+> This repository is provided for **demo, educational, and experimental purposes only**.
+> It is **not production‑ready** and **must not be used in production deployments**.
+> The author takes **no responsibility or liability** for any damage, data loss, costs,
+> or issues arising from the use of this code.
+> Use at your own risk.
