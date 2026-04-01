@@ -14,7 +14,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-1 Pump-001 ─────────────────────────────────────────────
     {
-        "tagName": "LUX.L1.PMP001.OutletPressure",
+        "tagName": "LUX.L1.PMP001.Pressure.Bar.1",
         "site": "LUX", "line": "L1", "equipment": "PMP001",
         "unit": "bar", "datatype": "float",
         "description": "Outlet pressure of primary coolant pump",
@@ -22,7 +22,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "pump discharge pressure head pressure",
     },
     {
-        "tagName": "LUX.L1.PMP001.FlowRate",
+        "tagName": "LUX.L1.PMP001.FlowRate.Lpm.1",
         "site": "LUX", "line": "L1", "equipment": "PMP001",
         "unit": "L/min", "datatype": "float",
         "description": "Volumetric flow rate of primary coolant pump",
@@ -30,7 +30,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "volumetric flow pump output liquid flow",
     },
     {
-        "tagName": "LUX.L1.PMP001.MotorCurrent",
+        "tagName": "LUX.L1.PMP001.Current.Amp.1",
         "site": "LUX", "line": "L1", "equipment": "PMP001",
         "unit": "A", "datatype": "float",
         "description": "Motor winding current draw of pump 001",
@@ -38,7 +38,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "winding current amp draw electrical current",
     },
     {
-        "tagName": "LUX.L1.PMP001.InletPressure",
+        "tagName": "LUX.L1.PMP001.Pressure.Bar.2",
         "site": "LUX", "line": "L1", "equipment": "PMP001",
         "unit": "bar", "datatype": "float",
         "description": "Suction inlet pressure of primary coolant pump",
@@ -48,7 +48,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-1 Motor-001 ────────────────────────────────────────────
     {
-        "tagName": "LUX.L1.MOT001.Speed",
+        "tagName": "LUX.L1.MOT001.Speed.Rpm.1",
         "site": "LUX", "line": "L1", "equipment": "MOT001",
         "unit": "RPM", "datatype": "float",
         "description": "Rotational speed of coolant pump drive motor",
@@ -56,7 +56,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "motor speed rotation shaft speed revolutions",
     },
     {
-        "tagName": "LUX.L1.MOT001.Temperature",
+        "tagName": "LUX.L1.MOT001.Temperature.Cel.1",
         "site": "LUX", "line": "L1", "equipment": "MOT001",
         "unit": "°C", "datatype": "float",
         "description": "Stator winding temperature of motor 001",
@@ -64,7 +64,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "motor temp winding temperature thermal",
     },
     {
-        "tagName": "LUX.L1.MOT001.PowerConsumption",
+        "tagName": "LUX.L1.MOT001.Power.KW.1",
         "site": "LUX", "line": "L1", "equipment": "MOT001",
         "unit": "kW", "datatype": "float",
         "description": "Active power consumption of motor 001",
@@ -72,7 +72,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "energy use power draw wattage electrical power",
     },
     {
-        "tagName": "LUX.L1.MOT001.VibrationLevel",
+        "tagName": "LUX.L1.MOT001.Vibration.Mms.1",
         "site": "LUX", "line": "L1", "equipment": "MOT001",
         "unit": "mm/s", "datatype": "float",
         "description": "Bearing vibration level of motor 001",
@@ -80,7 +80,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "vibration amplitude oscillation bearing vibration",
     },
     {
-        "tagName": "LUX.L1.MOT001.Torque",
+        "tagName": "LUX.L1.MOT001.Torque.Nm.1",
         "site": "LUX", "line": "L1", "equipment": "MOT001",
         "unit": "Nm", "datatype": "float",
         "description": "Output shaft torque of motor 001",
@@ -90,7 +90,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-2 Compressor-001 ───────────────────────────────────────
     {
-        "tagName": "LUX.L2.CMP001.DischargeTemp",
+        "tagName": "LUX.L2.CMP001.Temperature.Cel.1",
         "site": "LUX", "line": "L2", "equipment": "CMP001",
         "unit": "°C", "datatype": "float",
         "description": "Discharge temperature of instrument-air compressor",
@@ -98,7 +98,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "outlet temperature exhaust temp compressor discharge",
     },
     {
-        "tagName": "LUX.L2.CMP001.InletPressure",
+        "tagName": "LUX.L2.CMP001.Pressure.Bar.1",
         "site": "LUX", "line": "L2", "equipment": "CMP001",
         "unit": "bar", "datatype": "float",
         "description": "Inlet suction pressure of compressor 001",
@@ -106,7 +106,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "suction pressure intake pressure low-side pressure",
     },
     {
-        "tagName": "LUX.L2.CMP001.VibrationLevel",
+        "tagName": "LUX.L2.CMP001.Vibration.Mms.1",
         "site": "LUX", "line": "L2", "equipment": "CMP001",
         "unit": "mm/s", "datatype": "float",
         "description": "Bearing vibration level of compressor 001",
@@ -114,7 +114,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "vibration amplitude oscillation mechanical vibration",
     },
     {
-        "tagName": "LUX.L2.CMP001.OutletPressure",
+        "tagName": "LUX.L2.CMP001.Pressure.Bar.2",
         "site": "LUX", "line": "L2", "equipment": "CMP001",
         "unit": "bar", "datatype": "float",
         "description": "Discharge outlet pressure of compressor 001",
@@ -124,7 +124,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-2 HeatExchanger-001 ────────────────────────────────────
     {
-        "tagName": "LUX.L2.HEX001.InletTemp",
+        "tagName": "LUX.L2.HEX001.Temperature.Cel.1",
         "site": "LUX", "line": "L2", "equipment": "HEX001",
         "unit": "°C", "datatype": "float",
         "description": "Hot-side inlet temperature of heat exchanger 001",
@@ -132,7 +132,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "entry temperature incoming temp feed temperature",
     },
     {
-        "tagName": "LUX.L2.HEX001.OutletTemp",
+        "tagName": "LUX.L2.HEX001.Temperature.Cel.2",
         "site": "LUX", "line": "L2", "equipment": "HEX001",
         "unit": "°C", "datatype": "float",
         "description": "Hot-side outlet temperature of heat exchanger 001",
@@ -140,7 +140,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "exit temperature outgoing temp return temperature",
     },
     {
-        "tagName": "LUX.L2.HEX001.DifferentialPressure",
+        "tagName": "LUX.L2.HEX001.Pressure.Bar.1",
         "site": "LUX", "line": "L2", "equipment": "HEX001",
         "unit": "bar", "datatype": "float",
         "description": "Differential pressure across heat exchanger 001",
@@ -150,7 +150,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-3 Valve-001 ────────────────────────────────────────────
     {
-        "tagName": "LUX.L3.VLV001.Position",
+        "tagName": "LUX.L3.VLV001.Level.Pct.1",
         "site": "LUX", "line": "L3", "equipment": "VLV001",
         "unit": "%", "datatype": "float",
         "description": "Valve stem position (0% closed, 100% open)",
@@ -158,7 +158,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "valve opening stroke position travel",
     },
     {
-        "tagName": "LUX.L3.VLV001.OpenClose",
+        "tagName": "LUX.L3.VLV001.Status.Bool.1",
         "site": "LUX", "line": "L3", "equipment": "VLV001",
         "unit": "-", "datatype": "bool",
         "description": "Discrete open/close limit-switch feedback",
@@ -168,7 +168,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-3 Tank-001 ─────────────────────────────────────────────
     {
-        "tagName": "LUX.L3.TNK001.Level",
+        "tagName": "LUX.L3.TNK001.Level.M.1",
         "site": "LUX", "line": "L3", "equipment": "TNK001",
         "unit": "m", "datatype": "float",
         "description": "Liquid level in storage tank 001",
@@ -176,7 +176,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "tank level fill level liquid height fluid level",
     },
     {
-        "tagName": "LUX.L3.TNK001.Temperature",
+        "tagName": "LUX.L3.TNK001.Temperature.Cel.1",
         "site": "LUX", "line": "L3", "equipment": "TNK001",
         "unit": "°C", "datatype": "float",
         "description": "Liquid temperature inside storage tank 001",
@@ -184,7 +184,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "tank temperature fluid temp process temperature",
     },
     {
-        "tagName": "LUX.L3.TNK001.Pressure",
+        "tagName": "LUX.L3.TNK001.Pressure.Bar.1",
         "site": "LUX", "line": "L3", "equipment": "TNK001",
         "unit": "bar", "datatype": "float",
         "description": "Internal pressure of storage tank 001",
@@ -194,7 +194,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── LUX Line-3 Boiler-001 ───────────────────────────────────────────
     {
-        "tagName": "LUX.L3.BLR001.SteamPressure",
+        "tagName": "LUX.L3.BLR001.Pressure.Bar.1",
         "site": "LUX", "line": "L3", "equipment": "BLR001",
         "unit": "bar", "datatype": "float",
         "description": "Steam output pressure of boiler 001",
@@ -202,7 +202,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "boiler pressure steam header drum pressure",
     },
     {
-        "tagName": "LUX.L3.BLR001.FeedWaterTemp",
+        "tagName": "LUX.L3.BLR001.Temperature.Cel.1",
         "site": "LUX", "line": "L3", "equipment": "BLR001",
         "unit": "°C", "datatype": "float",
         "description": "Feed-water inlet temperature of boiler 001",
@@ -216,7 +216,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── BEL Line-1 Pump-001 ─────────────────────────────────────────────
     {
-        "tagName": "BEL.L1.PMP001.OutletPressure",
+        "tagName": "BEL.L1.PMP001.Pressure.Bar.1",
         "site": "BEL", "line": "L1", "equipment": "PMP001",
         "unit": "bar", "datatype": "float",
         "description": "Discharge pressure of process water pump",
@@ -224,7 +224,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "pump discharge pressure head pressure",
     },
     {
-        "tagName": "BEL.L1.PMP001.FlowRate",
+        "tagName": "BEL.L1.PMP001.FlowRate.Lpm.1",
         "site": "BEL", "line": "L1", "equipment": "PMP001",
         "unit": "L/min", "datatype": "float",
         "description": "Volumetric flow rate of process water pump",
@@ -232,7 +232,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "volumetric flow pump output water flow",
     },
     {
-        "tagName": "BEL.L1.PMP001.BearingTemp",
+        "tagName": "BEL.L1.PMP001.Temperature.Cel.1",
         "site": "BEL", "line": "L1", "equipment": "PMP001",
         "unit": "°C", "datatype": "float",
         "description": "Pump bearing temperature on drive-end",
@@ -240,7 +240,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "bearing temp DE bearing pump bearing thermal",
     },
     {
-        "tagName": "BEL.L1.PMP001.Running",
+        "tagName": "BEL.L1.PMP001.Status.Bool.1",
         "site": "BEL", "line": "L1", "equipment": "PMP001",
         "unit": "-", "datatype": "bool",
         "description": "Pump running status (true = running)",
@@ -250,7 +250,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── BEL Line-1 Conveyor-001 ─────────────────────────────────────────
     {
-        "tagName": "BEL.L1.CNV001.BeltSpeed",
+        "tagName": "BEL.L1.CNV001.Velocity.Ms.1",
         "site": "BEL", "line": "L1", "equipment": "CNV001",
         "unit": "m/s", "datatype": "float",
         "description": "Belt linear speed of intake conveyor",
@@ -258,7 +258,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "conveyor speed belt velocity line speed",
     },
     {
-        "tagName": "BEL.L1.CNV001.LoadWeight",
+        "tagName": "BEL.L1.CNV001.Weight.Kg.1",
         "site": "BEL", "line": "L1", "equipment": "CNV001",
         "unit": "kg", "datatype": "float",
         "description": "Instantaneous belt load weight on conveyor",
@@ -266,7 +266,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "belt load material weight conveyor weight",
     },
     {
-        "tagName": "BEL.L1.CNV001.Running",
+        "tagName": "BEL.L1.CNV001.Status.Bool.1",
         "site": "BEL", "line": "L1", "equipment": "CNV001",
         "unit": "-", "datatype": "bool",
         "description": "Conveyor running status (true = running)",
@@ -274,7 +274,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "run status on off conveyor operating",
     },
     {
-        "tagName": "BEL.L1.CNV001.MotorCurrent",
+        "tagName": "BEL.L1.CNV001.Current.Amp.1",
         "site": "BEL", "line": "L1", "equipment": "CNV001",
         "unit": "A", "datatype": "float",
         "description": "Drive motor current of conveyor 001",
@@ -284,7 +284,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── BEL Line-2 Motor-001 ────────────────────────────────────────────
     {
-        "tagName": "BEL.L2.MOT001.Speed",
+        "tagName": "BEL.L2.MOT001.Speed.Rpm.1",
         "site": "BEL", "line": "L2", "equipment": "MOT001",
         "unit": "RPM", "datatype": "float",
         "description": "Rotational speed of VFD motor 001",
@@ -292,7 +292,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "motor speed rotation shaft speed VFD speed",
     },
     {
-        "tagName": "BEL.L2.MOT001.PowerConsumption",
+        "tagName": "BEL.L2.MOT001.Power.KW.1",
         "site": "BEL", "line": "L2", "equipment": "MOT001",
         "unit": "kW", "datatype": "float",
         "description": "Active power consumption of motor 001",
@@ -300,7 +300,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "energy use power draw wattage electrical power",
     },
     {
-        "tagName": "BEL.L2.MOT001.Torque",
+        "tagName": "BEL.L2.MOT001.Torque.Nm.1",
         "site": "BEL", "line": "L2", "equipment": "MOT001",
         "unit": "Nm", "datatype": "float",
         "description": "Output shaft torque of motor 001",
@@ -310,7 +310,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── BEL Line-2 Compressor-001 ───────────────────────────────────────
     {
-        "tagName": "BEL.L2.CMP001.DischargeTemp",
+        "tagName": "BEL.L2.CMP001.Temperature.Cel.1",
         "site": "BEL", "line": "L2", "equipment": "CMP001",
         "unit": "°C", "datatype": "float",
         "description": "Discharge temperature of refrigerant compressor",
@@ -318,7 +318,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "outlet temperature exhaust temp compressor discharge",
     },
     {
-        "tagName": "BEL.L2.CMP001.OutletPressure",
+        "tagName": "BEL.L2.CMP001.Pressure.Bar.1",
         "site": "BEL", "line": "L2", "equipment": "CMP001",
         "unit": "bar", "datatype": "float",
         "description": "Discharge pressure of refrigerant compressor",
@@ -326,7 +326,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "discharge pressure high-side pressure head pressure",
     },
     {
-        "tagName": "BEL.L2.CMP001.OilTemp",
+        "tagName": "BEL.L2.CMP001.Temperature.Cel.2",
         "site": "BEL", "line": "L2", "equipment": "CMP001",
         "unit": "°C", "datatype": "float",
         "description": "Lubricating oil temperature of compressor 001",
@@ -336,7 +336,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── BEL Line-3 Valve-001 ────────────────────────────────────────────
     {
-        "tagName": "BEL.L3.VLV001.Position",
+        "tagName": "BEL.L3.VLV001.Level.Pct.1",
         "site": "BEL", "line": "L3", "equipment": "VLV001",
         "unit": "%", "datatype": "float",
         "description": "Control valve position — cooling water",
@@ -344,7 +344,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "valve opening stroke position travel",
     },
     {
-        "tagName": "BEL.L3.VLV001.OpenClose",
+        "tagName": "BEL.L3.VLV001.Status.Bool.1",
         "site": "BEL", "line": "L3", "equipment": "VLV001",
         "unit": "-", "datatype": "bool",
         "description": "Discrete open/close status of isolation valve",
@@ -354,7 +354,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── BEL Line-3 Tank-001 ─────────────────────────────────────────────
     {
-        "tagName": "BEL.L3.TNK001.Level",
+        "tagName": "BEL.L3.TNK001.Level.M.1",
         "site": "BEL", "line": "L3", "equipment": "TNK001",
         "unit": "m", "datatype": "float",
         "description": "Liquid level in chemical dosing tank",
@@ -362,7 +362,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "tank level fill level liquid height",
     },
     {
-        "tagName": "BEL.L3.TNK001.pH",
+        "tagName": "BEL.L3.TNK001.Acidity.Ph.1",
         "site": "BEL", "line": "L3", "equipment": "TNK001",
         "unit": "pH", "datatype": "float",
         "description": "pH value of solution in dosing tank",
@@ -370,7 +370,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "acid level alkalinity hydrogen ion concentration",
     },
     {
-        "tagName": "BEL.L3.TNK001.Density",
+        "tagName": "BEL.L3.TNK001.Density.Kgm3.1",
         "site": "BEL", "line": "L3", "equipment": "TNK001",
         "unit": "kg/m³", "datatype": "float",
         "description": "Liquid density in chemical dosing tank",
@@ -384,7 +384,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-1 Pump-001 ─────────────────────────────────────────────
     {
-        "tagName": "NED.L1.PMP001.OutletPressure",
+        "tagName": "NED.L1.PMP001.Pressure.Bar.1",
         "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "bar", "datatype": "float",
         "description": "Outlet pressure of boiler feed-water pump",
@@ -392,7 +392,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "pump discharge pressure head pressure",
     },
     {
-        "tagName": "NED.L1.PMP001.FlowRate",
+        "tagName": "NED.L1.PMP001.FlowRate.Lpm.1",
         "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "L/min", "datatype": "float",
         "description": "Volumetric flow rate of boiler feed-water pump",
@@ -400,7 +400,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "volumetric flow pump output feed water flow",
     },
     {
-        "tagName": "NED.L1.PMP001.MotorCurrent",
+        "tagName": "NED.L1.PMP001.Current.Amp.1",
         "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "A", "datatype": "float",
         "description": "Motor current draw of feed-water pump 001",
@@ -408,7 +408,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "winding current amp draw electrical current",
     },
     {
-        "tagName": "NED.L1.PMP001.VibrationLevel",
+        "tagName": "NED.L1.PMP001.Vibration.Mms.1",
         "site": "NED", "line": "L1", "equipment": "PMP001",
         "unit": "mm/s", "datatype": "float",
         "description": "Pump casing vibration level on drive-end",
@@ -418,7 +418,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-1 HeatExchanger-001 ────────────────────────────────────
     {
-        "tagName": "NED.L1.HEX001.InletTemp",
+        "tagName": "NED.L1.HEX001.Temperature.Cel.1",
         "site": "NED", "line": "L1", "equipment": "HEX001",
         "unit": "°C", "datatype": "float",
         "description": "Shell-side inlet temperature of heat exchanger",
@@ -426,7 +426,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "entry temperature incoming temp feed temperature",
     },
     {
-        "tagName": "NED.L1.HEX001.OutletTemp",
+        "tagName": "NED.L1.HEX001.Temperature.Cel.2",
         "site": "NED", "line": "L1", "equipment": "HEX001",
         "unit": "°C", "datatype": "float",
         "description": "Shell-side outlet temperature of heat exchanger",
@@ -434,7 +434,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "exit temperature outgoing temp return temperature",
     },
     {
-        "tagName": "NED.L1.HEX001.FlowRate",
+        "tagName": "NED.L1.HEX001.FlowRate.Lpm.1",
         "site": "NED", "line": "L1", "equipment": "HEX001",
         "unit": "L/min", "datatype": "float",
         "description": "Tube-side flow rate through heat exchanger",
@@ -444,7 +444,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-2 Motor-001 ────────────────────────────────────────────
     {
-        "tagName": "NED.L2.MOT001.Speed",
+        "tagName": "NED.L2.MOT001.Speed.Rpm.1",
         "site": "NED", "line": "L2", "equipment": "MOT001",
         "unit": "RPM", "datatype": "float",
         "description": "Rotational speed of compressor drive motor",
@@ -452,7 +452,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "motor speed rotation shaft speed revolutions",
     },
     {
-        "tagName": "NED.L2.MOT001.BearingTemp",
+        "tagName": "NED.L2.MOT001.Temperature.Cel.1",
         "site": "NED", "line": "L2", "equipment": "MOT001",
         "unit": "°C", "datatype": "float",
         "description": "Drive-end bearing temperature of motor 001",
@@ -460,7 +460,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "bearing temp DE bearing motor bearing thermal",
     },
     {
-        "tagName": "NED.L2.MOT001.MotorCurrent",
+        "tagName": "NED.L2.MOT001.Current.Amp.1",
         "site": "NED", "line": "L2", "equipment": "MOT001",
         "unit": "A", "datatype": "float",
         "description": "Phase current of motor 001",
@@ -470,7 +470,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-2 Boiler-001 ───────────────────────────────────────────
     {
-        "tagName": "NED.L2.BLR001.SteamPressure",
+        "tagName": "NED.L2.BLR001.Pressure.Bar.1",
         "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "bar", "datatype": "float",
         "description": "Steam drum pressure of boiler 001",
@@ -478,7 +478,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "boiler pressure steam header drum pressure",
     },
     {
-        "tagName": "NED.L2.BLR001.ExhaustTemp",
+        "tagName": "NED.L2.BLR001.Temperature.Cel.1",
         "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "°C", "datatype": "float",
         "description": "Flue gas exhaust temperature of boiler 001",
@@ -486,7 +486,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "stack temperature flue temp combustion exhaust",
     },
     {
-        "tagName": "NED.L2.BLR001.FeedWaterTemp",
+        "tagName": "NED.L2.BLR001.Temperature.Cel.2",
         "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "°C", "datatype": "float",
         "description": "Feed-water inlet temperature of boiler 001",
@@ -494,7 +494,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "make-up water temp boiler feed temperature",
     },
     {
-        "tagName": "NED.L2.BLR001.FuelFlowRate",
+        "tagName": "NED.L2.BLR001.FlowRate.Cmh.1",
         "site": "NED", "line": "L2", "equipment": "BLR001",
         "unit": "m³/h", "datatype": "float",
         "description": "Natural gas fuel flow rate to boiler 001",
@@ -504,7 +504,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-3 Conveyor-001 ─────────────────────────────────────────
     {
-        "tagName": "NED.L3.CNV001.BeltSpeed",
+        "tagName": "NED.L3.CNV001.Velocity.Ms.1",
         "site": "NED", "line": "L3", "equipment": "CNV001",
         "unit": "m/s", "datatype": "float",
         "description": "Belt speed of raw-material intake conveyor",
@@ -512,7 +512,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "conveyor speed belt velocity line speed",
     },
     {
-        "tagName": "NED.L3.CNV001.LoadWeight",
+        "tagName": "NED.L3.CNV001.Weight.Kg.1",
         "site": "NED", "line": "L3", "equipment": "CNV001",
         "unit": "kg", "datatype": "float",
         "description": "Instantaneous belt load weight of conveyor",
@@ -520,7 +520,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "belt load material weight conveyor weight",
     },
     {
-        "tagName": "NED.L3.CNV001.MotorCurrent",
+        "tagName": "NED.L3.CNV001.Current.Amp.1",
         "site": "NED", "line": "L3", "equipment": "CNV001",
         "unit": "A", "datatype": "float",
         "description": "Drive motor current of conveyor 001",
@@ -530,7 +530,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-3 Valve-001 ────────────────────────────────────────────
     {
-        "tagName": "NED.L3.VLV001.Position",
+        "tagName": "NED.L3.VLV001.Level.Pct.1",
         "site": "NED", "line": "L3", "equipment": "VLV001",
         "unit": "%", "datatype": "float",
         "description": "Control valve stem position — steam header",
@@ -540,7 +540,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-4 Tank-001 ─────────────────────────────────────────────
     {
-        "tagName": "NED.L4.TNK001.Level",
+        "tagName": "NED.L4.TNK001.Level.M.1",
         "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "m", "datatype": "float",
         "description": "Liquid level in raw-water storage tank",
@@ -548,7 +548,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "tank level fill level liquid height water level",
     },
     {
-        "tagName": "NED.L4.TNK001.Temperature",
+        "tagName": "NED.L4.TNK001.Temperature.Cel.1",
         "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "°C", "datatype": "float",
         "description": "Water temperature in raw-water tank",
@@ -556,7 +556,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "tank temperature water temp process temperature",
     },
     {
-        "tagName": "NED.L4.TNK001.Pressure",
+        "tagName": "NED.L4.TNK001.Pressure.Bar.1",
         "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "bar", "datatype": "float",
         "description": "Headspace pressure of raw-water tank",
@@ -564,7 +564,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "vessel pressure tank pressure internal pressure",
     },
     {
-        "tagName": "NED.L4.TNK001.Humidity",
+        "tagName": "NED.L4.TNK001.Humidity.Rh.1",
         "site": "NED", "line": "L4", "equipment": "TNK001",
         "unit": "%RH", "datatype": "float",
         "description": "Relative humidity in tank enclosure area",
@@ -574,7 +574,7 @@ GOLDEN_TAGS: list[dict] = [
 
     # ── NED Line-4 Compressor-001 ───────────────────────────────────────
     {
-        "tagName": "NED.L4.CMP001.DischargeTemp",
+        "tagName": "NED.L4.CMP001.Temperature.Cel.1",
         "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "°C", "datatype": "float",
         "description": "Discharge temperature of air compressor",
@@ -582,7 +582,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "outlet temperature exhaust temp air compressor discharge",
     },
     {
-        "tagName": "NED.L4.CMP001.InletPressure",
+        "tagName": "NED.L4.CMP001.Pressure.Bar.1",
         "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "bar", "datatype": "float",
         "description": "Suction inlet pressure of air compressor",
@@ -590,7 +590,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "suction pressure intake pressure atmospheric pressure",
     },
     {
-        "tagName": "NED.L4.CMP001.VibrationLevel",
+        "tagName": "NED.L4.CMP001.Vibration.Mms.1",
         "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "mm/s", "datatype": "float",
         "description": "Bearing vibration of air compressor 001",
@@ -598,7 +598,7 @@ GOLDEN_TAGS: list[dict] = [
         "synonyms": "vibration amplitude oscillation compressor vibration",
     },
     {
-        "tagName": "NED.L4.CMP001.Running",
+        "tagName": "NED.L4.CMP001.Status.Bool.1",
         "site": "NED", "line": "L4", "equipment": "CMP001",
         "unit": "-", "datatype": "bool",
         "description": "Compressor running status (true = running)",
