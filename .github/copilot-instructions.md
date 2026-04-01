@@ -100,25 +100,25 @@ cd server && uv run pytest tests/ -k "test_name"  # Single test by name
 
 A **tag** is a named data point from an industrial sensor. Factory equipment (pumps, compressors, motors) has sensors attached; each sensor reading is a "tag." The tag name uniquely identifies which sensor, on which machine, at which location.
 
-#### Format: `<SITE>.<LINE>.<EQUIPMENT>.<MEASUREMENT>`
+#### Format: `<SITE>.<LINE>.<EQUIPMENT>.<MEASUREMENT>.<UNIT>.<ID>`
 
 | Segment | What it is | Pattern | Examples |
 |---------|-----------|---------|---------|
 | **SITE** | 3-letter plant location code | `^[A-Z][a-zA-Z0-9]*$` | `LUX` (Luxembourg), `BEL` (Brussels), `NED` (Amsterdam) |
 | **LINE** | Production line identifier | `^[A-Z][a-zA-Z0-9]*$` | `L1`, `L2`, `L3`, `L4` |
 | **EQUIPMENT** | Device type abbreviation + number | `^[A-Z][a-zA-Z0-9]*$` | `PMP001` (Pump #1), `CMP003` (Compressor #3), `MOT004` (Motor #4) |
-| **MEASUREMENT** | PascalCase — what the sensor reads | `^[A-Z][a-zA-Z0-9]*$` | `OutletPressure`, `FlowRate`, `Speed`, `Temperature`, `VibrationLevel` |
-
-Optional 5th segment **DETAIL** for disambiguation (e.g., `Pressure.Discharge` vs `Pressure.Inlet`).
+| **MEASUREMENT** | PascalCase — derived from the unit | `^[A-Z][a-zA-Z0-9]*$` | `Pressure` (bar), `Temperature` (°C), `Speed` (RPM), `Vibration` (mm/s) |
+| **UNIT** | PascalCase engineering unit code | `^[A-Z][a-zA-Z0-9]*$` | `Bar`, `Cel`, `Rpm`, `Mms`, `Lpm` |
+| **ID** | Numeric auto-incrementing identifier | `^[0-9]+$` | `1`, `2`, `3` |
 
 **Equipment type codes**: PMP = Pump, CMP = Compressor, MOT = Motor, CNV = Conveyor, VLV = Valve, HEX = Heat Exchanger.
 
 **Common measurements**: OutletPressure, InletPressure, DischargeTemp, FlowRate, Speed, Temperature, VibrationLevel, MotorCurrent, PowerConsumption, BeltSpeed, LoadWeight, Position, Running (bool).
 
 **Examples**:
-- `LUX.L1.PMP001.OutletPressure` — Outlet pressure sensor on Pump 001, Line 1, Luxembourg
-- `BEL.L2.MOT001.Speed` — Speed sensor on Motor 001, Line 2, Brussels
-- `NED.L4.CMP001.VibrationLevel` — Vibration sensor on Compressor 001, Line 4, Amsterdam
+- `LUX.L1.PMP001.Pressure.Bar.1` — Pressure sensor on Pump 001, Line 1, Luxembourg
+- `BEL.L2.MOT001.Speed.Rpm.1` — Speed sensor on Motor 001, Line 2, Brussels
+- `NED.L4.CMP001.Vibration.Mms.1` — Vibration sensor on Compressor 001, Line 4, Amsterdam
 
 The naming validator (`server/src/validators/`) enforces this schema. AI suggestions must pass validation before acceptance. **Tag names must be globally unique** — the API rejects creation/update if a tag with the same name already exists.
 
