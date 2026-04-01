@@ -1,6 +1,7 @@
-import { StrictMode } from 'react'
+import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   FluentProvider,
   createLightTheme,
@@ -11,6 +12,26 @@ import App from './App'
 import TagListPage from './pages/TagListPage'
 import TagCreatePage from './pages/TagCreatePage'
 import TagEditPage from './pages/TagEditPage'
+
+// eslint-disable-next-line react-refresh/only-export-components
+const ReactQueryDevtools =
+  import.meta.env.DEV
+    ? lazy(() =>
+        import('@tanstack/react-query-devtools').then((m) => ({
+          default: m.ReactQueryDevtools,
+        })),
+      )
+    : () => null;
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+});
 
 // Aperam brand: purple #490B42, orange #F1511B
 const aperamBrand: BrandVariants = {
@@ -42,7 +63,7 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/tags" replace /> },
       { path: 'tags', element: <TagListPage /> },
       { path: 'tags/new', element: <TagCreatePage /> },
-      { path: 'tags/:id', element: <div>Tag detail (coming soon)</div> },
+      { path: 'tags/:id', element: <Navigate to="edit" replace /> },
       { path: 'tags/:id/edit', element: <TagEditPage /> },
     ],
   },
@@ -50,8 +71,13 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <FluentProvider theme={aperamTheme}>
-      <RouterProvider router={router} />
-    </FluentProvider>
+    <QueryClientProvider client={queryClient}>
+      <FluentProvider theme={aperamTheme}>
+        <RouterProvider router={router} />
+      </FluentProvider>
+      <Suspense fallback={null}>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </Suspense>
+    </QueryClientProvider>
   </StrictMode>,
 )

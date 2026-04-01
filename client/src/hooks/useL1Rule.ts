@@ -1,63 +1,30 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { l1RuleKeys } from "../api/queryKeys";
+import { fetchApi, ApiError } from "../api/client";
 import type { L1Rule } from "../types/rule";
 
+/**
+ * Fetch an L1 rule for a tag. Returns `null` when none exists (404).
+ */
 export function useL1Rule(tagId: string | undefined) {
-  const [rule, setRule] = useState<L1Rule | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fetchCount, setFetchCount] = useState(0);
-
-  const refetch = () => setFetchCount((c) => c + 1);
-
-  useEffect(() => {
-    if (!tagId) {
-      setRule(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    let cancelled = false;
-    const controller = new AbortController();
-
-    const doFetch = async () => {
-      setLoading(true);
-      setError(null);
-
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: l1RuleKeys.all(tagId!),
+    queryFn: async ({ signal }) => {
       try {
-        const res = await fetch(`/api/tags/${tagId}/rules/l1`, {
-          signal: controller.signal,
-        });
-
-        if (res.status === 404) {
-          if (!cancelled) setRule(null);
-          return;
-        }
-
-        if (!res.ok) {
-          const body = await res.text();
-          throw new Error(body || `Request failed with status ${res.status}`);
-        }
-
-        const json = (await res.json()) as L1Rule;
-        if (!cancelled) setRule(json);
-      } catch (err: unknown) {
-        if (!cancelled) {
-          if (err instanceof DOMException && err.name === "AbortError") return;
-          setError(err instanceof Error ? err.message : "Failed to load L1 rule");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+        return await fetchApi<L1Rule>(`/api/tags/${tagId}/rules/l1`, { signal });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
       }
-    };
+    },
+    enabled: !!tagId,
+    staleTime: 30_000,
+  });
 
-    doFetch();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [tagId, fetchCount]);
-
-  return { rule, loading, error, refetch };
+  return {
+    rule: data ?? null,
+    loading: isPending && !!tagId,
+    error: error?.message ?? null,
+    refetch,
+  };
 }
