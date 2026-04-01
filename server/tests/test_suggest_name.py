@@ -30,13 +30,13 @@ MINIMAL_SUGGEST_PAYLOAD = {
 }
 
 MOCK_RESULT = SuggestionResult(
-    suggestedName="LUX.L1.PMP001.OutletPressure",
+    suggestedName="LUX.L1.PMP001.Pressure.Bar.1",
     alternatives=[
-        "LUX.L1.PMP001.DischargePressure",
-        "LUX.L1.PMP002.OutletPressure",
+        "LUX.L1.PMP001.Pressure.Bar.2",
+        "LUX.L1.PMP002.Pressure.Bar.1",
     ],
     evidence=(
-        "Similar to tag 'LUX.L1.PMP001.OutletPressure' — "
+        "Similar to tag 'LUX.L1.PMP001.Pressure.Bar.1' — "
         "same site/line, description match on "
         "'outlet pressure of primary coolant pump' ↔ "
         "'Outlet pressure of primary coolant pump' "
@@ -44,7 +44,7 @@ MOCK_RESULT = SuggestionResult(
     ),
     matches=[
         SuggestionMatch(
-            tagName="LUX.L1.PMP001.OutletPressure",
+            tagName="LUX.L1.PMP001.Pressure.Bar.1",
             description="Outlet pressure of primary coolant pump",
             score=0.94,
             site="LUX",
@@ -54,7 +54,7 @@ MOCK_RESULT = SuggestionResult(
             datatype="float",
         ),
         SuggestionMatch(
-            tagName="LUX.L1.PMP001.DischargePressure",
+            tagName="LUX.L1.PMP001.Pressure.Bar.2",
             description="Discharge pressure of primary coolant pump",
             score=0.89,
             site="LUX",
@@ -64,7 +64,7 @@ MOCK_RESULT = SuggestionResult(
             datatype="float",
         ),
         SuggestionMatch(
-            tagName="LUX.L1.PMP002.OutletPressure",
+            tagName="LUX.L1.PMP002.Pressure.Bar.1",
             description="Outlet pressure of secondary coolant pump",
             score=0.82,
             site="LUX",
@@ -102,7 +102,7 @@ class TestSuggestName:
 
         assert resp.status_code == 200
         data = resp.json()
-        assert data["suggestedName"] == "LUX.L1.PMP001.OutletPressure"
+        assert data["suggestedName"] == "LUX.L1.PMP001.Pressure.Bar.1"
         assert len(data["alternatives"]) == 2
         assert len(data["matches"]) == 3
         assert data["evidence"] != ""
@@ -200,7 +200,7 @@ class TestSuggestName:
 
         data = resp.json()
         assert "similarity" in data["evidence"]
-        assert "LUX.L1.PMP001.OutletPressure" in data["evidence"]
+        assert "LUX.L1.PMP001.Pressure.Bar.1" in data["evidence"]
 
     def test_suggest_alternatives_exclude_top_match(self, client):
         with patch(
