@@ -38,50 +38,13 @@ function Set-EnvValue {
 # ---------------------------------------------------------------------------
 $cosmosEndpoint      = azd env get-value COSMOS_ENDPOINT
 $cosmosDatabase      = azd env get-value COSMOS_DATABASE
-$cosmosAccountName   = azd env get-value COSMOS_ACCOUNT_NAME
-$resourceGroup       = azd env get-value AZURE_RESOURCE_GROUP
 $searchEndpoint      = azd env get-value SEARCH_ENDPOINT
-$searchServiceName   = azd env get-value SEARCH_SERVICE_NAME
 $searchIndexName     = azd env get-value SEARCH_INDEX_NAME
 $projectEndpoint     = azd env get-value PROJECT_ENDPOINT
 $embeddingDeployment = azd env get-value PROJECT_EMBEDDING_DEPLOYMENT
 
 # ---------------------------------------------------------------------------
-# 2. Retrieve API keys (fallback auth alongside DefaultAzureCredential)
-# ---------------------------------------------------------------------------
-
-# Cosmos DB primary key
-$cosmosKey = ""
-if ($cosmosAccountName -and $resourceGroup) {
-    $cosmosKey = az cosmosdb keys list `
-        --name $cosmosAccountName `
-        --resource-group $resourceGroup `
-        --query primaryMasterKey `
-        --output tsv 2>$null
-    if ($cosmosKey) {
-        Write-Host "Retrieved Cosmos DB primary key"
-    } else {
-        Write-Warning "Could not retrieve Cosmos DB key — COSMOS_KEY will be left empty"
-    }
-}
-
-# AI Search admin key
-$searchApiKey = ""
-if ($searchServiceName -and $resourceGroup) {
-    $searchApiKey = az search admin-key show `
-        --service-name $searchServiceName `
-        --resource-group $resourceGroup `
-        --query primaryKey `
-        --output tsv 2>$null
-    if ($searchApiKey) {
-        Write-Host "Retrieved AI Search admin key"
-    } else {
-        Write-Warning "Could not retrieve AI Search key — SEARCH_API_KEY will be left empty (RBAC will be used)"
-    }
-}
-
-# ---------------------------------------------------------------------------
-# 3. Populate .env files
+# 2. Populate .env files (RBAC-only — no API keys)
 # ---------------------------------------------------------------------------
 $envFiles = @(
     (Join-Path $repoRoot "server" ".env"),
@@ -92,23 +55,17 @@ foreach ($envFile in $envFiles) {
     # Cosmos DB
     Set-EnvValue -FilePath $envFile -Key "COSMOS_ENDPOINT" -Value $cosmosEndpoint
     Set-EnvValue -FilePath $envFile -Key "COSMOS_DATABASE" -Value $cosmosDatabase
-    if ($cosmosKey) {
-        Set-EnvValue -FilePath $envFile -Key "COSMOS_KEY" -Value $cosmosKey
-    }
 
     # AI Search
     Set-EnvValue -FilePath $envFile -Key "SEARCH_ENDPOINT" -Value $searchEndpoint
     Set-EnvValue -FilePath $envFile -Key "SEARCH_INDEX_NAME" -Value $searchIndexName
-    if ($searchApiKey) {
-        Set-EnvValue -FilePath $envFile -Key "SEARCH_API_KEY" -Value $searchApiKey
-    }
 
     # AI Foundry
     Set-EnvValue -FilePath $envFile -Key "PROJECT_ENDPOINT" -Value $projectEndpoint
     Set-EnvValue -FilePath $envFile -Key "PROJECT_EMBEDDING_DEPLOYMENT" -Value $embeddingDeployment
 
     $relative = [System.IO.Path]::GetRelativePath($repoRoot, $envFile)
-    Write-Host "Updated $relative with all connection details"
+    Write-Host "Updated $relative with connection details (RBAC auth — no API keys)"
 }
 
 # ---------------------------------------------------------------------------
