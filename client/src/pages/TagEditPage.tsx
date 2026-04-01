@@ -1,34 +1,43 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import {
-  Title2,
-  Subtitle2,
-  Spinner,
-  Text,
+  Button,
   Dialog,
-  DialogSurface,
-  DialogTitle,
+  DialogActions,
   DialogBody,
   DialogContent,
-  DialogActions,
-  Button,
+  DialogSurface,
+  DialogTitle,
   Divider,
   MessageBar,
   MessageBarBody,
+  Spinner,
+  Subtitle2,
+  Text,
   Textarea,
+  Title2,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import TagForm from "../components/TagForm";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import ApprovalBadge from "../components/ApprovalBadge";
 import L1RulePanel from "../components/L1RulePanel";
 import L2RulePanel from "../components/L2RulePanel";
-import ApprovalBadge from "../components/ApprovalBadge";
+import TagForm from "../components/TagForm";
+import { useRetireTag } from "../hooks/useRetireTag";
 import { useTag } from "../hooks/useTag";
+import {
+  useApproveTag,
+  useRejectTag,
+  useRequestApproval,
+} from "../hooks/useTagApproval";
+import { useUpdateTag } from "../hooks/useUpdateTag";
 import type { CreateTag } from "../types/tag";
 
 const useStyles = makeStyles({
-  header: {
-    marginBottom: tokens.spacingVerticalS,
+  headerSection: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalL,
   },
   center: {
     display: "flex",
@@ -52,7 +61,6 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalM,
-    marginBottom: tokens.spacingVerticalM,
   },
 });
 
@@ -60,13 +68,18 @@ export default function TagEditPage() {
   const styles = useStyles();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tag, loading, error, refetch } = useTag(id);
+  const { tag, loading, error } = useTag(id);
   const [retireOpen, setRetireOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
+  const updateTag = useUpdateTag();
+  const retireTag = useRetireTag();
+  const requestApproval = useRequestApproval();
+  const approveTag = useApproveTag();
+  const rejectTagMutation = useRejectTag();
+
   const handleSubmit = async (data: CreateTag) => {
-    // Strip assetId — cannot change asset on update
     const updateData = {
       name: data.name,
       description: data.description,
@@ -75,71 +88,32 @@ export default function TagEditPage() {
       samplingFrequency: data.samplingFrequency,
       criticality: data.criticality,
       sourceId: data.sourceId,
+      assetId: data.assetId,
     };
-    const res = await fetch(`/api/tags/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updateData),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      let msg = "Failed to update tag";
-      if (body?.detail) {
-        if (typeof body.detail === "string") {
-          msg = body.detail;
-        } else if (body.detail.error) {
-          msg = body.detail.error;
-          if (body.detail.details?.length) {
-            msg += ": " + body.detail.details.join(", ");
-          }
-        }
-      }
-      throw new Error(msg);
-    }
+    await updateTag.mutateAsync({ id: id!, data: updateData });
     navigate("/tags");
   };
 
   const handleRetire = async () => {
-    const res = await fetch(`/api/tags/${id}/retire`, { method: "PATCH" });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      let msg = "Failed to retire tag";
-      if (body?.detail) {
-        if (typeof body.detail === "string") {
-          msg = body.detail;
-        } else if (body.detail.error) {
-          msg = body.detail.error;
-        }
-      }
-      throw new Error(msg);
-    }
+    await retireTag.mutateAsync(id!);
     navigate("/tags");
   };
 
   const handleRequestApproval = async () => {
-    const res = await fetch(`/api/tags/${id}/request-approval`, {
-      method: "POST",
-    });
-    if (!res.ok) throw new Error("Failed to request approval");
-    refetch();
+    await requestApproval.mutateAsync(id!);
   };
 
   const handleApprove = async () => {
-    const res = await fetch(`/api/tags/${id}/approve`, { method: "POST" });
-    if (!res.ok) throw new Error("Failed to approve tag");
-    refetch();
+    await approveTag.mutateAsync(id!);
   };
 
   const handleReject = async () => {
-    const res = await fetch(`/api/tags/${id}/reject`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rejectionReason: rejectReason || null }),
+    await rejectTagMutation.mutateAsync({
+      tagId: id!,
+      rejectionReason: rejectReason || null,
     });
-    if (!res.ok) throw new Error("Failed to reject tag");
     setRejectOpen(false);
     setRejectReason("");
-    refetch();
   };
 
   if (loading) {
@@ -153,42 +127,42 @@ export default function TagEditPage() {
   if (error || !tag) {
     return (
       <div className={styles.center}>
-        <Text className={styles.errorText}>
-          {error || "Tag not found."}
-        </Text>
+        <Text className={styles.errorText}>{error || "Tag not found."}</Text>
       </div>
     );
   }
 
   return (
     <div>
-      <Title2 className={styles.header}>Edit Tag</Title2>
+      <div className={styles.headerSection}>
+        <Title2>Edit Tag</Title2>
 
-      <div className={styles.approvalRow}>
-        <ApprovalBadge approvalStatus={tag.approvalStatus ?? "none"} />
+        <div className={styles.approvalRow}>
+          <ApprovalBadge approvalStatus={tag.approvalStatus ?? "none"} />
 
-        {tag.status === "draft" &&
-          (!tag.approvalStatus ||
-            tag.approvalStatus === "none" ||
-            tag.approvalStatus === "rejected") && (
-            <Button appearance="primary" onClick={handleRequestApproval}>
-              Request Approval
-            </Button>
+          {tag.status === "draft" &&
+            (!tag.approvalStatus ||
+              tag.approvalStatus === "none" ||
+              tag.approvalStatus === "rejected") && (
+              <Button appearance="primary" onClick={handleRequestApproval}>
+                Request Approval
+              </Button>
+            )}
+
+          {tag.approvalStatus === "pending" && (
+            <>
+              <Button appearance="primary" onClick={handleApprove}>
+                Approve
+              </Button>
+              <Button
+                appearance="secondary"
+                onClick={() => setRejectOpen(true)}
+              >
+                Reject
+              </Button>
+            </>
           )}
-
-        {tag.approvalStatus === "pending" && (
-          <>
-            <Button appearance="primary" onClick={handleApprove}>
-              Approve
-            </Button>
-            <Button
-              appearance="secondary"
-              onClick={() => setRejectOpen(true)}
-            >
-              Reject
-            </Button>
-          </>
-        )}
+        </div>
       </div>
 
       {tag.approvalStatus === "rejected" && tag.rejectionReason && (
@@ -225,9 +199,8 @@ export default function TagEditPage() {
           <DialogBody>
             <DialogTitle>Retire Tag</DialogTitle>
             <DialogContent>
-              Are you sure you want to retire &ldquo;{tag.name}&rdquo;? This
-              tag will be marked as retired and hidden from the default list
-              view.
+              Are you sure you want to retire &ldquo;{tag.name}&rdquo;? This tag
+              will be marked as retired and hidden from the default list view.
             </DialogContent>
             <DialogActions>
               <Button
@@ -251,10 +224,10 @@ export default function TagEditPage() {
         <DialogSurface>
           <DialogBody>
             <DialogTitle>Reject Tag</DialogTitle>
-            <DialogContent>
-              <Text>
-                Optionally provide a reason for rejecting this tag.
-              </Text>
+            <DialogContent
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              <Text>Optionally provide a reason for rejecting this tag.</Text>
               <Textarea
                 placeholder="Rejection reason (optional)"
                 value={rejectReason}

@@ -8,18 +8,17 @@ import {
   Dropdown,
   Option,
   Button,
-  Tooltip,
+  Label,
   MessageBar,
   MessageBarBody,
 } from "@fluentui/react-components";
-import { SparkleRegular } from "@fluentui/react-icons";
 import { useAssets } from "../hooks/useAssets";
+import { useNextAvailableName } from "../hooks/useNextAvailableName";
+import { generateBaseTagName } from "../utils/tagNameMappings";
 import type {
   Tag,
   CreateTag,
   Criticality,
-  NameValidationError,
-  ValidateNameResponse,
 } from "../types/tag";
 
 export interface TagFormProps {
@@ -28,6 +27,7 @@ export interface TagFormProps {
   onSubmit: (data: CreateTag) => Promise<void>;
   onCancel: () => void;
   onRetire?: () => void;
+  advancedContent?: React.ReactNode;
 }
 
 interface FormState {
@@ -96,8 +96,8 @@ const useStyles = makeStyles({
     flex: 1,
     minWidth: 0,
   },
-  suggestButton: {
-    alignSelf: "flex-start",
+  advancedLabel: {
+    paddingTop: tokens.spacingVerticalM,
   },
   actions: {
     display: "flex",
@@ -115,14 +115,12 @@ export default function TagForm({
   onSubmit,
   onCancel,
   onRetire,
+  advancedContent,
 }: TagFormProps) {
   const styles = useStyles();
   const { assets } = useAssets();
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
-  const [nameErrors, setNameErrors] = useState<NameValidationError[]>([]);
-  const [nameValidating, setNameValidating] = useState(false);
-  const [nameValid, setNameValid] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [attempted, setAttempted] = useState(false);
@@ -142,7 +140,6 @@ export default function TagForm({
         line: asset?.line ?? "",
         equipment: asset?.equipment ?? "",
       });
-      setNameValid(true);
     }
   }, [mode, initialData, assets]);
 
@@ -182,6 +179,12 @@ export default function TagForm({
   const resolvedUnit =
     form.unit === OTHER_UNIT_VALUE ? form.customUnit : form.unit;
 
+  // --- Auto-generated tag name (both create and edit) ---
+  const baseName = generateBaseTagName(form.site, form.line, form.equipment, resolvedUnit);
+  const { name: autoName, resolving: nameResolving } =
+    useNextAvailableName(baseName);
+  const effectiveName = autoName;
+
   // --- Field helpers ---
   const updateField = <K extends keyof FormState>(
     field: K,
@@ -198,49 +201,12 @@ export default function TagForm({
     setForm((prev) => ({ ...prev, line: value, equipment: "" }));
   };
 
-  // --- Name validation (called on blur and before submit) ---
-  const validateName = async (): Promise<boolean> => {
-    const name = form.name.trim();
-    if (!name) {
-      setNameErrors([]);
-      setNameValid(null);
-      return false;
-    }
-    setNameValidating(true);
-    try {
-      const res = await fetch("/api/tags/validate-name", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      const data: ValidateNameResponse = await res.json();
-      setNameValid(data.valid);
-      setNameErrors(data.errors);
-      return data.valid;
-    } catch {
-      setNameErrors([
-        {
-          segment: "api",
-          message: "Failed to validate name",
-          received: name,
-          expected: null,
-        },
-      ]);
-      setNameValid(false);
-      return false;
-    } finally {
-      setNameValidating(false);
-    }
-  };
-
   // --- Submit ---
   const handleSubmit = async () => {
     setAttempted(true);
-    setSubmitError(null);
 
-    // 1. Check required fields
     if (
-      !form.name ||
+      !effectiveName ||
       !form.description ||
       !resolvedUnit ||
       !form.equipment ||
@@ -249,35 +215,28 @@ export default function TagForm({
       setSubmitError("Please fill in all required fields.");
       return;
     }
-    if (mode === "create" && !resolvedAsset) {
+    if (nameResolving) {
+      setSubmitError("Tag name is still being resolved. Please wait.");
+      return;
+    }
+    if (!resolvedAsset) {
       setSubmitError(
         "Please select a valid asset (site, line, and equipment).",
       );
       return;
     }
 
-    // 2. Always validate the tag name before submitting
     setSubmitting(true);
-    const isNameValid = await validateName();
-    if (!isNameValid) {
-      setSubmitError("Please fix the tag name errors before submitting.");
-      setSubmitting(false);
-      return;
-    }
-
-    // 3. Submit
-    const assetId =
-      mode === "edit" ? initialData!.assetId : resolvedAsset!.id;
-
+    setSubmitError(null);
     try {
       await onSubmit({
-        name: form.name,
+        name: effectiveName,
         description: form.description,
         unit: resolvedUnit,
         datatype: "float",
         samplingFrequency: 1.0,
         criticality: form.criticality,
-        assetId,
+        assetId: resolvedAsset.id,
         sourceId: null,
       });
     } catch (err: unknown) {
@@ -293,27 +252,24 @@ export default function TagForm({
   const requiredError = (value: string) =>
     attempted && !value ? "This field is required" : undefined;
 
-  const nameValidationState = nameValidating
-    ? undefined
-    : nameValid === true
-      ? ("success" as const)
-      : nameValid === false
-        ? ("error" as const)
-        : attempted && !form.name
+  const nameValidationState =
+    nameResolving
+      ? undefined
+      : effectiveName
+        ? ("success" as const)
+        : attempted
           ? ("error" as const)
           : undefined;
 
-  const nameMessage = nameValidating
-    ? "Validating..."
-    : nameValid === true
-      ? "Valid name"
-      : nameErrors.length > 0
-        ? nameErrors.map((e) => `[${e.segment}] ${e.message}`).join("; ")
-        : requiredError(form.name);
+  const nameMessage = nameResolving
+    ? "Resolving name..."
+    : effectiveName
+      ? "Auto-generated"
+      : attempted
+        ? "Select site, line, equipment, and unit to generate a tag name"
+        : undefined;
 
   const unitError = requiredError(resolvedUnit);
-
-  const isAssetDisabled = mode === "edit";
 
   return (
     <div className={styles.form}>
@@ -329,14 +285,12 @@ export default function TagForm({
           className={styles.halfField}
           label="Site"
           required
-          hint={isAssetDisabled ? "Cannot change after creation" : undefined}
           validationState={
             attempted && !form.site ? "error" : undefined
           }
           validationMessage={requiredError(form.site)}
         >
           <Dropdown
-            disabled={isAssetDisabled}
             placeholder="Select site"
             value={form.site}
             selectedOptions={form.site ? [form.site] : []}
@@ -361,7 +315,7 @@ export default function TagForm({
           validationMessage={requiredError(form.line)}
         >
           <Dropdown
-            disabled={isAssetDisabled || !form.site}
+            disabled={!form.site}
             placeholder="Select line"
             value={form.line}
             selectedOptions={form.line ? [form.line] : []}
@@ -419,22 +373,7 @@ export default function TagForm({
         </Dropdown>
       </Field>
 
-      {/* Row 4: Suggest a Name button (stub) */}
-      <Tooltip
-        content="AI-powered suggestions coming soon"
-        relationship="description"
-      >
-        <Button
-          className={styles.suggestButton}
-          appearance="outline"
-          icon={<SparkleRegular />}
-          disabled
-        >
-          Suggest a Name
-        </Button>
-      </Tooltip>
-
-      {/* Row 5: Equipment + Unit (side by side) */}
+      {/* Row 4: Equipment + Unit (side by side) */}
       <div className={styles.row}>
         <Field
           className={styles.halfField}
@@ -446,7 +385,7 @@ export default function TagForm({
           validationMessage={requiredError(form.equipment)}
         >
           <Dropdown
-            disabled={isAssetDisabled || !form.line}
+            disabled={!form.line}
             placeholder="Select equipment"
             value={form.equipment}
             selectedOptions={form.equipment ? [form.equipment] : []}
@@ -515,7 +454,7 @@ export default function TagForm({
         </Field>
       )}
 
-      {/* Row 6: Tag Name (with validation on blur) */}
+      {/* Tag Name (read-only, auto-generated on create) */}
       <Field
         label="Tag Name"
         required
@@ -523,12 +462,24 @@ export default function TagForm({
         validationMessage={nameMessage}
       >
         <Input
-          value={form.name}
-          onChange={(_e, data) => updateField("name", data.value)}
-          onBlur={validateName}
-          placeholder="e.g. Plant.Line2.Pump001.Temperature"
+          value={effectiveName}
+          readOnly
+          placeholder={
+            mode === "create"
+              ? "Auto-generated from selections above"
+              : ""
+          }
         />
       </Field>
+
+      {advancedContent && (
+        <>
+          <Label className={styles.advancedLabel} weight="semibold" size="medium">
+            Advanced
+          </Label>
+          {advancedContent}
+        </>
+      )}
 
       {/* Actions */}
       <div className={styles.actions}>

@@ -26,9 +26,15 @@
       "allowed_values": null
     },
     {
-      "name": "detail",
-      "required": false,
+      "name": "unit",
+      "required": true,
       "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "allowed_values": null
+    },
+    {
+      "name": "id",
+      "required": true,
+      "pattern": "^[0-9]+$",
       "allowed_values": null
     }
   ]

@@ -10,12 +10,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.utils.db import get_cosmos_client, get_database
-from src.routes import tags_router, assets_router, sources_router, rules_router, suggest_name_router
+from src.routes import tags_router, assets_router, sources_router, rules_router, suggest_name_router, tag_names_router
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(name)s %(levelname)s %(message)s",
 )
+logging.getLogger("azure").setLevel(logging.CRITICAL)
 logger = logging.getLogger("ot_tag_registry")
 
 
@@ -69,3 +70,4 @@ app.include_router(assets_router)
 app.include_router(sources_router)
 app.include_router(rules_router)
 app.include_router(suggest_name_router)
+app.include_router(tag_names_router)
