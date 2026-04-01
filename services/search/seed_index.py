@@ -44,8 +44,8 @@ def _get_search_credential():
     return DefaultAzureCredential()
 
 
-def _get_embeddings_client():
-    """Return an Azure AI Foundry embeddings client."""
+def _get_openai_client():
+    """Return an OpenAI client authenticated via Azure AI Foundry."""
     from azure.ai.projects import AIProjectClient
 
     if not PROJECT_ENDPOINT:
@@ -57,7 +57,7 @@ def _get_embeddings_client():
         endpoint=PROJECT_ENDPOINT,
         credential=DefaultAzureCredential(),
     )
-    return project.inference.get_embeddings_client()
+    return project.get_openai_client()
 
 
 def _build_semantic_text(tag: dict) -> str:
@@ -77,12 +77,12 @@ def _generate_embeddings(texts: list[str]) -> list[list[float]]:
 
     Batches requests to respect API limits.
     """
-    client = _get_embeddings_client()
+    client = _get_openai_client()
     all_embeddings: list[list[float]] = []
 
     for i in range(0, len(texts), _EMBED_BATCH_SIZE):
         batch = texts[i : i + _EMBED_BATCH_SIZE]
-        response = client.embed(
+        response = client.embeddings.create(
             model=PROJECT_EMBEDDING_DEPLOYMENT,
             input=batch,
         )
