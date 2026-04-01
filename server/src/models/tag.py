@@ -65,3 +65,4 @@ class UpdateTag(BaseModel):
     criticality: Criticality | None = None
     status: TagStatus | None = None
     sourceId: str | None = None
+    assetId: str | None = None
