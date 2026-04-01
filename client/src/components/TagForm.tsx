@@ -330,7 +330,7 @@ export default function TagForm({
           <Dropdown
             disabled={isAssetDisabled}
             placeholder="Select site"
-            value={form.site || undefined}
+            value={form.site}
             selectedOptions={form.site ? [form.site] : []}
             onOptionSelect={(_e, data) =>
               handleSiteChange(data.optionValue ?? "")
@@ -355,7 +355,7 @@ export default function TagForm({
           <Dropdown
             disabled={isAssetDisabled || !form.site}
             placeholder="Select line"
-            value={form.line || undefined}
+            value={form.line}
             selectedOptions={form.line ? [form.line] : []}
             onOptionSelect={(_e, data) =>
               handleLineChange(data.optionValue ?? "")
@@ -393,7 +393,7 @@ export default function TagForm({
         <Dropdown
           value={
             CRITICALITY_OPTIONS.find((o) => o.value === form.criticality)
-              ?.label ?? "Medium"
+              ?.label ?? ""
           }
           selectedOptions={[form.criticality]}
           onOptionSelect={(_e, data) =>
@@ -440,7 +440,7 @@ export default function TagForm({
           <Dropdown
             disabled={isAssetDisabled || !form.line}
             placeholder="Select equipment"
-            value={form.equipment || undefined}
+            value={form.equipment}
             selectedOptions={form.equipment ? [form.equipment] : []}
             onOptionSelect={(_e, data) =>
               updateField("equipment", data.optionValue ?? "")
@@ -465,7 +465,7 @@ export default function TagForm({
             value={
               form.unit === OTHER_UNIT_VALUE
                 ? "Other..."
-                : form.unit || undefined
+                : form.unit
             }
             selectedOptions={form.unit ? [form.unit] : []}
             onOptionSelect={(_e, data) => {
