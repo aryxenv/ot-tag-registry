@@ -16,14 +16,7 @@ router = APIRouter(prefix="/api/tags", tags=["auto-fill"])
 async def auto_fill(body: AutoFillRequest) -> AutoFillResult:
     """Return AI-extracted tag fields via hybrid vector search + LLM."""
     try:
-        result = await auto_fill_tag(
-            site=body.site,
-            line=body.line,
-            description=body.description,
-            equipment=body.equipment,
-            unit=body.unit,
-            datatype=body.datatype,
-        )
+        result = await auto_fill_tag(query=body.query)
     except SearchServiceError as exc:
         logger.error("Search service error: %s", exc)
         raise HTTPException(status_code=502, detail={"error": str(exc)}) from exc

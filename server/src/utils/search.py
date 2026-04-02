@@ -1,9 +1,9 @@
 """Azure AI Search + AI extraction client for tag auto-fill.
 
 Self-contained module — queries the ``golden-tags`` Azure AI Search index
-using hybrid vector search (OData hard filters + semantic embedding), then
-passes the results through Mistral-Large-3 (via Azure AI Foundry) to extract
-structured form fields.
+using hybrid search (keyword text + semantic embedding, no OData filters),
+then passes the results through Mistral-Large-3 (via Azure AI Foundry) to
+extract structured form fields.
 
 Required environment variables (loaded by ``main.py`` via ``dotenv``):
     SEARCH_ENDPOINT, SEARCH_INDEX_NAME,
@@ -66,7 +66,7 @@ Lines: L1 → "Line-1", L2 → "Line-2", etc.
 Equipment: PMP001 → "Pump-001", CMP003 → "Compressor-003", MOT004 → "Motor-004"
 
 ## Your Task
-Given the user's description and similar existing tags from the registry, extract structured fields. Return a JSON object with these keys:
+Given the user's query and similar existing tags from the registry, extract structured fields. Return a JSON object with these keys:
 - "site": display name (e.g. "Plant-Luxembourg") or null
 - "line": display name (e.g. "Line-1") or null
 - "equipment": display name (e.g. "Pump-001") or null
@@ -164,34 +164,8 @@ def _get_chat_client():
 
 
 # ---------------------------------------------------------------------------
-# Query construction helpers
+# Query helpers
 # ---------------------------------------------------------------------------
-
-
-def _build_odata_filter(
-    site: str,
-    line: str,
-    equipment: str | None = None,
-) -> str:
-    """Build an OData filter string from hard-filter parameters."""
-    clauses = [f"site eq '{site}'", f"line eq '{line}'"]
-    if equipment:
-        clauses.append(f"equipment eq '{equipment}'")
-    return " and ".join(clauses)
-
-
-def _build_query_text(
-    description: str,
-    unit: str | None = None,
-    datatype: str | None = None,
-) -> str:
-    """Combine free-text inputs into a single string for embedding."""
-    parts = [description]
-    if unit:
-        parts.append(unit)
-    if datatype:
-        parts.append(datatype)
-    return " ".join(parts)
 
 
 def _generate_query_embedding(text: str) -> list[float]:
@@ -225,9 +199,7 @@ def _format_matches_for_prompt(matches: list[AutoFillMatch]) -> str:
 
 
 def _extract_structured_fields(
-    description: str,
-    site: str,
-    line: str,
+    query: str,
     matches: list[AutoFillMatch],
 ) -> dict:
     """Use Mistral-Large-3 via AIProjectClient to extract structured fields.
@@ -243,14 +215,8 @@ def _extract_structured_fields(
 
     matches_context = _format_matches_for_prompt(matches)
 
-    # Override site/line with known display values since they're hard-filtered
-    site_display = _SITE_DISPLAY.get(site, site)
-    line_display = f"Line-{line[1:]}" if line.startswith("L") and line[1:].isdigit() else line
-
     user_msg = (
-        f"Site: {site_display}\n"
-        f"Line: {line_display}\n"
-        f"User description: {description}\n\n"
+        f"User query: {query}\n\n"
         f"Similar tags from the registry:\n{matches_context}"
     )
 
@@ -271,10 +237,6 @@ def _extract_structured_fields(
             raw = raw.rsplit("```", 1)[0]
         extracted: dict = json.loads(raw)
 
-        # Ensure site/line always reflect the hard-filtered values
-        extracted["site"] = site_display
-        extracted["line"] = line_display
-
         return extracted
     except Exception:
         logger.exception("AI extraction failed — falling back to search-only results")
@@ -287,34 +249,25 @@ def _extract_structured_fields(
 
 
 async def auto_fill_tag(
-    site: str,
-    line: str,
-    description: str,
-    equipment: str | None = None,
-    unit: str | None = None,
-    datatype: str | None = None,
+    query: str,
     top_k: int = 5,
 ) -> AutoFillResult:
-    """Return AI-extracted tag fields using hybrid vector search + LLM.
+    """Return AI-extracted tag fields using hybrid search + LLM.
 
-    Builds an OData filter from *site*, *line*, and optional *equipment*,
-    generates an embedding from the free-text *description* (plus optional
-    *unit* / *datatype*), and executes a hybrid vector + filter query
-    against the ``golden-tags`` Azure AI Search index.
+    Generates an embedding from the user's free-text *query* and executes a
+    hybrid search (keyword text + semantic vector, no OData filters) against
+    the ``golden-tags`` Azure AI Search index.
 
     The top matches are then passed to Mistral-Large-3 along with the
-    user's description to extract structured form fields (equipment, unit,
-    datatype, tag name, criticality, etc.).
+    user's query to extract structured form fields (site, line, equipment,
+    unit, datatype, tag name, criticality, etc.).
 
     Raises:
         SearchServiceError: If the embedding or search API call fails.
         ValueError: If required environment variables are missing.
     """
-    odata_filter = _build_odata_filter(site, line, equipment)
-    query_text = _build_query_text(description, unit, datatype)
-
     # 1. Generate embedding
-    embedding = _generate_query_embedding(query_text)
+    embedding = _generate_query_embedding(query)
 
     # 2. Build vector query
     vector_query = VectorizedQuery(
@@ -323,13 +276,12 @@ async def auto_fill_tag(
         fields="semanticVector",
     )
 
-    # 3. Execute hybrid search
+    # 3. Execute hybrid search (keyword + vector, no OData filter)
     try:
         client = _get_search_client()
         results = client.search(
-            search_text=query_text,
+            search_text=query,
             vector_queries=[vector_query],
-            filter=odata_filter,
             select=_SELECT_FIELDS,
             top=top_k,
         )
@@ -352,7 +304,7 @@ async def auto_fill_tag(
         raise SearchServiceError(f"Search query failed: {exc}") from exc
 
     # 4. AI extraction
-    extracted = _extract_structured_fields(description, site, line, matches)
+    extracted = _extract_structured_fields(query, matches)
 
     # 5. Build result
     confidence = matches[0].score if matches else 0.0

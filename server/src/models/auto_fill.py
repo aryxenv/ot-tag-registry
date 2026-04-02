@@ -6,12 +6,7 @@ from pydantic import BaseModel
 class AutoFillRequest(BaseModel):
     """Request body for ``POST /api/tags/auto-fill``."""
 
-    site: str
-    line: str
-    description: str
-    equipment: str | None = None
-    unit: str | None = None
-    datatype: str | None = None
+    query: str
 
 
 class AutoFillMatch(BaseModel):

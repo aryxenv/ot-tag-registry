@@ -15,18 +15,7 @@ from src.utils.search import SearchServiceError
 AUTOFILL_URL = "/api/tags/auto-fill"
 
 VALID_AUTOFILL_PAYLOAD = {
-    "site": "LUX",
-    "line": "L1",
-    "description": "outlet pressure of primary coolant pump",
-    "equipment": "PMP001",
-    "unit": "bar",
-    "datatype": "float",
-}
-
-MINIMAL_AUTOFILL_PAYLOAD = {
-    "site": "LUX",
-    "line": "L1",
-    "description": "outlet pressure",
+    "query": "outlet pressure sensor on the main cooling pump in Luxembourg Line 1",
 }
 
 MOCK_MATCHES = [
@@ -128,36 +117,20 @@ class TestAutoFill:
         assert data["matches"] == []
         assert data["confidence"] == 0.0
 
-    def test_autofill_minimal_payload(self, client):
+    def test_autofill_passes_query_to_search(self, client):
         with patch(
             "src.routes.auto_fill.auto_fill_tag",
             new_callable=AsyncMock,
             return_value=MOCK_RESULT,
         ) as mock_fn:
-            resp = client.post(AUTOFILL_URL, json=MINIMAL_AUTOFILL_PAYLOAD)
+            resp = client.post(AUTOFILL_URL, json=VALID_AUTOFILL_PAYLOAD)
 
         assert resp.status_code == 200
         call_kwargs = mock_fn.call_args.kwargs
-        assert call_kwargs["site"] == "LUX"
-        assert call_kwargs["line"] == "L1"
-        assert call_kwargs["description"] == "outlet pressure"
-        assert call_kwargs["equipment"] is None
-        assert call_kwargs["unit"] is None
-        assert call_kwargs["datatype"] is None
+        assert call_kwargs["query"] == VALID_AUTOFILL_PAYLOAD["query"]
 
-    def test_autofill_missing_description(self, client):
-        payload = {"site": "LUX", "line": "L1"}
-        resp = client.post(AUTOFILL_URL, json=payload)
-        assert resp.status_code == 422
-
-    def test_autofill_missing_site_returns_422(self, client):
-        payload = {"line": "L1", "description": "pressure"}
-        resp = client.post(AUTOFILL_URL, json=payload)
-        assert resp.status_code == 422
-
-    def test_autofill_missing_line_returns_422(self, client):
-        payload = {"site": "LUX", "description": "pressure"}
-        resp = client.post(AUTOFILL_URL, json=payload)
+    def test_autofill_missing_query_returns_422(self, client):
+        resp = client.post(AUTOFILL_URL, json={})
         assert resp.status_code == 422
 
     def test_autofill_search_service_error_returns_502(self, client):
@@ -210,11 +183,9 @@ class TestAutoFill:
             resp = client.post(AUTOFILL_URL, json=VALID_AUTOFILL_PAYLOAD)
 
         data = resp.json()
-        # Display names (not short codes)
         assert data["site"] == "Plant-Luxembourg"
         assert data["line"] == "Line-1"
         assert data["equipment"] == "Pump-001"
-        # Tag-format name (no ID suffix)
         assert data["name"] == "LUX.L1.PMP001.Pressure.Bar"
         assert data["description"] is not None
         assert data["criticality"] in ("low", "medium", "high", "critical")
@@ -229,10 +200,8 @@ class TestAutoFill:
             resp = client.post(AUTOFILL_URL, json=VALID_AUTOFILL_PAYLOAD)
 
         data = resp.json()
-        # Extracted fields are null (AI failed)
         assert data["name"] is None
         assert data["equipment"] is None
-        # But matches are still returned
         assert len(data["matches"]) == 3
         assert data["confidence"] == 0.94
 
