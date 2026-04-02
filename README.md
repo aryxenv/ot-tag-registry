@@ -63,88 +63,29 @@ graph TD
 
 ### Prerequisites
 
-- **Python 3.12+** with [`uv`](https://docs.astral.sh/uv/) package manager
-- **Node.js 20+** with npm
-- **Azure Cosmos DB** account — the backend persists all data to a real Cosmos DB instance in your Azure subscription
-- **Azure AI Search** service — powers the "Suggest a Name" vector search feature
-- **Azure AI Foundry** project — provides `text-embedding-3-large` embeddings for semantic search
+- [Python 3.12+](https://www.python.org/) with [`uv`](https://docs.astral.sh/uv/)
+- [Node.js 20+](https://nodejs.org/) with npm
+- [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) — logged in
+- [Azure Developer CLI (`azd`)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd)
 
-### Environment Setup
-
-Copy the example env file and fill in your Cosmos DB credentials:
+### Setup
 
 ```bash
-cp server/.env.example server/.env
-```
-
-Required variables:
-
-| Variable                       | Description                                                                    |
-| ------------------------------ | ------------------------------------------------------------------------------ |
-| `COSMOS_ENDPOINT`              | Your Cosmos DB account URI (e.g. `https://<account>.documents.azure.com:443/`) |
-| `COSMOS_DATABASE`              | Database name (defaults to `ot-tag-registry`)                                  |
-| `SEARCH_ENDPOINT`              | Azure AI Search service URI (e.g. `https://<service>.search.windows.net`)      |
-| `SEARCH_INDEX_NAME`            | Index name (defaults to `golden-tags`)                                         |
-| `PROJECT_ENDPOINT`             | Azure AI Foundry project endpoint                                              |
-| `PROJECT_EMBEDDING_DEPLOYMENT` | Embedding model deployment name (e.g. `text-embedding-3-large`)                |
-
-> **Authentication:** All services use `DefaultAzureCredential` (managed identity in Azure, Azure CLI / VS Code locally). No API keys are needed.
-
-The **services** layer needs its own env file with the same variables for setup scripts:
-
-```bash
-cp services/.env.example services/.env
-```
-
-### Install & Run
-
-```bash
-# Install dependencies
-cd server && uv venv && uv pip install -r requirements.txt
-cd ../services && uv venv && uv pip install -r requirements.txt
-cd ../client && npm install
-
-# Start backend (port 8000)
-cd server && uv run uvicorn src.main:app --reload
-
-# Start frontend (port 5173)
-cd client && npm run dev
-```
-
-### Seed Sample Data
-
-The seed script populates your Cosmos DB with realistic sample data for development and demo purposes:
-
-```bash
-cd services && uv run python -m database.seed
+./setup.sh
 ```
 
 This will:
+1. Install backend and frontend dependencies
+2. Provision Azure resources via `azd up` (Cosmos DB, AI Search, AI Foundry) — skips if already provisioned
+3. Print commands to start the dev servers
 
-1. **Create the database and 5 containers** (`assets`, `tags`, `sources`, `l1Rules`, `l2Rules`) if they don't already exist
-2. **Upsert sample documents** — ~20 assets across 3 sites (Luxembourg, Brussels, Amsterdam), 6 data sources, ~35 tags, 27 L1 rules, and 5 L2 rules
-
-> [!WARNING]
-> This writes to your live Azure Cosmos DB instance. The script uses upsert operations, so it's safe to re-run — it will overwrite existing seed documents rather than create duplicates. Make sure your `server/.env` has valid credentials before running.
-
-### Seed Azure AI Search Index
-
-The AI Search index powers the "Suggest a Name" feature. Two scripts set up and populate the `golden-tags` vector index:
+To start the servers immediately after setup:
 
 ```bash
-# 1. Create the index schema (run once)
-cd services && uv run python -m search.create_index
-
-# 2. Generate embeddings and upload golden tags
-cd services && uv run python -m search.seed_index
+./setup.sh --start both      # backend (port 8000) + frontend (port 5173)
+./setup.sh --start server    # backend only
+./setup.sh --start client    # frontend only
 ```
-
-This will:
-
-1. **Create the `golden-tags` index** with HNSW vector search (3072 dimensions, cosine metric) configured for `text-embedding-3-large`
-2. **Seed 68 golden tags** across 3 sites (Luxembourg, Belgium, France), 8 equipment types, and 29 measurement types — each with a vector embedding generated via Azure AI Foundry
-
-> **Requires** `SEARCH_ENDPOINT`, `PROJECT_ENDPOINT`, and `PROJECT_EMBEDDING_DEPLOYMENT` to be set in `services/.env`.
 
 ## API Reference
 
@@ -195,26 +136,19 @@ All endpoints are prefixed with `/api`.
 ## Testing & Linting
 
 ```bash
-# Backend tests (pytest)
-cd server && uv run pytest tests/ -v
-
-# Frontend lint
-cd client && npm run lint
-
-# Frontend type-check + build
-cd client && npm run build
+cd server && uv run pytest tests/ -v   # Backend tests
+cd client && npm run lint               # Frontend lint
+cd client && npm run build              # Frontend type-check + build
 ```
 
 ## Deployment
 
-The project includes Azure Developer CLI (`azd`) configuration for deploying to Azure:
+Infrastructure is defined as **Bicep** templates in `azure/`. The setup script runs `azd up` automatically, but you can also run it manually:
 
 ```bash
-azd up        # Provision infrastructure + deploy app
-azd deploy    # Deploy code changes only (infra already exists)
+azd up        # Provision infrastructure + deploy
+azd deploy    # Deploy code changes only
 ```
-
-Infrastructure is defined as **Bicep** templates in `azure/`. See `azure.yaml` for the full configuration.
 
 ## Project Structure
 
