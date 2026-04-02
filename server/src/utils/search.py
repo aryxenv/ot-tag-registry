@@ -90,8 +90,7 @@ class SearchServiceError(Exception):
 
 _cached_search_credential: DefaultAzureCredential | None = None
 _cached_search_client: SearchClient | None = None
-_cached_embeddings_client = None
-_cached_chat_client = None
+_cached_ai_client = None
 
 
 def _get_search_credential() -> DefaultAzureCredential:
@@ -119,48 +118,26 @@ def _get_search_client() -> SearchClient:
     return _cached_search_client
 
 
-def _get_embeddings_client():
-    """Return a cached Azure AI Foundry embeddings client."""
-    global _cached_embeddings_client
-    if _cached_embeddings_client is not None:
-        return _cached_embeddings_client
+_cached_ai_client = None
+
+
+def _get_ai_client():
+    """Return a cached OpenAI-compatible client via Azure AI Foundry."""
+    global _cached_ai_client
+    if _cached_ai_client is not None:
+        return _cached_ai_client
     from azure.ai.projects import AIProjectClient
 
     project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
     if not project_endpoint:
         raise ValueError("PROJECT_ENDPOINT environment variable must be set")
-    deployment = os.environ.get("PROJECT_EMBEDDING_DEPLOYMENT", "")
-    if not deployment:
-        raise ValueError("PROJECT_EMBEDDING_DEPLOYMENT environment variable must be set")
 
     project = AIProjectClient(
         endpoint=project_endpoint,
         credential=DefaultAzureCredential(),
     )
-    _cached_embeddings_client = project.inference.get_embeddings_client()
-    return _cached_embeddings_client
-
-
-def _get_chat_client():
-    """Return a cached Azure AI Foundry chat completions client."""
-    global _cached_chat_client
-    if _cached_chat_client is not None:
-        return _cached_chat_client
-    from azure.ai.projects import AIProjectClient
-
-    project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
-    if not project_endpoint:
-        raise ValueError("PROJECT_ENDPOINT environment variable must be set")
-    deployment = os.environ.get("PROJECT_CHAT_DEPLOYMENT", "")
-    if not deployment:
-        raise ValueError("PROJECT_CHAT_DEPLOYMENT environment variable must be set")
-
-    project = AIProjectClient(
-        endpoint=project_endpoint,
-        credential=DefaultAzureCredential(),
-    )
-    _cached_chat_client = project.inference.get_chat_completions_client()
-    return _cached_chat_client
+    _cached_ai_client = project.get_openai_client()
+    return _cached_ai_client
 
 
 # ---------------------------------------------------------------------------
@@ -171,9 +148,11 @@ def _get_chat_client():
 def _generate_query_embedding(text: str) -> list[float]:
     """Generate a single embedding vector for *text*."""
     deployment = os.environ.get("PROJECT_EMBEDDING_DEPLOYMENT", "")
+    if not deployment:
+        raise ValueError("PROJECT_EMBEDDING_DEPLOYMENT environment variable must be set")
     try:
-        client = _get_embeddings_client()
-        response = client.embed(model=deployment, input=[text])
+        client = _get_ai_client()
+        response = client.embeddings.create(model=deployment, input=[text])
         return response.data[0].embedding
     except (HttpResponseError, ServiceRequestError) as exc:
         raise SearchServiceError(f"Embedding generation failed: {exc}") from exc
@@ -221,8 +200,8 @@ def _extract_structured_fields(
     )
 
     try:
-        client = _get_chat_client()
-        response = client.complete(
+        client = _get_ai_client()
+        response = client.chat.completions.create(
             model=deployment,
             messages=[
                 {"role": "system", "content": _AUTOFILL_SYSTEM_PROMPT},
