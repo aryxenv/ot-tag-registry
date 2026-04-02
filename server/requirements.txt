@@ -6,3 +6,4 @@ azure-search-documents
 azure-ai-projects
 python-dotenv
 pydantic
+httpx

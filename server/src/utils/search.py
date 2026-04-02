@@ -1,21 +1,24 @@
-"""Azure AI Search + AI extraction client for tag auto-fill.
+"""Azure AI Search + Foundry Agent client for tag auto-fill.
 
 Self-contained module — queries the ``golden-tags`` Azure AI Search index
 using hybrid search (keyword text + semantic embedding, no OData filters),
-then passes the results through Mistral-Large-3 (via Azure AI Foundry) to
-extract structured form fields.
+then invokes the ``tag-auto-fill`` Foundry Agent (gpt-4.1-mini with
+function-calling tools) to clean and structure the result.
 
 Required environment variables (loaded by ``main.py`` via ``dotenv``):
     SEARCH_ENDPOINT, SEARCH_INDEX_NAME,
-    PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT, PROJECT_CHAT_DEPLOYMENT
+    PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT,
+    PROJECT_CHAT_DEPLOYMENT, FUNCTION_APP_URL
 Optional:
     SEARCH_API_KEY  — falls back to DefaultAzureCredential when unset.
+    AUTOFILL_AGENT_NAME — defaults to ``tag-auto-fill``.
 """
 
 import json
 import logging
 import os
 
+import httpx
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
@@ -35,48 +38,8 @@ _SELECT_FIELDS = [
     "datatype",
 ]
 
-# Display name mappings — keep in sync with client/src/utils/tagNameMappings.ts
-_SITE_DISPLAY = {"LUX": "Plant-Luxembourg", "BEL": "Plant-Brussels", "NED": "Plant-Amsterdam"}
-_EQUIP_PREFIX_DISPLAY = {
-    "PMP": "Pump", "CMP": "Compressor", "MOT": "Motor", "CNV": "Conveyor",
-    "VLV": "Valve", "HEX": "HeatExchanger", "BLR": "Boiler", "TNK": "Tank",
-}
-
-_AUTOFILL_SYSTEM_PROMPT = """\
-You are a tag naming assistant for an industrial IoT tag registry.
-
-## Tag Naming Format
-`SITE.LINE.EQUIPMENT.MEASUREMENT.UNIT.ID`
-
-| Segment | Description | Examples |
-|---------|-------------|----------|
-| SITE | 3-letter plant code | LUX, BEL, NED |
-| LINE | Production line | L1, L2, L3 |
-| EQUIPMENT | Type abbreviation + 3-digit number | PMP001, CMP003, MOT004 |
-| MEASUREMENT | PascalCase measurement name | Pressure, Temperature, Speed |
-| UNIT | PascalCase unit code | Bar, Cel, Rpm, Mms, Lpm |
-| ID | Numeric (omit — the system adds it) | — |
-
-## Equipment Codes
-PMP = Pump, CMP = Compressor, MOT = Motor, CNV = Conveyor, VLV = Valve, HEX = Heat Exchanger, BLR = Boiler, TNK = Tank
-
-## Frontend Display Names
-Sites: LUX → "Plant-Luxembourg", BEL → "Plant-Brussels", NED → "Plant-Amsterdam"
-Lines: L1 → "Line-1", L2 → "Line-2", etc.
-Equipment: PMP001 → "Pump-001", CMP003 → "Compressor-003", MOT004 → "Motor-004"
-
-## Your Task
-Given the user's query and similar existing tags from the registry, extract structured fields. Return a JSON object with these keys:
-- "site": display name (e.g. "Plant-Luxembourg") or null
-- "line": display name (e.g. "Line-1") or null
-- "equipment": display name (e.g. "Pump-001") or null
-- "unit": engineering unit in lowercase (e.g. "bar", "°C", "RPM") or null
-- "datatype": "float", "int", or "bool" — or null
-- "name": tag name WITHOUT the ID suffix (e.g. "LUX.L1.PMP001.Pressure.Bar") or null
-- "description": cleaned-up one-line description or null
-- "criticality": "low", "medium", "high", or "critical" — or null
-
-Return ONLY valid JSON, no markdown fences, no explanation."""
+AGENT_NAME = "tag-auto-fill"
+_MAX_TOOL_ITERATIONS = 3
 
 
 class SearchServiceError(Exception):
@@ -118,9 +81,6 @@ def _get_search_client() -> SearchClient:
     return _cached_search_client
 
 
-_cached_ai_client = None
-
-
 def _get_ai_client():
     """Return a cached OpenAI-compatible client via Azure AI Foundry."""
     global _cached_ai_client
@@ -159,12 +119,47 @@ def _generate_query_embedding(text: str) -> list[float]:
 
 
 # ---------------------------------------------------------------------------
-# AI extraction
+# Agent tool execution
+# ---------------------------------------------------------------------------
+
+
+def _execute_tool(name: str, arguments: str) -> str:
+    """Execute a function tool by calling the Azure Functions HTTP endpoint."""
+    func_url = os.environ.get("FUNCTION_APP_URL", "")
+    if not func_url:
+        return json.dumps({"error": "FUNCTION_APP_URL not configured"})
+
+    try:
+        args = json.loads(arguments) if arguments else {}
+
+        if name == "get_available_sites":
+            resp = httpx.get(f"{func_url}/api/get-sites", timeout=10)
+            resp.raise_for_status()
+            return resp.text
+
+        if name == "get_available_lines":
+            site = args.get("site", "")
+            resp = httpx.get(
+                f"{func_url}/api/get-lines",
+                params={"site": site},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            return resp.text
+
+        return json.dumps({"error": f"Unknown tool: {name}"})
+    except Exception as exc:
+        logger.warning("Tool %s failed: %s", name, exc)
+        return json.dumps({"error": str(exc)})
+
+
+# ---------------------------------------------------------------------------
+# AI extraction via Foundry Agent
 # ---------------------------------------------------------------------------
 
 
 def _format_matches_for_prompt(matches: list[AutoFillMatch]) -> str:
-    """Format search matches as context for the LLM prompt."""
+    """Format search matches as context for the agent prompt."""
     if not matches:
         return "No similar tags found in the registry."
     lines = []
@@ -181,44 +176,77 @@ def _extract_structured_fields(
     query: str,
     matches: list[AutoFillMatch],
 ) -> dict:
-    """Use Mistral-Large-3 via AIProjectClient to extract structured fields.
+    """Invoke the Foundry Agent to clean and structure the search result.
+
+    Uses the ``tag-auto-fill`` agent (gpt-4.1-mini with function-calling
+    tools).  The agent may call ``get_available_sites`` /
+    ``get_available_lines`` via Azure Functions to validate site/line.
 
     Returns a dict with keys: site, line, equipment, unit, datatype, name,
     description, criticality.  Values are strings or ``None``.
     On any failure, returns an empty dict (caller falls back gracefully).
     """
-    deployment = os.environ.get("PROJECT_CHAT_DEPLOYMENT", "")
-    if not deployment:
-        logger.warning("PROJECT_CHAT_DEPLOYMENT not set — skipping AI extraction")
+    agent_name = os.environ.get("AUTOFILL_AGENT_NAME", AGENT_NAME)
+    if not os.environ.get("PROJECT_CHAT_DEPLOYMENT"):
+        logger.warning("PROJECT_CHAT_DEPLOYMENT not set — skipping agent extraction")
         return {}
 
     matches_context = _format_matches_for_prompt(matches)
-
     user_msg = (
         f"User query: {query}\n\n"
-        f"Similar tags from the registry:\n{matches_context}"
+        f"Closest matching tag from the registry:\n{matches_context}"
     )
 
     try:
-        client = _get_ai_client()
-        response = client.chat.completions.create(
-            model=deployment,
-            messages=[
-                {"role": "system", "content": _AUTOFILL_SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg},
-            ],
-            temperature=0.1,
+        from openai.types.responses.response_input_param import (
+            FunctionCallOutput,
         )
-        raw = response.choices[0].message.content.strip()
-        # Strip markdown code fences if the model wraps its response
+
+        client = _get_ai_client()
+
+        # First call: send query + match context to the agent
+        response = client.responses.create(
+            input=user_msg,
+            extra_body={
+                "agent_reference": {"name": agent_name, "type": "agent_reference"},
+            },
+        )
+
+        # Tool-calling loop: handle function calls from the agent
+        for _ in range(_MAX_TOOL_ITERATIONS):
+            tool_outputs = []
+            for item in response.output:
+                if item.type == "function_call":
+                    result = _execute_tool(item.name, item.arguments)
+                    tool_outputs.append(
+                        FunctionCallOutput(
+                            type="function_call_output",
+                            call_id=item.call_id,
+                            output=result,
+                        )
+                    )
+
+            if not tool_outputs:
+                break
+
+            # Submit tool results and get next response
+            response = client.responses.create(
+                input=tool_outputs,
+                previous_response_id=response.id,
+                extra_body={
+                    "agent_reference": {"name": agent_name, "type": "agent_reference"},
+                },
+            )
+
+        # Parse the final text response as JSON
+        raw = response.output_text.strip()
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
             raw = raw.rsplit("```", 1)[0]
-        extracted: dict = json.loads(raw)
+        return json.loads(raw)
 
-        return extracted
     except Exception:
-        logger.exception("AI extraction failed — falling back to search-only results")
+        logger.exception("Agent extraction failed — falling back to search-only results")
         return {}
 
 
@@ -231,15 +259,15 @@ async def auto_fill_tag(
     query: str,
     top_k: int = 1,
 ) -> AutoFillResult:
-    """Return AI-extracted tag fields using hybrid search + LLM.
+    """Return AI-extracted tag fields using hybrid search + Foundry Agent.
 
     Generates an embedding from the user's free-text *query* and executes a
     hybrid search (keyword text + semantic vector, no OData filters) against
     the ``golden-tags`` Azure AI Search index.
 
-    The top matches are then passed to Mistral-Large-3 along with the
-    user's query to extract structured form fields (site, line, equipment,
-    unit, datatype, tag name, criticality, etc.).
+    The top match is then passed to the ``tag-auto-fill`` Foundry Agent
+    (gpt-4.1-mini) which cleans and validates the result against the user's
+    query, optionally calling Azure Functions to look up valid sites/lines.
 
     Raises:
         SearchServiceError: If the embedding or search API call fails.
@@ -282,7 +310,7 @@ async def auto_fill_tag(
     except (HttpResponseError, ServiceRequestError) as exc:
         raise SearchServiceError(f"Search query failed: {exc}") from exc
 
-    # 4. AI extraction
+    # 4. Agent extraction
     extracted = _extract_structured_fields(query, matches)
 
     # 5. Build result

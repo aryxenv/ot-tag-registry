@@ -20,16 +20,16 @@ param embeddingModelVersion string = '1'
 param embeddingCapacity int = 120
 
 @description('Name of the chat model deployment')
-param chatDeploymentName string = 'Mistral-Large-3'
+param chatDeploymentName string = 'gpt-4.1-mini'
 
 @description('Chat model name')
-param chatModelName string = 'Mistral-Large-3'
+param chatModelName string = 'gpt-4.1-mini'
 
 @description('Chat model version')
-param chatModelVersion string = '1'
+param chatModelVersion string = '2025-04-14'
 
-@description('Chat deployment capacity (requests per minute)')
-param chatCapacity int = 1
+@description('Chat deployment capacity (thousands of tokens per minute)')
+param chatCapacity int = 10
 
 // ---------------------------------------------------------------------------
 // AI Foundry resource (CognitiveServices/accounts, kind: AIServices)
@@ -102,7 +102,7 @@ resource chatDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-0
   }
   properties: {
     model: {
-      format: 'Mistral AI'
+      format: 'OpenAI'
       name: chatModelName
       version: chatModelVersion
     }

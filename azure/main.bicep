@@ -61,6 +61,17 @@ module aiFoundry 'modules/ai-foundry.bicep' = {
   }
 }
 
+module functionApp 'modules/function-app.bicep' = {
+  scope: rg
+  name: 'function-app'
+  params: {
+    location: location
+    namePrefix: environmentName
+    cosmosEndpoint: cosmosDb.outputs.endpoint
+    cosmosDatabaseName: cosmosDatabaseName
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Role assignments — signed-in user
 // ---------------------------------------------------------------------------
@@ -109,6 +120,17 @@ module userAiDevRole 'modules/role-assignment.bicep' = {
   }
 }
 
+// Cosmos DB Built-in Data Reader — for Function App to query assets
+module funcCosmosReaderRole 'modules/role-assignment.bicep' = {
+  scope: rg
+  name: 'func-cosmos-reader-role'
+  params: {
+    principalId: functionApp.outputs.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: '00000000-0000-0000-0000-000000000001' // Cosmos DB Built-in Data Reader
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Outputs (automatically stored in azd env)
 // ---------------------------------------------------------------------------
@@ -123,4 +145,5 @@ output PROJECT_ENDPOINT string = aiFoundry.outputs.endpoint
 output PROJECT_EMBEDDING_DEPLOYMENT string = aiFoundry.outputs.embeddingDeploymentName
 output PROJECT_CHAT_DEPLOYMENT string = aiFoundry.outputs.chatDeploymentName
 output AI_SERVICES_ACCOUNT_NAME string = aiFoundry.outputs.accountName
+output FUNCTION_APP_URL string = functionApp.outputs.functionAppUrl
 output AZURE_RESOURCE_GROUP string = rg.name
