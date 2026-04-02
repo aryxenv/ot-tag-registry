@@ -1,16 +1,18 @@
-"""Azure AI Search + embeddings client for tag-name suggestions.
+"""Azure AI Search + AI extraction client for tag auto-fill.
 
 Self-contained module — queries the ``golden-tags`` Azure AI Search index
-using hybrid vector search (OData hard filters + semantic embedding) to
-return ranked tag-name suggestions.
+using hybrid vector search (OData hard filters + semantic embedding), then
+passes the results through Mistral-Large-3 (via Azure AI Foundry) to extract
+structured form fields.
 
 Required environment variables (loaded by ``main.py`` via ``dotenv``):
     SEARCH_ENDPOINT, SEARCH_INDEX_NAME,
-    PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT
+    PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT, PROJECT_CHAT_DEPLOYMENT
 Optional:
     SEARCH_API_KEY  — falls back to DefaultAzureCredential when unset.
 """
 
+import json
 import logging
 import os
 
@@ -19,7 +21,7 @@ from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery
 
-from src.models.suggest_name import SuggestionMatch, SuggestionResult
+from src.models.auto_fill import AutoFillMatch, AutoFillResult
 
 logger = logging.getLogger("ot_tag_registry.search")
 
@@ -32,6 +34,49 @@ _SELECT_FIELDS = [
     "unit",
     "datatype",
 ]
+
+# Display name mappings — keep in sync with client/src/utils/tagNameMappings.ts
+_SITE_DISPLAY = {"LUX": "Plant-Luxembourg", "BEL": "Plant-Brussels", "NED": "Plant-Amsterdam"}
+_EQUIP_PREFIX_DISPLAY = {
+    "PMP": "Pump", "CMP": "Compressor", "MOT": "Motor", "CNV": "Conveyor",
+    "VLV": "Valve", "HEX": "HeatExchanger", "BLR": "Boiler", "TNK": "Tank",
+}
+
+_AUTOFILL_SYSTEM_PROMPT = """\
+You are a tag naming assistant for an industrial IoT tag registry.
+
+## Tag Naming Format
+`SITE.LINE.EQUIPMENT.MEASUREMENT.UNIT.ID`
+
+| Segment | Description | Examples |
+|---------|-------------|----------|
+| SITE | 3-letter plant code | LUX, BEL, NED |
+| LINE | Production line | L1, L2, L3 |
+| EQUIPMENT | Type abbreviation + 3-digit number | PMP001, CMP003, MOT004 |
+| MEASUREMENT | PascalCase measurement name | Pressure, Temperature, Speed |
+| UNIT | PascalCase unit code | Bar, Cel, Rpm, Mms, Lpm |
+| ID | Numeric (omit — the system adds it) | — |
+
+## Equipment Codes
+PMP = Pump, CMP = Compressor, MOT = Motor, CNV = Conveyor, VLV = Valve, HEX = Heat Exchanger, BLR = Boiler, TNK = Tank
+
+## Frontend Display Names
+Sites: LUX → "Plant-Luxembourg", BEL → "Plant-Brussels", NED → "Plant-Amsterdam"
+Lines: L1 → "Line-1", L2 → "Line-2", etc.
+Equipment: PMP001 → "Pump-001", CMP003 → "Compressor-003", MOT004 → "Motor-004"
+
+## Your Task
+Given the user's description and similar existing tags from the registry, extract structured fields. Return a JSON object with these keys:
+- "site": display name (e.g. "Plant-Luxembourg") or null
+- "line": display name (e.g. "Line-1") or null
+- "equipment": display name (e.g. "Pump-001") or null
+- "unit": engineering unit in lowercase (e.g. "bar", "°C", "RPM") or null
+- "datatype": "float", "int", or "bool" — or null
+- "name": tag name WITHOUT the ID suffix (e.g. "LUX.L1.PMP001.Pressure.Bar") or null
+- "description": cleaned-up one-line description or null
+- "criticality": "low", "medium", "high", or "critical" — or null
+
+Return ONLY valid JSON, no markdown fences, no explanation."""
 
 
 class SearchServiceError(Exception):
@@ -46,6 +91,7 @@ class SearchServiceError(Exception):
 _cached_search_credential: DefaultAzureCredential | None = None
 _cached_search_client: SearchClient | None = None
 _cached_embeddings_client = None
+_cached_chat_client = None
 
 
 def _get_search_credential() -> DefaultAzureCredential:
@@ -95,6 +141,28 @@ def _get_embeddings_client():
     return _cached_embeddings_client
 
 
+def _get_chat_client():
+    """Return a cached Azure AI Foundry chat completions client."""
+    global _cached_chat_client
+    if _cached_chat_client is not None:
+        return _cached_chat_client
+    from azure.ai.projects import AIProjectClient
+
+    project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
+    if not project_endpoint:
+        raise ValueError("PROJECT_ENDPOINT environment variable must be set")
+    deployment = os.environ.get("PROJECT_CHAT_DEPLOYMENT", "")
+    if not deployment:
+        raise ValueError("PROJECT_CHAT_DEPLOYMENT environment variable must be set")
+
+    project = AIProjectClient(
+        endpoint=project_endpoint,
+        credential=DefaultAzureCredential(),
+    )
+    _cached_chat_client = project.inference.get_chat_completions_client()
+    return _cached_chat_client
+
+
 # ---------------------------------------------------------------------------
 # Query construction helpers
 # ---------------------------------------------------------------------------
@@ -137,17 +205,80 @@ def _generate_query_embedding(text: str) -> list[float]:
         raise SearchServiceError(f"Embedding generation failed: {exc}") from exc
 
 
-def _build_evidence(
-    request_description: str,
-    top_match: SuggestionMatch,
-) -> str:
-    """Build a human-readable evidence string from the top match."""
-    return (
-        f"Similar to tag '{top_match.tagName}' — "
-        f"same site/line, description match on "
-        f"'{request_description}' ↔ '{top_match.description}' "
-        f"({top_match.score:.2f} similarity)"
+# ---------------------------------------------------------------------------
+# AI extraction
+# ---------------------------------------------------------------------------
+
+
+def _format_matches_for_prompt(matches: list[AutoFillMatch]) -> str:
+    """Format search matches as context for the LLM prompt."""
+    if not matches:
+        return "No similar tags found in the registry."
+    lines = []
+    for m in matches:
+        lines.append(
+            f"- {m.tagName} (score: {m.score:.2f}): {m.description} "
+            f"[site={m.site}, line={m.line}, equip={m.equipment}, "
+            f"unit={m.unit}, datatype={m.datatype}]"
+        )
+    return "\n".join(lines)
+
+
+def _extract_structured_fields(
+    description: str,
+    site: str,
+    line: str,
+    matches: list[AutoFillMatch],
+) -> dict:
+    """Use Mistral-Large-3 via AIProjectClient to extract structured fields.
+
+    Returns a dict with keys: site, line, equipment, unit, datatype, name,
+    description, criticality.  Values are strings or ``None``.
+    On any failure, returns an empty dict (caller falls back gracefully).
+    """
+    deployment = os.environ.get("PROJECT_CHAT_DEPLOYMENT", "")
+    if not deployment:
+        logger.warning("PROJECT_CHAT_DEPLOYMENT not set — skipping AI extraction")
+        return {}
+
+    matches_context = _format_matches_for_prompt(matches)
+
+    # Override site/line with known display values since they're hard-filtered
+    site_display = _SITE_DISPLAY.get(site, site)
+    line_display = f"Line-{line[1:]}" if line.startswith("L") and line[1:].isdigit() else line
+
+    user_msg = (
+        f"Site: {site_display}\n"
+        f"Line: {line_display}\n"
+        f"User description: {description}\n\n"
+        f"Similar tags from the registry:\n{matches_context}"
     )
+
+    try:
+        client = _get_chat_client()
+        response = client.complete(
+            model=deployment,
+            messages=[
+                {"role": "system", "content": _AUTOFILL_SYSTEM_PROMPT},
+                {"role": "user", "content": user_msg},
+            ],
+            temperature=0.1,
+        )
+        raw = response.choices[0].message.content.strip()
+        # Strip markdown code fences if the model wraps its response
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+            raw = raw.rsplit("```", 1)[0]
+        extracted: dict = json.loads(raw)
+
+        # Ensure site/line always reflect the hard-filtered values
+        extracted["site"] = site_display
+        extracted["line"] = line_display
+
+        return extracted
+    except Exception:
+        logger.exception("AI extraction failed — falling back to search-only results")
+        return {}
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +286,7 @@ def _build_evidence(
 # ---------------------------------------------------------------------------
 
 
-async def suggest_tag_name(
+async def auto_fill_tag(
     site: str,
     line: str,
     description: str,
@@ -163,16 +294,17 @@ async def suggest_tag_name(
     unit: str | None = None,
     datatype: str | None = None,
     top_k: int = 5,
-) -> SuggestionResult:
-    """Return ranked tag-name suggestions using hybrid vector search.
+) -> AutoFillResult:
+    """Return AI-extracted tag fields using hybrid vector search + LLM.
 
     Builds an OData filter from *site*, *line*, and optional *equipment*,
     generates an embedding from the free-text *description* (plus optional
     *unit* / *datatype*), and executes a hybrid vector + filter query
     against the ``golden-tags`` Azure AI Search index.
 
-    Returns a :class:`SuggestionResult` with the best match as
-    ``suggestedName`` and remaining matches as ``alternatives``.
+    The top matches are then passed to Mistral-Large-3 along with the
+    user's description to extract structured form fields (equipment, unit,
+    datatype, tag name, criticality, etc.).
 
     Raises:
         SearchServiceError: If the embedding or search API call fails.
@@ -202,10 +334,10 @@ async def suggest_tag_name(
             top=top_k,
         )
 
-        matches: list[SuggestionMatch] = []
+        matches: list[AutoFillMatch] = []
         for result in results:
             matches.append(
-                SuggestionMatch(
+                AutoFillMatch(
                     tagName=result["tagName"],
                     description=result.get("description", ""),
                     score=result["@search.score"],
@@ -219,18 +351,21 @@ async def suggest_tag_name(
     except (HttpResponseError, ServiceRequestError) as exc:
         raise SearchServiceError(f"Search query failed: {exc}") from exc
 
-    # 4. Build result
-    if not matches:
-        return SuggestionResult(
-            suggestedName="",
-            alternatives=[],
-            evidence="",
-            matches=[],
-        )
+    # 4. AI extraction
+    extracted = _extract_structured_fields(description, site, line, matches)
 
-    return SuggestionResult(
-        suggestedName=matches[0].tagName,
-        alternatives=[m.tagName for m in matches[1:]],
-        evidence=_build_evidence(description, matches[0]),
+    # 5. Build result
+    confidence = matches[0].score if matches else 0.0
+
+    return AutoFillResult(
+        site=extracted.get("site"),
+        line=extracted.get("line"),
+        equipment=extracted.get("equipment"),
+        unit=extracted.get("unit"),
+        datatype=extracted.get("datatype"),
+        name=extracted.get("name"),
+        description=extracted.get("description"),
+        criticality=extracted.get("criticality"),
+        confidence=confidence,
         matches=matches,
     )

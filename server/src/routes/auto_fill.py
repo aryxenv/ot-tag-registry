@@ -1,22 +1,22 @@
-"""Suggest-name route — returns AI-powered tag name suggestions."""
+"""Auto-fill route — returns AI-powered tag field suggestions."""
 
 import logging
 
 from fastapi import APIRouter, HTTPException
 
-from src.models.suggest_name import SuggestNameRequest, SuggestionResult
-from src.utils.search import SearchServiceError, suggest_tag_name
+from src.models.auto_fill import AutoFillRequest, AutoFillResult
+from src.utils.search import SearchServiceError, auto_fill_tag
 
-logger = logging.getLogger("ot_tag_registry.routes.suggest_name")
+logger = logging.getLogger("ot_tag_registry.routes.auto_fill")
 
-router = APIRouter(prefix="/api/tags", tags=["suggest-name"])
+router = APIRouter(prefix="/api/tags", tags=["auto-fill"])
 
 
-@router.post("/suggest-name", response_model=SuggestionResult)
-async def suggest_name(body: SuggestNameRequest) -> SuggestionResult:
-    """Return ranked tag-name suggestions via hybrid vector search."""
+@router.post("/auto-fill", response_model=AutoFillResult)
+async def auto_fill(body: AutoFillRequest) -> AutoFillResult:
+    """Return AI-extracted tag fields via hybrid vector search + LLM."""
     try:
-        result = await suggest_tag_name(
+        result = await auto_fill_tag(
             site=body.site,
             line=body.line,
             description=body.description,

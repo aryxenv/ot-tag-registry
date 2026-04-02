@@ -13,7 +13,7 @@ from .rules import (
     CreateL2Rule,
     UpdateL2Rule,
 )
-from .suggest_name import SuggestNameRequest, SuggestionMatch, SuggestionResult
+from .auto_fill import AutoFillRequest, AutoFillMatch, AutoFillResult
 
 __all__ = [
     "Asset",
@@ -38,7 +38,7 @@ __all__ = [
     "UpdateL1Rule",
     "CreateL2Rule",
     "UpdateL2Rule",
-    "SuggestNameRequest",
-    "SuggestionMatch",
-    "SuggestionResult",
+    "AutoFillRequest",
+    "AutoFillMatch",
+    "AutoFillResult",
 ]

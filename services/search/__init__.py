@@ -1,4 +1,4 @@
-from search.suggest_name import (
+from search.auto_fill import (
     SearchServiceError,
     SuggestionMatch,
     SuggestionResult,

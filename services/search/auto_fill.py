@@ -1,4 +1,4 @@
-"""Suggest tag names via hybrid vector search against the ``golden-tags`` index.
+"""Auto-fill tag fields via hybrid vector search against the ``golden-tags`` index.
 
 Combines OData hard filters (site, line, equipment) with a vector query
 generated from the user's free-text description to return ranked tag-name
@@ -14,7 +14,7 @@ Prerequisites:
 Usage (standalone test)::
 
     cd services
-    uv run python -m search.suggest_name
+    uv run python -m search.auto_fill
 """
 
 import logging
@@ -31,7 +31,7 @@ from pydantic import BaseModel
 _repo_root = Path(__file__).resolve().parent.parent.parent
 load_dotenv(_repo_root / "services" / ".env")
 
-logger = logging.getLogger("search.suggest_name")
+logger = logging.getLogger("search.auto_fill")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 
 SEARCH_ENDPOINT = os.environ.get("SEARCH_ENDPOINT", "")
