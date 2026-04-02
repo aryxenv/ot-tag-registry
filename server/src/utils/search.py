@@ -229,7 +229,7 @@ def _extract_structured_fields(
 
 async def auto_fill_tag(
     query: str,
-    top_k: int = 5,
+    top_k: int = 1,
 ) -> AutoFillResult:
     """Return AI-extracted tag fields using hybrid search + LLM.
 

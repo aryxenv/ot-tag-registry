@@ -121,5 +121,6 @@ output SEARCH_SERVICE_NAME string = aiSearch.outputs.name
 output SEARCH_INDEX_NAME string = 'golden-tags'
 output PROJECT_ENDPOINT string = aiFoundry.outputs.endpoint
 output PROJECT_EMBEDDING_DEPLOYMENT string = aiFoundry.outputs.embeddingDeploymentName
+output PROJECT_CHAT_DEPLOYMENT string = aiFoundry.outputs.chatDeploymentName
 output AI_SERVICES_ACCOUNT_NAME string = aiFoundry.outputs.accountName
 output AZURE_RESOURCE_GROUP string = rg.name

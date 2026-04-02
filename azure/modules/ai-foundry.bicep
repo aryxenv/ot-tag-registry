@@ -19,6 +19,18 @@ param embeddingModelVersion string = '1'
 @description('Deployment capacity in thousands of tokens per minute')
 param embeddingCapacity int = 120
 
+@description('Name of the chat model deployment')
+param chatDeploymentName string = 'Mistral-Large-3'
+
+@description('Chat model name')
+param chatModelName string = 'Mistral-Large-3'
+
+@description('Chat model version')
+param chatModelVersion string = '1'
+
+@description('Chat deployment capacity (requests per minute)')
+param chatCapacity int = 1
+
 // ---------------------------------------------------------------------------
 // AI Foundry resource (CognitiveServices/accounts, kind: AIServices)
 // Replaces the old Hub + separate Azure OpenAI pattern.
@@ -77,6 +89,27 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
 }
 
 // ---------------------------------------------------------------------------
+// Chat model deployment (Mistral-Large-3)
+// ---------------------------------------------------------------------------
+
+resource chatDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  parent: aiFoundry
+  name: chatDeploymentName
+  dependsOn: [embeddingDeployment]
+  sku: {
+    name: 'GlobalStandard'
+    capacity: chatCapacity
+  }
+  properties: {
+    model: {
+      format: 'Mistral AI'
+      name: chatModelName
+      version: chatModelVersion
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Outputs
 // ---------------------------------------------------------------------------
 
@@ -84,4 +117,5 @@ output endpoint string = aiFoundry.properties.endpoint
 output accountName string = aiFoundry.name
 output projectName string = aiProject.name
 output embeddingDeploymentName string = embeddingDeployment.name
+output chatDeploymentName string = chatDeployment.name
 output principalId string = aiFoundry.identity.principalId
