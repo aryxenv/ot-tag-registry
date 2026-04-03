@@ -101,7 +101,7 @@ All endpoints are prefixed with `/api`.
 | `PUT`   | `/api/tags/{id}`                  | Partial update — only provided fields change            |
 | `PATCH` | `/api/tags/{id}/retire`           | Soft-delete (sets status to `retired`)                  |
 | `POST`  | `/api/tags/validate-name`         | Validate a name against the naming schema               |
-| `POST`  | `/api/tags/suggest-name`          | AI-powered name suggestions via hybrid vector search    |
+| `POST`  | `/api/tags/auto-fill`             | AI-powered tag auto-fill via hybrid vector search + LLM |
 | `POST`  | `/api/tags/{id}/request-approval` | Submit tag for governance approval                      |
 | `POST`  | `/api/tags/{id}/approve`          | Approve a pending tag                                   |
 | `POST`  | `/api/tags/{id}/reject`           | Reject a pending tag (optional reason)                  |
@@ -158,7 +158,7 @@ ot-tag-registry/
 ├── client/          # React + Vite + TypeScript frontend
 ├── server/          # Python (FastAPI) backend API (standalone deployable)
 │   ├── src/
-│   │   ├── routes/      # API endpoints (tags, assets, sources, rules, suggest-name)
+│   │   ├── routes/      # API endpoints (tags, assets, sources, rules, auto-fill)
 │   │   ├── models/      # Pydantic data models
 │   │   ├── utils/       # Cosmos DB client (db.py) + AI Search client (search.py)
 │   │   └── validators/  # Naming schema validator

@@ -35,7 +35,10 @@ cosmos_database="$(azd env get-value COSMOS_DATABASE)"
 search_endpoint="$(azd env get-value SEARCH_ENDPOINT)"
 search_index_name="$(azd env get-value SEARCH_INDEX_NAME)"
 project_endpoint="$(azd env get-value PROJECT_ENDPOINT)"
+project_name="$(azd env get-value PROJECT_NAME)"
 embedding_deployment="$(azd env get-value PROJECT_EMBEDDING_DEPLOYMENT)"
+chat_deployment="$(azd env get-value PROJECT_CHAT_DEPLOYMENT)"
+function_app_url="$(azd env get-value FUNCTION_APP_URL)"
 
 # ---------------------------------------------------------------------------
 # 2. Populate .env files (RBAC-only — no API keys)
@@ -51,7 +54,12 @@ for env_file in "$REPO_ROOT/server/.env" "$REPO_ROOT/services/.env"; do
 
     # AI Foundry
     set_env_value "$env_file" "PROJECT_ENDPOINT" "$project_endpoint"
+    set_env_value "$env_file" "PROJECT_NAME" "$project_name"
     set_env_value "$env_file" "PROJECT_EMBEDDING_DEPLOYMENT" "$embedding_deployment"
+    set_env_value "$env_file" "PROJECT_CHAT_DEPLOYMENT" "$chat_deployment"
+
+    # Function App (auto-fill tools)
+    set_env_value "$env_file" "FUNCTION_APP_URL" "$function_app_url"
 
     relative="${env_file#"$REPO_ROOT/"}"
     echo "Updated $relative with connection details (RBAC auth — no API keys)"
@@ -85,6 +93,11 @@ uv run python -m search.create_index
 # Seed all data (Cosmos DB + AI Search)
 echo "Seeding Cosmos DB and AI Search data..."
 if uv run python -m seed_all; then
+    echo ""
+    echo "=== Setting up AI agent ==="
+    echo "Creating auto-fill agent on AI Foundry..."
+    uv run python -m agent.setup_agent
+
     echo ""
     echo "=== Post-provision complete ==="
     echo "All services configured and seeded. Ready to run:"

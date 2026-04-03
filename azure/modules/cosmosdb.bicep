@@ -16,6 +16,9 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   kind: 'GlobalDocumentDB'
   properties: {
     databaseAccountOfferType: 'Standard'
+    publicNetworkAccess: 'Enabled'
+    isVirtualNetworkFilterEnabled: false
+    ipRules: []
     capabilities: [
       { name: 'EnableServerless' }
     ]

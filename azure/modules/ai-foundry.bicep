@@ -19,6 +19,18 @@ param embeddingModelVersion string = '1'
 @description('Deployment capacity in thousands of tokens per minute')
 param embeddingCapacity int = 120
 
+@description('Name of the chat model deployment')
+param chatDeploymentName string = 'gpt-4.1-mini'
+
+@description('Chat model name')
+param chatModelName string = 'gpt-4.1-mini'
+
+@description('Chat model version')
+param chatModelVersion string = '2025-04-14'
+
+@description('Chat deployment capacity (thousands of tokens per minute)')
+param chatCapacity int = 10
+
 // ---------------------------------------------------------------------------
 // AI Foundry resource (CognitiveServices/accounts, kind: AIServices)
 // Replaces the old Hub + separate Azure OpenAI pattern.
@@ -77,11 +89,34 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
 }
 
 // ---------------------------------------------------------------------------
+// Chat model deployment (gpt-4.1-mini)
+// ---------------------------------------------------------------------------
+
+resource chatDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  parent: aiFoundry
+  name: chatDeploymentName
+  dependsOn: [embeddingDeployment]
+  sku: {
+    name: 'GlobalStandard'
+    capacity: chatCapacity
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: chatModelName
+      version: chatModelVersion
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Outputs
 // ---------------------------------------------------------------------------
 
 output endpoint string = aiFoundry.properties.endpoint
+output projectEndpoint string = 'https://${aiFoundry.name}.services.ai.azure.com/api/projects/${aiProject.name}'
 output accountName string = aiFoundry.name
 output projectName string = aiProject.name
 output embeddingDeploymentName string = embeddingDeployment.name
+output chatDeploymentName string = chatDeployment.name
 output principalId string = aiFoundry.identity.principalId

@@ -1,25 +1,31 @@
-"""Azure AI Search + embeddings client for tag-name suggestions.
+"""Azure AI Search + Foundry Agent client for tag auto-fill.
 
 Self-contained module — queries the ``golden-tags`` Azure AI Search index
-using hybrid vector search (OData hard filters + semantic embedding) to
-return ranked tag-name suggestions.
+using hybrid search (keyword text + semantic embedding, no OData filters),
+then invokes the ``tag-auto-fill`` Foundry Agent (gpt-4.1-mini with
+function-calling tools) to clean and structure the result.
 
 Required environment variables (loaded by ``main.py`` via ``dotenv``):
     SEARCH_ENDPOINT, SEARCH_INDEX_NAME,
-    PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT
+    PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT,
+    PROJECT_CHAT_DEPLOYMENT, FUNCTION_APP_URL
 Optional:
     SEARCH_API_KEY  — falls back to DefaultAzureCredential when unset.
+    AUTOFILL_AGENT_NAME — defaults to ``tag-auto-fill``.
 """
 
+import asyncio
+import json
 import logging
 import os
 
+import httpx
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery
 
-from src.models.suggest_name import SuggestionMatch, SuggestionResult
+from src.models.auto_fill import AutoFillMatch, AutoFillResult
 
 logger = logging.getLogger("ot_tag_registry.search")
 
@@ -33,6 +39,9 @@ _SELECT_FIELDS = [
     "datatype",
 ]
 
+AGENT_NAME = "tag-auto-fill"
+_MAX_TOOL_ITERATIONS = 3
+
 
 class SearchServiceError(Exception):
     """Raised when the search or embedding service fails."""
@@ -45,7 +54,7 @@ class SearchServiceError(Exception):
 
 _cached_search_credential: DefaultAzureCredential | None = None
 _cached_search_client: SearchClient | None = None
-_cached_embeddings_client = None
+_cached_ai_client = None
 
 
 def _get_search_credential() -> DefaultAzureCredential:
@@ -73,81 +82,173 @@ def _get_search_client() -> SearchClient:
     return _cached_search_client
 
 
-def _get_embeddings_client():
-    """Return a cached Azure AI Foundry embeddings client."""
-    global _cached_embeddings_client
-    if _cached_embeddings_client is not None:
-        return _cached_embeddings_client
+def _get_ai_client():
+    """Return a cached OpenAI-compatible client via Azure AI Foundry."""
+    global _cached_ai_client
+    if _cached_ai_client is not None:
+        return _cached_ai_client
     from azure.ai.projects import AIProjectClient
 
     project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
     if not project_endpoint:
         raise ValueError("PROJECT_ENDPOINT environment variable must be set")
-    deployment = os.environ.get("PROJECT_EMBEDDING_DEPLOYMENT", "")
-    if not deployment:
-        raise ValueError("PROJECT_EMBEDDING_DEPLOYMENT environment variable must be set")
 
     project = AIProjectClient(
         endpoint=project_endpoint,
         credential=DefaultAzureCredential(),
     )
-    _cached_embeddings_client = project.inference.get_embeddings_client()
-    return _cached_embeddings_client
+    _cached_ai_client = project.get_openai_client()
+    return _cached_ai_client
 
 
 # ---------------------------------------------------------------------------
-# Query construction helpers
+# Query helpers
 # ---------------------------------------------------------------------------
-
-
-def _build_odata_filter(
-    site: str,
-    line: str,
-    equipment: str | None = None,
-) -> str:
-    """Build an OData filter string from hard-filter parameters."""
-    clauses = [f"site eq '{site}'", f"line eq '{line}'"]
-    if equipment:
-        clauses.append(f"equipment eq '{equipment}'")
-    return " and ".join(clauses)
-
-
-def _build_query_text(
-    description: str,
-    unit: str | None = None,
-    datatype: str | None = None,
-) -> str:
-    """Combine free-text inputs into a single string for embedding."""
-    parts = [description]
-    if unit:
-        parts.append(unit)
-    if datatype:
-        parts.append(datatype)
-    return " ".join(parts)
 
 
 def _generate_query_embedding(text: str) -> list[float]:
     """Generate a single embedding vector for *text*."""
     deployment = os.environ.get("PROJECT_EMBEDDING_DEPLOYMENT", "")
+    if not deployment:
+        raise ValueError("PROJECT_EMBEDDING_DEPLOYMENT environment variable must be set")
     try:
-        client = _get_embeddings_client()
-        response = client.embed(model=deployment, input=[text])
+        client = _get_ai_client()
+        response = client.embeddings.create(model=deployment, input=[text])
         return response.data[0].embedding
     except (HttpResponseError, ServiceRequestError) as exc:
         raise SearchServiceError(f"Embedding generation failed: {exc}") from exc
 
 
-def _build_evidence(
-    request_description: str,
-    top_match: SuggestionMatch,
-) -> str:
-    """Build a human-readable evidence string from the top match."""
-    return (
-        f"Similar to tag '{top_match.tagName}' — "
-        f"same site/line, description match on "
-        f"'{request_description}' ↔ '{top_match.description}' "
-        f"({top_match.score:.2f} similarity)"
+# ---------------------------------------------------------------------------
+# Agent tool execution
+# ---------------------------------------------------------------------------
+
+
+def _execute_tool(name: str, arguments: str) -> str:
+    """Execute a function tool by calling the Azure Functions HTTP endpoint."""
+    func_url = os.environ.get("FUNCTION_APP_URL", "")
+    if not func_url:
+        return json.dumps({"error": "FUNCTION_APP_URL not configured"})
+
+    try:
+        args = json.loads(arguments) if arguments else {}
+
+        if name == "get_available_sites":
+            resp = httpx.get(f"{func_url}/api/get-sites", timeout=10)
+            resp.raise_for_status()
+            return resp.text
+
+        if name == "get_available_lines":
+            site = args.get("site", "")
+            resp = httpx.get(
+                f"{func_url}/api/get-lines",
+                params={"site": site},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            return resp.text
+
+        return json.dumps({"error": f"Unknown tool: {name}"})
+    except Exception as exc:
+        logger.warning("Tool %s failed: %s", name, exc)
+        return json.dumps({"error": str(exc)})
+
+
+# ---------------------------------------------------------------------------
+# AI extraction via Foundry Agent
+# ---------------------------------------------------------------------------
+
+
+def _format_matches_for_prompt(matches: list[AutoFillMatch]) -> str:
+    """Format search matches as context for the agent prompt."""
+    if not matches:
+        return "No similar tags found in the registry."
+    lines = []
+    for m in matches:
+        lines.append(
+            f"- {m.tagName} (score: {m.score:.2f}): {m.description} "
+            f"[site={m.site}, line={m.line}, equip={m.equipment}, "
+            f"unit={m.unit}, datatype={m.datatype}]"
+        )
+    return "\n".join(lines)
+
+
+def _extract_structured_fields(
+    query: str,
+    matches: list[AutoFillMatch],
+) -> dict:
+    """Invoke the Foundry Agent to clean and structure the search result.
+
+    Uses the ``tag-auto-fill`` agent (gpt-4.1-mini with function-calling
+    tools).  The agent may call ``get_available_sites`` /
+    ``get_available_lines`` via Azure Functions to validate site/line.
+
+    Returns a dict with keys: site, line, equipment, unit, datatype, name,
+    description, criticality.  Values are strings or ``None``.
+    On any failure, returns an empty dict (caller falls back gracefully).
+    """
+    agent_name = os.environ.get("AUTOFILL_AGENT_NAME", AGENT_NAME)
+    if not os.environ.get("PROJECT_CHAT_DEPLOYMENT"):
+        logger.warning("PROJECT_CHAT_DEPLOYMENT not set — skipping agent extraction")
+        return {}
+
+    matches_context = _format_matches_for_prompt(matches)
+    user_msg = (
+        f"User query: {query}\n\n"
+        f"Closest matching tag from the registry:\n{matches_context}"
     )
+
+    try:
+        from openai.types.responses.response_input_param import (
+            FunctionCallOutput,
+        )
+
+        client = _get_ai_client()
+
+        # First call: send query + match context to the agent
+        response = client.responses.create(
+            input=user_msg,
+            extra_body={
+                "agent_reference": {"name": agent_name, "type": "agent_reference"},
+            },
+        )
+
+        # Tool-calling loop: handle function calls from the agent
+        for _ in range(_MAX_TOOL_ITERATIONS):
+            tool_outputs = []
+            for item in response.output:
+                if item.type == "function_call":
+                    result = _execute_tool(item.name, item.arguments)
+                    tool_outputs.append(
+                        FunctionCallOutput(
+                            type="function_call_output",
+                            call_id=item.call_id,
+                            output=result,
+                        )
+                    )
+
+            if not tool_outputs:
+                break
+
+            # Submit tool results and get next response
+            response = client.responses.create(
+                input=tool_outputs,
+                previous_response_id=response.id,
+                extra_body={
+                    "agent_reference": {"name": agent_name, "type": "agent_reference"},
+                },
+            )
+
+        # Parse the final text response as JSON
+        raw = response.output_text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+            raw = raw.rsplit("```", 1)[0]
+        return json.loads(raw)
+
+    except Exception:
+        logger.exception("Agent extraction failed — falling back to search-only results")
+        return {}
 
 
 # ---------------------------------------------------------------------------
@@ -155,34 +256,26 @@ def _build_evidence(
 # ---------------------------------------------------------------------------
 
 
-async def suggest_tag_name(
-    site: str,
-    line: str,
-    description: str,
-    equipment: str | None = None,
-    unit: str | None = None,
-    datatype: str | None = None,
-    top_k: int = 5,
-) -> SuggestionResult:
-    """Return ranked tag-name suggestions using hybrid vector search.
+async def auto_fill_tag(
+    query: str,
+    top_k: int = 1,
+) -> AutoFillResult:
+    """Return AI-extracted tag fields using hybrid search + Foundry Agent.
 
-    Builds an OData filter from *site*, *line*, and optional *equipment*,
-    generates an embedding from the free-text *description* (plus optional
-    *unit* / *datatype*), and executes a hybrid vector + filter query
-    against the ``golden-tags`` Azure AI Search index.
+    Generates an embedding from the user's free-text *query* and executes a
+    hybrid search (keyword text + semantic vector, no OData filters) against
+    the ``golden-tags`` Azure AI Search index.
 
-    Returns a :class:`SuggestionResult` with the best match as
-    ``suggestedName`` and remaining matches as ``alternatives``.
+    The top match is then passed to the ``tag-auto-fill`` Foundry Agent
+    (gpt-4.1-mini) which cleans and validates the result against the user's
+    query, optionally calling Azure Functions to look up valid sites/lines.
 
     Raises:
         SearchServiceError: If the embedding or search API call fails.
         ValueError: If required environment variables are missing.
     """
-    odata_filter = _build_odata_filter(site, line, equipment)
-    query_text = _build_query_text(description, unit, datatype)
-
     # 1. Generate embedding
-    embedding = _generate_query_embedding(query_text)
+    embedding = _generate_query_embedding(query)
 
     # 2. Build vector query
     vector_query = VectorizedQuery(
@@ -191,21 +284,20 @@ async def suggest_tag_name(
         fields="semanticVector",
     )
 
-    # 3. Execute hybrid search
+    # 3. Execute hybrid search (keyword + vector, no OData filter)
     try:
         client = _get_search_client()
         results = client.search(
-            search_text=query_text,
+            search_text=query,
             vector_queries=[vector_query],
-            filter=odata_filter,
             select=_SELECT_FIELDS,
             top=top_k,
         )
 
-        matches: list[SuggestionMatch] = []
+        matches: list[AutoFillMatch] = []
         for result in results:
             matches.append(
-                SuggestionMatch(
+                AutoFillMatch(
                     tagName=result["tagName"],
                     description=result.get("description", ""),
                     score=result["@search.score"],
@@ -219,18 +311,21 @@ async def suggest_tag_name(
     except (HttpResponseError, ServiceRequestError) as exc:
         raise SearchServiceError(f"Search query failed: {exc}") from exc
 
-    # 4. Build result
-    if not matches:
-        return SuggestionResult(
-            suggestedName="",
-            alternatives=[],
-            evidence="",
-            matches=[],
-        )
+    # 4. Agent extraction (sync HTTP calls — run off the event loop)
+    extracted = await asyncio.to_thread(_extract_structured_fields, query, matches)
 
-    return SuggestionResult(
-        suggestedName=matches[0].tagName,
-        alternatives=[m.tagName for m in matches[1:]],
-        evidence=_build_evidence(description, matches[0]),
+    # 5. Build result
+    confidence = matches[0].score if matches else 0.0
+
+    return AutoFillResult(
+        site=extracted.get("site"),
+        line=extracted.get("line"),
+        equipment=extracted.get("equipment"),
+        unit=extracted.get("unit"),
+        datatype=extracted.get("datatype"),
+        name=extracted.get("name"),
+        description=extracted.get("description"),
+        criticality=extracted.get("criticality"),
+        confidence=confidence,
         matches=matches,
     )
