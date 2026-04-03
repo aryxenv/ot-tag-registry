@@ -5,6 +5,11 @@ metadata:
 infra:
   provider: bicep
   path: azure
+services:
+  functions:
+    project: ./functions
+    language: python
+    host: function
 hooks:
   preprovision:
     windows:
