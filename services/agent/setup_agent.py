@@ -38,36 +38,41 @@ against the user's query, producing structured form fields.
 site code), use your `get_available_sites` tool to find the matching site, then \
 `get_available_lines` to find valid lines. Return the DISPLAY NAME (e.g. \
 "Plant-Luxembourg", "Line-1"). If the query does NOT mention any location, \
-return null for both site and line — do NOT copy from the search result.
+return null for both site and line — do NOT copy from the search result. \
+If the tools fail or time out, infer the site/line from the search result \
+using these mappings: LUX=Plant-Luxembourg, BEL=Plant-Brussels, \
+NED=Plant-Amsterdam. L1=Line-1, L2=Line-2, L3=Line-3, L4=Line-4.
 
 2. **Equipment**: If the query mentions equipment (pump, motor, compressor, \
 etc.), return the display name format: "{Type}-001" (e.g. "Pump-001", \
 "Compressor-001"). If the query doesn't mention equipment, return null.
 
-3. **Unit/Datatype**: Keep from the search result if the measurement concept \
-matches the query. Override if the query describes a different measurement \
-(e.g. query says "temperature" but search result is a pressure tag).
+3. **Unit/Datatype**: ALWAYS copy these from the search result. The search \
+result includes unit and datatype — keep them. Only override if the query \
+explicitly describes a DIFFERENT measurement than the search result.
 
-4. **Name**: Build the tag name in format SITE.LINE.EQUIPMENT.MEASUREMENT.UNIT \
-(no ID suffix — the system adds it). Only if you have enough fields to build it; \
-otherwise null.
+4. **Name**: Build the tag name using SHORT CODES, not display names. \
+Format: `SITE_CODE.LINE_CODE.EQUIPMENT_CODE.MEASUREMENT.UNIT_CODE` \
+(no ID suffix — the system adds it). \
+Site codes: Plant-Luxembourg→LUX, Plant-Brussels→BEL, Plant-Amsterdam→NED. \
+Line codes: Line-1→L1, Line-2→L2, Line-3→L3, Line-4→L4. \
+Equipment codes: Pump→PMP, Compressor→CMP, Motor→MOT, Conveyor→CNV, \
+Valve→VLV, HeatExchanger→HEX, Boiler→BLR, Tank→TNK (append 001). \
+Example: LUX.L1.PMP001.Pressure.Bar \
+Only build the name if you have site, line, and equipment; otherwise null.
 
 5. **Description**: Clean up the user's query into a proper one-line description.
 
 6. **Criticality**: Only set if the query contains criticality hints (e.g. \
 "critical", "safety", "important"). Otherwise null.
 
-## Tag Naming Format
-`SITE.LINE.EQUIPMENT.MEASUREMENT.UNIT`
-
-Equipment codes: PMP=Pump, CMP=Compressor, MOT=Motor, CNV=Conveyor, \
-VLV=Valve, HEX=HeatExchanger, BLR=Boiler, TNK=Tank
-
+## Unit and Measurement Reference
 Unit codes: bar→Bar, °C→Cel, RPM→Rpm, mm/s→Mms, L/min→Lpm, kW→KW, A→Amp, \
-m→M, kg→Kg, %→Pct, pH→Ph
+m→M, kg→Kg, %→Pct, pH→Ph, m/s→Ms, bool→Bool
 
 Measurement from unit: bar→Pressure, °C→Temperature, RPM→Speed, \
-mm/s→Vibration, L/min→FlowRate, kW→Power, A→Current
+mm/s→Vibration, L/min→FlowRate, kW→Power, A→Current, m→Level, kg→Weight, \
+m/s→Velocity, bool→Status
 
 ## Output Format
 Return ONLY valid JSON with these keys:
@@ -77,7 +82,7 @@ Return ONLY valid JSON with these keys:
   "equipment": "display name or null",
   "unit": "engineering unit (e.g. bar, °C) or null",
   "datatype": "float, int, or bool — or null",
-  "name": "TAG.NAME.FORMAT or null",
+  "name": "CODE.FORMAT.TAG.NAME or null",
   "description": "cleaned one-line description or null",
   "criticality": "low/medium/high/critical or null"
 }
