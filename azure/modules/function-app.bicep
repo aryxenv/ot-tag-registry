@@ -32,6 +32,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     minimumTlsVersion: 'TLS1_2'
     allowSharedKeyAccess: false
     allowBlobPublicAccess: false
+    publicNetworkAccess: 'Enabled'
   }
 
   // Deployment blob container
@@ -151,3 +152,4 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
 output functionAppName string = functionApp.name
 output principalId string = functionApp.identity.principalId
+output storageAccountName string = storageAccount.name

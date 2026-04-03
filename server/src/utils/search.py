@@ -54,7 +54,8 @@ class SearchServiceError(Exception):
 
 _cached_search_credential: DefaultAzureCredential | None = None
 _cached_search_client: SearchClient | None = None
-_cached_ai_client = None
+_cached_openai_client = None
+_cached_agent_client = None
 
 
 def _get_search_credential() -> DefaultAzureCredential:
@@ -83,10 +84,35 @@ def _get_search_client() -> SearchClient:
 
 
 def _get_ai_client():
-    """Return a cached OpenAI-compatible client via Azure AI Foundry."""
-    global _cached_ai_client
-    if _cached_ai_client is not None:
-        return _cached_ai_client
+    """Return a cached OpenAI client for embeddings (account-level endpoint)."""
+    global _cached_openai_client
+    if _cached_openai_client is not None:
+        return _cached_openai_client
+    from azure.ai.projects import AIProjectClient
+
+    # Embeddings are deployed at the account level, not the project level.
+    # AI_SERVICES_ENDPOINT is the account-level endpoint; fall back to
+    # stripping the /api/projects/* suffix from PROJECT_ENDPOINT.
+    endpoint = os.environ.get("AI_SERVICES_ENDPOINT", "")
+    if not endpoint:
+        project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
+        if not project_endpoint:
+            raise ValueError("AI_SERVICES_ENDPOINT or PROJECT_ENDPOINT must be set")
+        endpoint = project_endpoint.split("/api/projects/")[0]
+
+    project = AIProjectClient(
+        endpoint=endpoint,
+        credential=DefaultAzureCredential(),
+    )
+    _cached_openai_client = project.get_openai_client()
+    return _cached_openai_client
+
+
+def _get_agent_client():
+    """Return a cached OpenAI client for agent calls (project-scoped endpoint)."""
+    global _cached_agent_client
+    if _cached_agent_client is not None:
+        return _cached_agent_client
     from azure.ai.projects import AIProjectClient
 
     project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
@@ -97,8 +123,8 @@ def _get_ai_client():
         endpoint=project_endpoint,
         credential=DefaultAzureCredential(),
     )
-    _cached_ai_client = project.get_openai_client()
-    return _cached_ai_client
+    _cached_agent_client = project.get_openai_client()
+    return _cached_agent_client
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +160,7 @@ def _execute_tool(name: str, arguments: str) -> str:
         args = json.loads(arguments) if arguments else {}
 
         if name == "get_available_sites":
-            resp = httpx.get(f"{func_url}/api/get-sites", timeout=10)
+            resp = httpx.get(f"{func_url}/api/get-sites", timeout=30)
             resp.raise_for_status()
             return resp.text
 
@@ -143,7 +169,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             resp = httpx.get(
                 f"{func_url}/api/get-lines",
                 params={"site": site},
-                timeout=10,
+                timeout=30,
             )
             resp.raise_for_status()
             return resp.text
@@ -203,7 +229,7 @@ def _extract_structured_fields(
             FunctionCallOutput,
         )
 
-        client = _get_ai_client()
+        client = _get_agent_client()
 
         # First call: send query + match context to the agent
         response = client.responses.create(
