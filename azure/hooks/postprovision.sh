@@ -35,6 +35,7 @@ cosmos_database="$(azd env get-value COSMOS_DATABASE)"
 search_endpoint="$(azd env get-value SEARCH_ENDPOINT)"
 search_index_name="$(azd env get-value SEARCH_INDEX_NAME)"
 project_endpoint="$(azd env get-value PROJECT_ENDPOINT)"
+project_name="$(azd env get-value PROJECT_NAME)"
 embedding_deployment="$(azd env get-value PROJECT_EMBEDDING_DEPLOYMENT)"
 chat_deployment="$(azd env get-value PROJECT_CHAT_DEPLOYMENT)"
 function_app_url="$(azd env get-value FUNCTION_APP_URL)"
@@ -53,6 +54,7 @@ for env_file in "$REPO_ROOT/server/.env" "$REPO_ROOT/services/.env"; do
 
     # AI Foundry
     set_env_value "$env_file" "PROJECT_ENDPOINT" "$project_endpoint"
+    set_env_value "$env_file" "PROJECT_NAME" "$project_name"
     set_env_value "$env_file" "PROJECT_EMBEDDING_DEPLOYMENT" "$embedding_deployment"
     set_env_value "$env_file" "PROJECT_CHAT_DEPLOYMENT" "$chat_deployment"
 

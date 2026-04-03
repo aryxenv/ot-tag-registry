@@ -67,6 +67,10 @@ module functionApp 'modules/function-app.bicep' = {
   params: {
     location: location
     namePrefix: environmentName
+    tags: {
+      'azd-env-name': environmentName
+      'azd-service-name': 'functions'
+    }
     cosmosEndpoint: cosmosDb.outputs.endpoint
     cosmosDatabaseName: cosmosDatabaseName
   }
@@ -120,14 +124,14 @@ module userAiDevRole 'modules/role-assignment.bicep' = {
   }
 }
 
-// Cosmos DB Built-in Data Reader — for Function App to query assets
-module funcCosmosReaderRole 'modules/role-assignment.bicep' = {
+// Cosmos DB Built-in Data Reader — for Function App to query assets (data plane role)
+module funcCosmosReaderRole 'modules/cosmos-role.bicep' = {
   scope: rg
   name: 'func-cosmos-reader-role'
   params: {
+    cosmosAccountName: cosmosDb.outputs.accountName
     principalId: functionApp.outputs.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: '00000000-0000-0000-0000-000000000001' // Cosmos DB Built-in Data Reader
+    roleDefinitionId: '00000000-0000-0000-0000-000000000001' // Built-in Data Reader
   }
 }
 
@@ -141,7 +145,8 @@ output COSMOS_ACCOUNT_NAME string = cosmosDb.outputs.accountName
 output SEARCH_ENDPOINT string = aiSearch.outputs.endpoint
 output SEARCH_SERVICE_NAME string = aiSearch.outputs.name
 output SEARCH_INDEX_NAME string = 'golden-tags'
-output PROJECT_ENDPOINT string = aiFoundry.outputs.endpoint
+output PROJECT_ENDPOINT string = aiFoundry.outputs.projectEndpoint
+output PROJECT_NAME string = aiFoundry.outputs.projectName
 output PROJECT_EMBEDDING_DEPLOYMENT string = aiFoundry.outputs.embeddingDeploymentName
 output PROJECT_CHAT_DEPLOYMENT string = aiFoundry.outputs.chatDeploymentName
 output AI_SERVICES_ACCOUNT_NAME string = aiFoundry.outputs.accountName

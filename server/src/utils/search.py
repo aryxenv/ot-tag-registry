@@ -14,6 +14,7 @@ Optional:
     AUTOFILL_AGENT_NAME — defaults to ``tag-auto-fill``.
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -310,8 +311,8 @@ async def auto_fill_tag(
     except (HttpResponseError, ServiceRequestError) as exc:
         raise SearchServiceError(f"Search query failed: {exc}") from exc
 
-    # 4. Agent extraction
-    extracted = _extract_structured_fields(query, matches)
+    # 4. Agent extraction (sync HTTP calls — run off the event loop)
+    extracted = await asyncio.to_thread(_extract_structured_fields, query, matches)
 
     # 5. Build result
     confidence = matches[0].score if matches else 0.0
