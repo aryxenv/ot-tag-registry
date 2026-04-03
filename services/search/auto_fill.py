@@ -107,16 +107,23 @@ def _get_search_client() -> SearchClient:
 
 
 def _get_embeddings_client():
-    """Return an Azure AI Foundry embeddings client."""
+    """Return an Azure AI Foundry embeddings client.
+
+    Uses the account-level endpoint because model deployments live at
+    the account scope, not the project scope.
+    """
     from azure.ai.projects import AIProjectClient
 
-    if not PROJECT_ENDPOINT:
-        raise ValueError("PROJECT_ENDPOINT must be set for embedding generation")
+    endpoint = os.environ.get("AI_SERVICES_ENDPOINT", "")
+    if not endpoint:
+        if not PROJECT_ENDPOINT:
+            raise ValueError("AI_SERVICES_ENDPOINT or PROJECT_ENDPOINT must be set")
+        endpoint = PROJECT_ENDPOINT.split("/api/projects/")[0]
     if not PROJECT_EMBEDDING_DEPLOYMENT:
         raise ValueError("PROJECT_EMBEDDING_DEPLOYMENT must be set")
 
     project = AIProjectClient(
-        endpoint=PROJECT_ENDPOINT,
+        endpoint=endpoint,
         credential=DefaultAzureCredential(),
     )
     return project.inference.get_embeddings_client()
