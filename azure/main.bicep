@@ -135,6 +135,17 @@ module funcCosmosReaderRole 'modules/cosmos-role.bicep' = {
   }
 }
 
+// Storage Blob Data Owner — for signed-in user to deploy to Function App blob container
+module userFuncStorageBlobRole 'modules/role-assignment.bicep' = {
+  scope: rg
+  name: 'user-func-storage-blob-role'
+  params: {
+    principalId: principalId
+    principalType: 'User'
+    roleDefinitionId: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' // Storage Blob Data Owner
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Outputs (automatically stored in azd env)
 // ---------------------------------------------------------------------------
@@ -146,6 +157,7 @@ output SEARCH_ENDPOINT string = aiSearch.outputs.endpoint
 output SEARCH_SERVICE_NAME string = aiSearch.outputs.name
 output SEARCH_INDEX_NAME string = 'golden-tags'
 output PROJECT_ENDPOINT string = aiFoundry.outputs.projectEndpoint
+output AI_SERVICES_ENDPOINT string = aiFoundry.outputs.endpoint
 output PROJECT_NAME string = aiFoundry.outputs.projectName
 output PROJECT_EMBEDDING_DEPLOYMENT string = aiFoundry.outputs.embeddingDeploymentName
 output PROJECT_CHAT_DEPLOYMENT string = aiFoundry.outputs.chatDeploymentName
