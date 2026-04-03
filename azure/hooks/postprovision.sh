@@ -36,6 +36,7 @@ search_endpoint="$(azd env get-value SEARCH_ENDPOINT)"
 search_index_name="$(azd env get-value SEARCH_INDEX_NAME)"
 project_endpoint="$(azd env get-value PROJECT_ENDPOINT)"
 project_name="$(azd env get-value PROJECT_NAME)"
+ai_services_endpoint="$(azd env get-value AI_SERVICES_ENDPOINT)"
 embedding_deployment="$(azd env get-value PROJECT_EMBEDDING_DEPLOYMENT)"
 chat_deployment="$(azd env get-value PROJECT_CHAT_DEPLOYMENT)"
 function_app_url="$(azd env get-value FUNCTION_APP_URL)"
@@ -55,6 +56,7 @@ for env_file in "$REPO_ROOT/server/.env" "$REPO_ROOT/services/.env"; do
     # AI Foundry
     set_env_value "$env_file" "PROJECT_ENDPOINT" "$project_endpoint"
     set_env_value "$env_file" "PROJECT_NAME" "$project_name"
+    set_env_value "$env_file" "AI_SERVICES_ENDPOINT" "$ai_services_endpoint"
     set_env_value "$env_file" "PROJECT_EMBEDDING_DEPLOYMENT" "$embedding_deployment"
     set_env_value "$env_file" "PROJECT_CHAT_DEPLOYMENT" "$chat_deployment"
 
@@ -96,7 +98,21 @@ if uv run python -m seed_all; then
     echo ""
     echo "=== Setting up AI agent ==="
     echo "Creating auto-fill agent on AI Foundry..."
-    uv run python -m agent.setup_agent
+    # The AI Foundry project may take time to propagate after fresh creation.
+    # Retry up to 3 times with a delay between attempts.
+    agent_ok=false
+    for attempt in 1 2 3; do
+        if uv run python -m agent.setup_agent 2>&1; then
+            agent_ok=true
+            break
+        fi
+        echo "  ⚠ Agent setup attempt $attempt failed — retrying in 30s..."
+        sleep 30
+    done
+    if [ "$agent_ok" = false ]; then
+        echo "WARNING: Agent setup failed after 3 attempts." >&2
+        echo "WARNING: Run manually later: cd services && uv run python -m agent.setup_agent" >&2
+    fi
 
     echo ""
     echo "=== Post-provision complete ==="
