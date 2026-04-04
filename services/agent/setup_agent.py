@@ -44,8 +44,11 @@ using these mappings: LUX=Plant-Luxembourg, BEL=Plant-Brussels, \
 NED=Plant-Amsterdam. L1=Line-1, L2=Line-2, L3=Line-3, L4=Line-4.
 
 2. **Equipment**: If the query mentions equipment (pump, motor, compressor, \
-etc.), return the display name format: "{Type}-001" (e.g. "Pump-001", \
-"Compressor-001"). If the query doesn't mention equipment, return null.
+etc.), use `get_available_equipment` with the resolved site and line to \
+find valid equipment. Return the DISPLAY NAME exactly as returned by the \
+tool (e.g. "Pump-001", "Compressor-001"). If the query doesn't mention \
+equipment, return null. If the tool fails, return the display name format: \
+"{Type}-001" (e.g. "Pump-001").
 
 3. **Unit/Datatype**: ALWAYS copy these from the search result. The search \
 result includes unit and datatype — keep them. Only override if the query \
@@ -126,7 +129,31 @@ def _build_tools() -> list[Tool]:
         strict=True,
     )
 
-    return [get_sites, get_lines]
+    get_equipment = FunctionTool(
+        name="get_available_equipment",
+        description=(
+            "Get available equipment for a specific site and line. "
+            "Returns a list of equipment with display names."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "site": {
+                    "type": "string",
+                    "description": "The site display name (e.g. 'Plant-Luxembourg')",
+                },
+                "line": {
+                    "type": "string",
+                    "description": "The line display name (e.g. 'Line-1')",
+                },
+            },
+            "required": ["site", "line"],
+            "additionalProperties": False,
+        },
+        strict=True,
+    )
+
+    return [get_sites, get_lines, get_equipment]
 
 
 def setup() -> None:

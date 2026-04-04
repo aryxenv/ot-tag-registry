@@ -5,10 +5,13 @@ using hybrid search (keyword text + semantic embedding, no OData filters),
 then invokes the ``tag-auto-fill`` Foundry Agent (gpt-4.1-mini with
 function-calling tools) to clean and structure the result.
 
+Agent tools (``get_available_sites``, ``get_available_lines``) are fulfilled
+by direct Cosmos DB queries against the ``assets`` container.
+
 Required environment variables (loaded by ``main.py`` via ``dotenv``):
     SEARCH_ENDPOINT, SEARCH_INDEX_NAME,
     PROJECT_ENDPOINT, PROJECT_EMBEDDING_DEPLOYMENT,
-    PROJECT_CHAT_DEPLOYMENT, FUNCTION_APP_URL
+    PROJECT_CHAT_DEPLOYMENT
 Optional:
     SEARCH_API_KEY  — falls back to DefaultAzureCredential when unset.
     AUTOFILL_AGENT_NAME — defaults to ``tag-auto-fill``.
@@ -19,7 +22,6 @@ import json
 import logging
 import os
 
-import httpx
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
@@ -151,28 +153,69 @@ def _generate_query_embedding(text: str) -> list[float]:
 
 
 def _execute_tool(name: str, arguments: str) -> str:
-    """Execute a function tool by calling the Azure Functions HTTP endpoint."""
-    func_url = os.environ.get("FUNCTION_APP_URL", "")
-    if not func_url:
-        return json.dumps({"error": "FUNCTION_APP_URL not configured"})
+    """Execute a function tool by querying Cosmos DB directly.
+
+    Replaces the previous Azure Functions HTTP calls with direct DB access
+    via ``get_container("assets")`` to avoid cold-start timeouts.
+    """
+    from src.utils.db import get_container
 
     try:
         args = json.loads(arguments) if arguments else {}
 
         if name == "get_available_sites":
-            resp = httpx.get(f"{func_url}/api/get-sites", timeout=30)
-            resp.raise_for_status()
-            return resp.text
+            container = get_container("assets")
+            results = list(container.query_items(
+                query="SELECT DISTINCT c.site FROM c",
+                enable_cross_partition_query=True,
+            ))
+            site_code_map = {
+                "Plant-Luxembourg": "LUX",
+                "Plant-Brussels": "BEL",
+                "Plant-Amsterdam": "NED",
+            }
+            sites = []
+            for row in results:
+                display = row["site"]
+                code = site_code_map.get(display, display[:3].upper())
+                sites.append({"display": display, "code": code})
+            sites.sort(key=lambda s: s["display"])
+            return json.dumps(sites)
 
         if name == "get_available_lines":
             site = args.get("site", "")
-            resp = httpx.get(
-                f"{func_url}/api/get-lines",
-                params={"site": site},
-                timeout=30,
-            )
-            resp.raise_for_status()
-            return resp.text
+            container = get_container("assets")
+            results = list(container.query_items(
+                query="SELECT DISTINCT c.line FROM c WHERE c.site = @site",
+                parameters=[{"name": "@site", "value": site}],
+                partition_key=site,
+            ))
+            lines = []
+            for row in results:
+                display = row["line"]
+                code = display.replace("Line-", "L")
+                lines.append({"display": display, "code": code})
+            lines.sort(key=lambda l: l["display"])
+            return json.dumps(lines)
+
+        if name == "get_available_equipment":
+            site = args.get("site", "")
+            line = args.get("line", "")
+            container = get_container("assets")
+            results = list(container.query_items(
+                query=(
+                    "SELECT DISTINCT c.equipment FROM c"
+                    " WHERE c.site = @site AND c.line = @line"
+                ),
+                parameters=[
+                    {"name": "@site", "value": site},
+                    {"name": "@line", "value": line},
+                ],
+                partition_key=site,
+            ))
+            equipment = [{"display": r["equipment"]} for r in results]
+            equipment.sort(key=lambda e: e["display"])
+            return json.dumps(equipment)
 
         return json.dumps({"error": f"Unknown tool: {name}"})
     except Exception as exc:
