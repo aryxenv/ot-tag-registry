@@ -7,6 +7,10 @@
     "microsoft-learn": {
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "excalidraw": {
+      "command": "npx.cmd",
+      "args": ["-y", "excalidraw-mcp-server"]
     }
   }
 }
