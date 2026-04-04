@@ -135,7 +135,7 @@ The form is **description-driven**: business users provide context, AI derives t
 
 ### AI Search (suggest-name)
 
-Hybrid query pattern: OData filter (site + line) → semantic text (description + unit) → Azure OpenAI embedding (ada-002, 1536 dims) → vector search (HNSW, cosine) → ranked suggestions. Index name: `golden-tags`.
+Hybrid query pattern: OData filter (site + line) → semantic text (description + unit) → Azure AI Foundry embedding (text-embedding-3-large, 3072 dims) → vector search (HNSW, cosine) → ranked suggestions. Index name: `golden-tags`.
 
 ## Agent Boundaries
 
