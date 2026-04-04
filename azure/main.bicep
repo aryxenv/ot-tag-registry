@@ -61,21 +61,6 @@ module aiFoundry 'modules/ai-foundry.bicep' = {
   }
 }
 
-module functionApp 'modules/function-app.bicep' = {
-  scope: rg
-  name: 'function-app'
-  params: {
-    location: location
-    namePrefix: environmentName
-    tags: {
-      'azd-env-name': environmentName
-      'azd-service-name': 'functions'
-    }
-    cosmosEndpoint: cosmosDb.outputs.endpoint
-    cosmosDatabaseName: cosmosDatabaseName
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Role assignments — signed-in user
 // ---------------------------------------------------------------------------
@@ -124,28 +109,6 @@ module userAiDevRole 'modules/role-assignment.bicep' = {
   }
 }
 
-// Cosmos DB Built-in Data Reader — for Function App to query assets (data plane role)
-module funcCosmosReaderRole 'modules/cosmos-role.bicep' = {
-  scope: rg
-  name: 'func-cosmos-reader-role'
-  params: {
-    cosmosAccountName: cosmosDb.outputs.accountName
-    principalId: functionApp.outputs.principalId
-    roleDefinitionId: '00000000-0000-0000-0000-000000000001' // Built-in Data Reader
-  }
-}
-
-// Storage Blob Data Owner — for signed-in user to deploy to Function App blob container
-module userFuncStorageBlobRole 'modules/role-assignment.bicep' = {
-  scope: rg
-  name: 'user-func-storage-blob-role'
-  params: {
-    principalId: principalId
-    principalType: 'User'
-    roleDefinitionId: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' // Storage Blob Data Owner
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Outputs (automatically stored in azd env)
 // ---------------------------------------------------------------------------
@@ -162,5 +125,4 @@ output PROJECT_NAME string = aiFoundry.outputs.projectName
 output PROJECT_EMBEDDING_DEPLOYMENT string = aiFoundry.outputs.embeddingDeploymentName
 output PROJECT_CHAT_DEPLOYMENT string = aiFoundry.outputs.chatDeploymentName
 output AI_SERVICES_ACCOUNT_NAME string = aiFoundry.outputs.accountName
-output FUNCTION_APP_URL string = functionApp.outputs.functionAppUrl
 output AZURE_RESOURCE_GROUP string = rg.name

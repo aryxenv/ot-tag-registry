@@ -14,6 +14,9 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   name: accountName
   location: location
   kind: 'GlobalDocumentDB'
+  tags: {
+    SecurityControl: 'Ignore' // Specific to Microsoft Tenants due to Azure Policy, remove for non-Microsoft tenants
+  }
   properties: {
     databaseAccountOfferType: 'Standard'
     publicNetworkAccess: 'Enabled'

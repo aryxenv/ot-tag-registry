@@ -39,8 +39,6 @@ project_name="$(azd env get-value PROJECT_NAME)"
 ai_services_endpoint="$(azd env get-value AI_SERVICES_ENDPOINT)"
 embedding_deployment="$(azd env get-value PROJECT_EMBEDDING_DEPLOYMENT)"
 chat_deployment="$(azd env get-value PROJECT_CHAT_DEPLOYMENT)"
-function_app_url="$(azd env get-value FUNCTION_APP_URL)"
-
 # ---------------------------------------------------------------------------
 # 2. Populate .env files (RBAC-only — no API keys)
 # ---------------------------------------------------------------------------
@@ -59,9 +57,6 @@ for env_file in "$REPO_ROOT/server/.env" "$REPO_ROOT/services/.env"; do
     set_env_value "$env_file" "AI_SERVICES_ENDPOINT" "$ai_services_endpoint"
     set_env_value "$env_file" "PROJECT_EMBEDDING_DEPLOYMENT" "$embedding_deployment"
     set_env_value "$env_file" "PROJECT_CHAT_DEPLOYMENT" "$chat_deployment"
-
-    # Function App (auto-fill tools)
-    set_env_value "$env_file" "FUNCTION_APP_URL" "$function_app_url"
 
     relative="${env_file#"$REPO_ROOT/"}"
     echo "Updated $relative with connection details (RBAC auth — no API keys)"
