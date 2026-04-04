@@ -1,5 +1,8 @@
 # OT Tag Registry
 
+> [!NOTE]
+> This README.md has a business-value focus, for a more technical perspective see [TECHNICAL_README.md](./TECHNICAL_README.md)
+
 **One place to create, govern, and standardise every sensor tag across your industrial sites.**
 
 ## The Problem
@@ -75,6 +78,7 @@ graph TD
 ```
 
 This will:
+
 1. Install backend and frontend dependencies
 2. Provision Azure resources via `azd up` (Cosmos DB, AI Search, AI Foundry) — skips if already provisioned
 3. Print commands to start the dev servers
