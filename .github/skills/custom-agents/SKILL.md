@@ -33,31 +33,31 @@ description: Defines the template, conventions, and quality bar for authoring Gi
 
 Every `.agent.md` starts with a YAML frontmatter block. Here are all supported fields:
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | Yes | Display name shown in the agent picker. |
-| `description` | string | Yes | One-line summary of the agent's purpose. Shown in UI dropdowns. |
-| `tools` | string[] | Yes | Tools this agent is allowed to use. **Always restrict to the minimum set needed.** |
-| `model` | string | No | Preferred AI model (e.g., `gpt-4o`, `claude-sonnet-4-20250514`). Defaults to session model if omitted. |
-| `agents` | string[] | Orchestrators only | Names of subagents this agent can invoke. |
-| `user-invokable` | boolean | No | Whether the agent appears in the user picker. Set `false` for subagents. Default: `true`. |
-| `handoffs` | object[] | No | Pre-configured transitions to other agents. See [Handoffs](#handoffs). |
-| `argument-hint` | string | No | Placeholder suggestion shown in the chat input. |
-| `disable-model-invocation` | boolean | No | Prevents other agents from delegating to this agent autonomously. Default: `false`. |
+| Field                      | Type     | Required           | Description                                                                                            |
+| -------------------------- | -------- | ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `name`                     | string   | Yes                | Display name shown in the agent picker.                                                                |
+| `description`              | string   | Yes                | One-line summary of the agent's purpose. Shown in UI dropdowns.                                        |
+| `tools`                    | string[] | Yes                | Tools this agent is allowed to use. **Always restrict to the minimum set needed.**                     |
+| `model`                    | string   | No                 | Preferred AI model (e.g., `gpt-4o`, `claude-sonnet-4-20250514`). Defaults to session model if omitted. |
+| `agents`                   | string[] | Orchestrators only | Names of subagents this agent can invoke.                                                              |
+| `user-invokable`           | boolean  | No                 | Whether the agent appears in the user picker. Set `false` for subagents. Default: `true`.              |
+| `handoffs`                 | object[] | No                 | Pre-configured transitions to other agents. See [Handoffs](#handoffs).                                 |
+| `argument-hint`            | string   | No                 | Placeholder suggestion shown in the chat input.                                                        |
+| `disable-model-invocation` | boolean  | No                 | Prevents other agents from delegating to this agent autonomously. Default: `false`.                    |
 
 ### Tool reference
 
 Grant only what the agent needs:
 
-| Tool | Capability | Typical use |
-|------|-----------|-------------|
-| `read` | View files and directories | All agents that need code context |
-| `edit` | Modify files | Agents that write or refactor code |
-| `search` | Find references, symbols, text | Code navigation and analysis |
-| `terminal` | Execute shell commands | Build, test, lint runners |
-| `github` | Interact with GitHub (issues, PRs) | PR-aware agents |
-| `test` | Run or analyze test suites | QA and testing agents |
-| `agent` | Invoke or hand off to other agents | Orchestrators |
+| Tool       | Capability                         | Typical use                        |
+| ---------- | ---------------------------------- | ---------------------------------- |
+| `read`     | View files and directories         | All agents that need code context  |
+| `edit`     | Modify files                       | Agents that write or refactor code |
+| `search`   | Find references, symbols, text     | Code navigation and analysis       |
+| `terminal` | Execute shell commands             | Build, test, lint runners          |
+| `github`   | Interact with GitHub (issues, PRs) | PR-aware agents                    |
+| `test`     | Run or analyze test suites         | QA and testing agents              |
+| `agent`    | Invoke or hand off to other agents | Orchestrators                      |
 
 ## Optimized Agent Template
 
@@ -119,18 +119,18 @@ Use nested agents when a workflow has **distinct phases** that benefit from spec
 
 ### When to use nested agents
 
-| Pattern | Use nested agents | Use standalone agent |
-|---------|-------------------|---------------------|
-| Multi-phase workflow (plan → build → test) | ✅ | |
-| Single focused task (review code, write tests) | | ✅ |
-| Tasks requiring different tool sets per phase | ✅ | |
-| Simple read-only analysis | | ✅ |
+| Pattern                                        | Use nested agents | Use standalone agent |
+| ---------------------------------------------- | ----------------- | -------------------- |
+| Multi-phase workflow (plan → build → test)     | ✅                |                      |
+| Single focused task (review code, write tests) |                   | ✅                   |
+| Tasks requiring different tool sets per phase  | ✅                |                      |
+| Simple read-only analysis                      |                   | ✅                   |
 
 ### Orchestrator template
 
 The orchestrator coordinates subagents. It should have `agent` in its tools and list its subagents by name.
 
-````markdown
+```markdown
 ---
 name: feature-builder
 description: "Orchestrates feature development: planning, implementation, and testing."
@@ -157,13 +157,13 @@ You are a development lead that coordinates feature delivery by delegating to sp
 - **Never** write code yourself — always delegate to the appropriate subagent.
 - **Never** skip the testing phase.
 - If a subagent fails, retry once with clarified instructions before reporting the failure.
-````
+```
 
 ### Subagent template
 
 Subagents are focused workers. They set `user-invokable: false` so they don't clutter the agent picker.
 
-````markdown
+```markdown
 ---
 name: fb--implementer
 description: "Writes feature code following Contoso Finance conventions."
@@ -186,7 +186,7 @@ You are a senior developer implementing features in the Contoso Finance codebase
 - **Never** create new domain modules without explicit instruction
 - **Never** modify shared infrastructure without approval
 - **Never** skip linting
-````
+```
 
 ### Handoffs
 
@@ -200,25 +200,25 @@ handoffs:
     send: [context, files]
 ```
 
-| Field | Description |
-|-------|-------------|
-| `label` | Button text shown in chat UI |
-| `agent` | Target agent name |
-| `prompt` | Instructions sent to the target agent |
-| `send` | What context to forward (`context`, `files`) |
+| Field    | Description                                  |
+| -------- | -------------------------------------------- |
+| `label`  | Button text shown in chat UI                 |
+| `agent`  | Target agent name                            |
+| `prompt` | Instructions sent to the target agent        |
+| `send`   | What context to forward (`context`, `files`) |
 
 ## Tool Selection by Role
 
 Common agent archetypes and their recommended tool sets:
 
-| Agent role | Tools | Rationale |
-|-----------|-------|-----------|
-| Code reviewer | `read`, `search` | Read-only — reviewers should not edit code |
-| Test writer | `read`, `edit`, `search`, `terminal` | Needs to write tests and run them |
-| Full-stack developer | `read`, `edit`, `search`, `terminal` | Needs full file and shell access |
-| Documentation writer | `read`, `edit`, `search` | No shell needed for docs |
-| PR manager | `read`, `search`, `github` | Needs GitHub API access |
-| Orchestrator | `agent`, `read`, `search` | Delegates work, reads for context |
+| Agent role           | Tools                                | Rationale                                  |
+| -------------------- | ------------------------------------ | ------------------------------------------ |
+| Code reviewer        | `read`, `search`                     | Read-only — reviewers should not edit code |
+| Test writer          | `read`, `edit`, `search`, `terminal` | Needs to write tests and run them          |
+| Full-stack developer | `read`, `edit`, `search`, `terminal` | Needs full file and shell access           |
+| Documentation writer | `read`, `edit`, `search`             | No shell needed for docs                   |
+| PR manager           | `read`, `search`, `github`           | Needs GitHub API access                    |
+| Orchestrator         | `agent`, `read`, `search`            | Delegates work, reads for context          |
 
 **Principle of least privilege** — start with the minimum tool set and add only when the agent demonstrably needs it.
 

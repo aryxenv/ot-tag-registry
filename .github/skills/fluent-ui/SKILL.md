@@ -21,6 +21,7 @@ This repo has a **Fluent UI MCP server** configured in `.vscode/mcp.json`:
 ```
 
 **Use the `mcp-fluent-ui` MCP server tools** when you need to:
+
 - Look up which Fluent UI component to use for a given UI pattern
 - Check component props, slots, and usage examples
 - Find the right icon from `@fluentui/react-icons`
@@ -54,6 +55,7 @@ Key colors:
 The brand ramp is built around `#58a6ff` (GitHub blue).
 
 ### Rules
+
 - **Dark mode first.** The app ships with a dark theme. All UI must look correct against dark backgrounds.
 - Use `tokens` from `@fluentui/react-components` for colors — never hardcode colors unless extending the theme.
 - The theme is applied via `<FluentProvider theme={contosoTheme}>` in `main.tsx`.
@@ -63,19 +65,20 @@ The brand ramp is built around `#58a6ff` (GitHub blue).
 Use **`makeStyles`** from `@fluentui/react-components` for all custom styles.
 
 ```tsx
-import { makeStyles, tokens } from '@fluentui/react-components'
+import { makeStyles, tokens } from "@fluentui/react-components";
 
 const useStyles = makeStyles({
   container: {
-    padding: '16px',
+    padding: "16px",
     backgroundColor: tokens.colorNeutralBackground2,
-    borderRadius: '8px',
+    borderRadius: "8px",
     border: `1px solid ${tokens.colorNeutralStroke1}`,
   },
-})
+});
 ```
 
 ### Rules
+
 - Use `makeStyles` — not CSS files, inline styles, or other CSS-in-JS libraries.
 - Reference theme tokens (`tokens.colorNeutralBackground1`, etc.) instead of raw hex values.
 - Hardcoded colors are acceptable only for brand-specific overrides already defined in `theme.ts`.
@@ -83,7 +86,9 @@ const useStyles = makeStyles({
 ## Component Patterns
 
 ### Typography
+
 Use Fluent text components — not raw HTML headings or `<p>` tags:
+
 ```tsx
 import { Title1, Title2, Title3, Subtitle1, Text } from '@fluentui/react-components'
 
@@ -92,12 +97,15 @@ import { Title1, Title2, Title3, Subtitle1, Text } from '@fluentui/react-compone
 ```
 
 ### Icons
+
 Import from `@fluentui/react-icons`. Use `Regular` weight by default, `Filled` for active states:
+
 ```tsx
-import { BoardRegular, BoardFilled } from '@fluentui/react-icons'
+import { BoardRegular, BoardFilled } from "@fluentui/react-icons";
 ```
 
 ### Layout
+
 Use Fluent primitives and `makeStyles` with flexbox — not CSS grid frameworks or layout libraries.
 
 ## What NOT to do
