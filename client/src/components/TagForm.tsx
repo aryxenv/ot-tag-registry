@@ -13,10 +13,11 @@ import {
   MessageBar,
   MessageBarBody,
 } from "@fluentui/react-components";
-import { SparkleRegular } from "@fluentui/react-icons";
+import { SparkleRegular, TranslateRegular } from "@fluentui/react-icons";
 import { useAssets } from "../hooks/useAssets";
 import { useNextAvailableName } from "../hooks/useNextAvailableName";
 import { useAutoFill } from "../hooks/useAutoFill";
+import { useTranslate } from "../hooks/useTranslate";
 import { generateBaseTagName } from "../utils/tagNameMappings";
 import type {
   Tag,
@@ -142,6 +143,7 @@ export default function TagForm({
   const [autoFillQuery, setAutoFillQuery] = useState("");
   const [autoFillBaseName, setAutoFillBaseName] = useState("");
   const autoFill = useAutoFill();
+  const translate = useTranslate();
 
   const applyAutoFillResult = (result: AutoFillResult) => {
     setForm((prev) => {
@@ -171,6 +173,22 @@ export default function TagForm({
       onSuccess: applyAutoFillResult,
       onError: (err) => {
         const message = err instanceof Error ? err.message : "Auto-fill failed. Please try again.";
+        setSubmitError(message);
+      },
+    });
+  };
+
+  const handleTranslate = () => {
+    if (!autoFillQuery.trim()) return;
+    setSubmitError(null);
+    translate.mutate(autoFillQuery.trim(), {
+      onSuccess: (result) => {
+        if (result.wasTranslated) {
+          setAutoFillQuery(result.text);
+        }
+      },
+      onError: (err) => {
+        const message = err instanceof Error ? err.message : "Translation failed.";
         setSubmitError(message);
       },
     });
@@ -349,14 +367,23 @@ export default function TagForm({
               placeholder="e.g. outlet pressure sensor on the main cooling pump in Luxembourg Line 1"
               rows={2}
               resize="vertical"
-              disabled={autoFill.isPending}
+              disabled={autoFill.isPending || translate.isPending}
             />
           </Field>
+          <Button
+            appearance="subtle"
+            icon={translate.isPending ? <Spinner size="tiny" /> : <TranslateRegular />}
+            onClick={handleTranslate}
+            disabled={translate.isPending || autoFill.isPending || !autoFillQuery.trim()}
+            title="Translate to English"
+          >
+            {translate.isPending ? "Translating..." : "Translate"}
+          </Button>
           <Button
             appearance="primary"
             icon={autoFill.isPending ? <Spinner size="tiny" /> : <SparkleRegular />}
             onClick={handleAutoFill}
-            disabled={autoFill.isPending || !autoFillQuery.trim()}
+            disabled={autoFill.isPending || translate.isPending || !autoFillQuery.trim()}
           >
             {autoFill.isPending ? "Filling..." : "Auto-fill"}
           </Button>

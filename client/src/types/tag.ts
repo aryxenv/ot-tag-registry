@@ -66,6 +66,13 @@ export interface ValidateNameResponse {
   errors: NameValidationError[];
 }
 
+/** Response from POST /api/tags/translate */
+export interface TranslateResponse {
+  text: string;
+  sourceLanguage: string;
+  wasTranslated: boolean;
+}
+
 /** Request body for POST /api/tags/auto-fill */
 export interface AutoFillRequest {
   query: string;

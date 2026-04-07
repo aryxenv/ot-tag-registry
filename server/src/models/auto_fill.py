@@ -9,6 +9,20 @@ class AutoFillRequest(BaseModel):
     query: str
 
 
+class TranslateRequest(BaseModel):
+    """Request body for ``POST /api/tags/translate``."""
+
+    text: str
+
+
+class TranslateResponse(BaseModel):
+    """Response from ``POST /api/tags/translate``."""
+
+    text: str
+    sourceLanguage: str
+    wasTranslated: bool
+
+
 class AutoFillMatch(BaseModel):
     """A single search hit from the golden-tags index."""
 

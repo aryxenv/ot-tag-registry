@@ -1,5 +1,5 @@
 import { fetchApi } from "./client";
-import type { Tag, CreateTag, ValidateNameResponse, AutoFillResult } from "../types/tag";
+import type { Tag, CreateTag, ValidateNameResponse, AutoFillResult, TranslateResponse } from "../types/tag";
 import type { L1Rule, CreateL1Rule, L2Rule, CreateL2Rule } from "../types/rule";
 
 export function createTag(data: CreateTag): Promise<Tag> {
@@ -95,5 +95,12 @@ export function autoFillTag(query: string): Promise<AutoFillResult> {
   return fetchApi<AutoFillResult>("/api/tags/auto-fill", {
     method: "POST",
     body: { query },
+  });
+}
+
+export function translateText(text: string): Promise<TranslateResponse> {
+  return fetchApi<TranslateResponse>("/api/tags/translate", {
+    method: "POST",
+    body: { text },
   });
 }

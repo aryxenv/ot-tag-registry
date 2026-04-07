@@ -4,8 +4,9 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from src.models.auto_fill import AutoFillRequest, AutoFillResult
+from src.models.auto_fill import AutoFillRequest, AutoFillResult, TranslateRequest, TranslateResponse
 from src.utils.search import SearchServiceError, auto_fill_tag
+from src.utils.translate import normalise_to_english
 
 logger = logging.getLogger("ot_tag_registry.routes.auto_fill")
 
@@ -25,3 +26,14 @@ async def auto_fill(body: AutoFillRequest) -> AutoFillResult:
         raise HTTPException(status_code=400, detail={"error": str(exc)}) from exc
 
     return result
+
+
+@router.post("/translate", response_model=TranslateResponse)
+async def translate(body: TranslateRequest) -> TranslateResponse:
+    """Translate free-text to English using Azure Translator."""
+    result = await normalise_to_english(body.text)
+    return TranslateResponse(
+        text=result.text,
+        sourceLanguage=result.source_language,
+        wasTranslated=result.was_translated,
+    )

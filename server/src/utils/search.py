@@ -321,6 +321,54 @@ def _extract_structured_fields(
 
 
 # ---------------------------------------------------------------------------
+# Search execution with retry on stale SSL connections
+# ---------------------------------------------------------------------------
+
+
+def _execute_search(
+    query: str,
+    vector_query: VectorizedQuery,
+    top_k: int,
+) -> list[AutoFillMatch]:
+    """Run the hybrid search, retrying once with a fresh client on SSL errors."""
+    global _cached_search_client
+
+    for attempt in range(2):
+        try:
+            client = _get_search_client()
+            results = client.search(
+                search_text=query,
+                vector_queries=[vector_query],
+                select=_SELECT_FIELDS,
+                top=top_k,
+            )
+
+            matches: list[AutoFillMatch] = []
+            for result in results:
+                matches.append(
+                    AutoFillMatch(
+                        tagName=result["tagName"],
+                        description=result.get("description", ""),
+                        score=result["@search.score"],
+                        site=result.get("site", ""),
+                        line=result.get("line", ""),
+                        equipment=result.get("equipment", ""),
+                        unit=result.get("unit", ""),
+                        datatype=result.get("datatype", ""),
+                    )
+                )
+            return matches
+        except (HttpResponseError, ServiceRequestError) as exc:
+            if attempt == 0:
+                logger.warning("Search failed (attempt 1), retrying with fresh client: %s", exc)
+                _cached_search_client = None
+                continue
+            raise SearchServiceError(f"Search query failed: {exc}") from exc
+
+    return []  # unreachable, but satisfies type checker
+
+
+# ---------------------------------------------------------------------------
 # Main query function
 # ---------------------------------------------------------------------------
 
@@ -343,8 +391,13 @@ async def auto_fill_tag(
         SearchServiceError: If the embedding or search API call fails.
         ValueError: If required environment variables are missing.
     """
-    # 1. Generate embedding
-    embedding = _generate_query_embedding(query)
+    # 0. Normalise query to English (non-blocking — falls back to original)
+    from src.utils.translate import normalise_to_english as _translate
+    translate_result = await _translate(query)
+    normalised_query = translate_result.text
+
+    # 1. Generate embedding (from normalised text)
+    embedding = _generate_query_embedding(normalised_query)
 
     # 2. Build vector query
     vector_query = VectorizedQuery(
@@ -354,34 +407,14 @@ async def auto_fill_tag(
     )
 
     # 3. Execute hybrid search (keyword + vector, no OData filter)
-    try:
-        client = _get_search_client()
-        results = client.search(
-            search_text=query,
-            vector_queries=[vector_query],
-            select=_SELECT_FIELDS,
-            top=top_k,
-        )
-
-        matches: list[AutoFillMatch] = []
-        for result in results:
-            matches.append(
-                AutoFillMatch(
-                    tagName=result["tagName"],
-                    description=result.get("description", ""),
-                    score=result["@search.score"],
-                    site=result.get("site", ""),
-                    line=result.get("line", ""),
-                    equipment=result.get("equipment", ""),
-                    unit=result.get("unit", ""),
-                    datatype=result.get("datatype", ""),
-                )
-            )
-    except (HttpResponseError, ServiceRequestError) as exc:
-        raise SearchServiceError(f"Search query failed: {exc}") from exc
+    #    Run the sync SearchClient off the event loop and retry once on
+    #    transient SSL errors (stale cached connection).
+    matches = await asyncio.to_thread(
+        _execute_search, normalised_query, vector_query, top_k,
+    )
 
     # 4. Agent extraction (sync HTTP calls — run off the event loop)
-    extracted = await asyncio.to_thread(_extract_structured_fields, query, matches)
+    extracted = await asyncio.to_thread(_extract_structured_fields, normalised_query, matches)
 
     # 5. Build result
     confidence = matches[0].score if matches else 0.0
