@@ -17,7 +17,7 @@ from azure.identity import DefaultAzureCredential
 
 logger = logging.getLogger(__name__)
 
-_TRANSLATE_API_VERSION = "2024-11-01"
+_TRANSLATE_API_VERSION = "2025-10-01-preview"
 _TARGET_LANGUAGE = "en"
 _SCOPE = "https://cognitiveservices.azure.com/.default"
 

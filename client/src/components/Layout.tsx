@@ -1,12 +1,15 @@
+import { useState } from "react";
 import {
   makeStyles,
   mergeClasses,
   tokens,
   Subtitle1,
   Text,
+  Button,
 } from "@fluentui/react-components";
-import { TagRegular } from "@fluentui/react-icons";
+import { TagRegular, SparkleRegular } from "@fluentui/react-icons";
 import { NavLink, Outlet } from "react-router-dom";
+import AgentPanel from "./AgentPanel";
 
 const useStyles = makeStyles({
   root: {
@@ -39,6 +42,12 @@ const useStyles = makeStyles({
     flexShrink: "0",
   },
   topbarTitle: {
+    color: tokens.colorNeutralForegroundOnBrand,
+  },
+  topbarSpacer: {
+    flexGrow: 1,
+  },
+  topbarButton: {
     color: tokens.colorNeutralForegroundOnBrand,
   },
   body: {
@@ -92,11 +101,21 @@ const useStyles = makeStyles({
 
 export default function Layout() {
   const styles = useStyles();
+  const [agentOpen, setAgentOpen] = useState(false);
 
   return (
     <div className={styles.root}>
       <header className={styles.topbar}>
         <Subtitle1 className={styles.topbarTitle}>OT Tag Registry</Subtitle1>
+        <div className={styles.topbarSpacer} />
+        <Button
+          className={styles.topbarButton}
+          appearance="subtle"
+          icon={<SparkleRegular />}
+          onClick={() => setAgentOpen(true)}
+        >
+          AI Agent
+        </Button>
       </header>
       <div className={styles.body}>
         <nav className={styles.sidebar}>
@@ -114,6 +133,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      <AgentPanel open={agentOpen} onClose={() => setAgentOpen(false)} />
     </div>
   );
 }
