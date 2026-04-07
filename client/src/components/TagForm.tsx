@@ -9,16 +9,20 @@ import {
   Option,
   Button,
   Label,
+  Spinner,
   MessageBar,
   MessageBarBody,
 } from "@fluentui/react-components";
+import { SparkleRegular } from "@fluentui/react-icons";
 import { useAssets } from "../hooks/useAssets";
 import { useNextAvailableName } from "../hooks/useNextAvailableName";
+import { useAutoFill } from "../hooks/useAutoFill";
 import { generateBaseTagName } from "../utils/tagNameMappings";
 import type {
   Tag,
   CreateTag,
   Criticality,
+  AutoFillResult,
 } from "../types/tag";
 
 export interface TagFormProps {
@@ -99,6 +103,15 @@ const useStyles = makeStyles({
   advancedLabel: {
     paddingTop: tokens.spacingVerticalM,
   },
+  autoFillRow: {
+    display: "flex",
+    alignItems: "flex-end",
+    gap: tokens.spacingHorizontalM,
+  },
+  autoFillField: {
+    flex: 1,
+    minWidth: 0,
+  },
   actions: {
     display: "flex",
     gap: tokens.spacingHorizontalM,
@@ -124,6 +137,44 @@ export default function TagForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [attempted, setAttempted] = useState(false);
+
+  // --- Auto-fill (create mode only) ---
+  const [autoFillQuery, setAutoFillQuery] = useState("");
+  const [autoFillBaseName, setAutoFillBaseName] = useState("");
+  const autoFill = useAutoFill();
+
+  const applyAutoFillResult = (result: AutoFillResult) => {
+    setForm((prev) => {
+      const next = { ...prev };
+      if (result.site) next.site = result.site;
+      if (result.line) next.line = result.line;
+      if (result.equipment) next.equipment = result.equipment;
+      if (result.description) next.description = result.description;
+      if (result.criticality) next.criticality = result.criticality as Criticality;
+      if (result.unit) {
+        const isPreset = UNIT_OPTIONS.includes(result.unit);
+        next.unit = isPreset ? result.unit : OTHER_UNIT_VALUE;
+        next.customUnit = isPreset ? "" : result.unit;
+      }
+      return next;
+    });
+    // Set the AI-derived base name for next-available-name resolution
+    if (result.name) {
+      setAutoFillBaseName(result.name);
+    }
+  };
+
+  const handleAutoFill = () => {
+    if (!autoFillQuery.trim()) return;
+    setSubmitError(null);
+    autoFill.mutate(autoFillQuery.trim(), {
+      onSuccess: applyAutoFillResult,
+      onError: (err) => {
+        const message = err instanceof Error ? err.message : "Auto-fill failed. Please try again.";
+        setSubmitError(message);
+      },
+    });
+  };
 
   // Pre-populate form in edit mode once assets load
   useEffect(() => {
@@ -180,10 +231,19 @@ export default function TagForm({
     form.unit === OTHER_UNIT_VALUE ? form.customUnit : form.unit;
 
   // --- Auto-generated tag name (both create and edit) ---
-  const baseName = generateBaseTagName(form.site, form.line, form.equipment, resolvedUnit);
+  const manualBaseName = generateBaseTagName(form.site, form.line, form.equipment, resolvedUnit);
+  // Prefer AI-derived base name; clear it when user changes form fields manually
+  const baseName = autoFillBaseName || manualBaseName;
   const { name: autoName, resolving: nameResolving } =
     useNextAvailableName(baseName);
   const effectiveName = autoName;
+
+  // Clear the AI base name when the user manually changes cascading fields
+  useEffect(() => {
+    if (autoFillBaseName && manualBaseName && manualBaseName !== autoFillBaseName) {
+      setAutoFillBaseName("");
+    }
+  }, [manualBaseName, autoFillBaseName]);
 
   // --- Field helpers ---
   const updateField = <K extends keyof FormState>(
@@ -277,6 +337,30 @@ export default function TagForm({
         <MessageBar intent="error">
           <MessageBarBody>{submitError}</MessageBarBody>
         </MessageBar>
+      )}
+
+      {/* Auto-fill section (create mode only) */}
+      {mode === "create" && (
+        <div className={styles.autoFillRow}>
+          <Field className={styles.autoFillField} label="Describe your tag">
+            <Textarea
+              value={autoFillQuery}
+              onChange={(_e, data) => setAutoFillQuery(data.value)}
+              placeholder="e.g. outlet pressure sensor on the main cooling pump in Luxembourg Line 1"
+              rows={2}
+              resize="vertical"
+              disabled={autoFill.isPending}
+            />
+          </Field>
+          <Button
+            appearance="primary"
+            icon={autoFill.isPending ? <Spinner size="tiny" /> : <SparkleRegular />}
+            onClick={handleAutoFill}
+            disabled={autoFill.isPending || !autoFillQuery.trim()}
+          >
+            {autoFill.isPending ? "Filling..." : "Auto-fill"}
+          </Button>
+        </div>
       )}
 
       {/* Row 1: Site + Line (side by side) */}

@@ -65,3 +65,34 @@ export interface ValidateNameResponse {
   valid: boolean;
   errors: NameValidationError[];
 }
+
+/** Request body for POST /api/tags/auto-fill */
+export interface AutoFillRequest {
+  query: string;
+}
+
+/** A single search hit from the golden-tags index */
+export interface AutoFillMatch {
+  tagName: string;
+  description: string;
+  score: number;
+  site: string;
+  line: string;
+  equipment: string;
+  unit: string;
+  datatype: string;
+}
+
+/** Response from POST /api/tags/auto-fill */
+export interface AutoFillResult {
+  site: string | null;
+  line: string | null;
+  equipment: string | null;
+  unit: string | null;
+  datatype: string | null;
+  name: string | null;
+  description: string | null;
+  criticality: string | null;
+  confidence: number;
+  matches: AutoFillMatch[];
+}
