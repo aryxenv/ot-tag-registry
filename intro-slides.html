@@ -722,6 +722,36 @@
         opacity: 0.92;
       }
 
+      .copy-toast {
+        position: fixed;
+        bottom: clamp(22px, 3vw, 36px);
+        left: 50%;
+        z-index: 50;
+        padding: 10px 16px;
+        border: 1px solid rgba(80, 230, 255, 0.32);
+        border-radius: 999px;
+        background: rgba(5, 11, 26, 0.86);
+        color: var(--cyan-100);
+        font-family: var(--display-font);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+        transform: translate(-50%, 12px);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 220ms var(--ease-out),
+          transform 220ms var(--ease-out);
+      }
+
+      .copy-toast.is-visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
       .demo-card:hover::after,
       .demo-card:focus-visible::after {
         transform: scale(1.18);
@@ -1182,9 +1212,11 @@
           <div class="demo-grid reveal" style="--delay: 180ms">
             <a
               class="demo-card"
+              id="spark-card"
               href="https://github.com/spark"
               target="_blank"
               rel="noreferrer"
+              data-copy-prompt="spark-prompt"
             >
               <svg
                 aria-hidden="true"
@@ -1241,6 +1273,36 @@
       </section>
     </main>
 
+    <div class="copy-toast" id="copy-toast" role="status" aria-live="polite">
+      Prompt copied to clipboard
+    </div>
+
+    <script type="text/plain" id="spark-prompt">
+      Simple app for manual entries on Tag Registry (OT Ownership)
+
+      Today, tag definitions/rules are often scattered (Excel, emails, local know-how). That creates:
+
+      - inconsistent tag naming and semantics across sites
+      - unclear ownership (OT vs IT vs integrator)
+      - slow onboarding for new sensors/tags and rework in analytics
+
+      Objective of the demo
+
+      Show a lightweight business app where Site OT can:
+
+      - create / update / retire tags in a governed way
+      - define "physical truth" rules as configuration (not code)
+      - request validation/approval when needed
+
+      Key data objects (MDM-style)
+
+      - Asset (site, line, equipment, hierarchy)
+      - Tag (name, description, unit, datatype, sampling frequency, criticality)
+      - Source (PLC/SCADA/Historians, connector, topic/path)
+      - L1 Rules (Range): min/max, missing data policy, spike threshold
+      - L2 Rules (State Profile): mapping to operating modes (Running/Idle/Stop), state-dependent ranges
+    </script>
+
     <button
       class="hit-zone hit-zone--prev"
       type="button"
@@ -1261,6 +1323,55 @@
         const counter = document.querySelector("#slide-counter");
         const prevZone = document.querySelector(".hit-zone--prev");
         const nextZone = document.querySelector(".hit-zone--next");
+        const toast = document.querySelector("#copy-toast");
+        let toastTimer = null;
+
+        const showToast = (message) => {
+          if (!toast) return;
+          toast.textContent = message;
+          toast.classList.add("is-visible");
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => {
+            toast.classList.remove("is-visible");
+          }, 2200);
+        };
+
+        const copyText = async (text) => {
+          try {
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(text);
+              return true;
+            }
+          } catch (err) {
+            // fall through to legacy fallback
+          }
+          try {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand("copy");
+            document.body.removeChild(ta);
+            return ok;
+          } catch (err) {
+            return false;
+          }
+        };
+
+        document.querySelectorAll("[data-copy-prompt]").forEach((card) => {
+          const sourceId = card.getAttribute("data-copy-prompt");
+          const source = sourceId ? document.getElementById(sourceId) : null;
+          if (!source) return;
+          const text = source.textContent.trim();
+          card.addEventListener("click", () => {
+            copyText(text).then((ok) => {
+              showToast(ok ? "Prompt copied to clipboard" : "Copy failed");
+            });
+          });
+        });
         let current = 0;
 
         const wrap = (index) => (index + slides.length) % slides.length;
@@ -1322,7 +1433,10 @@
           const zone = event.currentTarget;
           const prevPointerEvents = zone.style.pointerEvents;
           zone.style.pointerEvents = "none";
-          const target = document.elementFromPoint(event.clientX, event.clientY);
+          const target = document.elementFromPoint(
+            event.clientX,
+            event.clientY,
+          );
           zone.style.pointerEvents = prevPointerEvents;
           const link = target && target.closest("a[href]");
           if (link) {
@@ -1332,8 +1446,12 @@
           action();
         };
 
-        prevZone.addEventListener("click", (event) => handleZoneClick(event, goPrev));
-        nextZone.addEventListener("click", (event) => handleZoneClick(event, goNext));
+        prevZone.addEventListener("click", (event) =>
+          handleZoneClick(event, goPrev),
+        );
+        nextZone.addEventListener("click", (event) =>
+          handleZoneClick(event, goNext),
+        );
 
         let touchStartX = null;
         document.addEventListener(
