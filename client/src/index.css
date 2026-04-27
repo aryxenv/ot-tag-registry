@@ -31,8 +31,8 @@
   --apr-steel-100: #F3F4F6;
   --apr-steel-50: #F8FAFC;
 
-  --apr-display-font: "Sora Variable", "Sora", "Segoe UI Variable", "Segoe UI",
-    system-ui, sans-serif;
+  --apr-display-font: "Aptos Display", "Aptos", "Segoe UI Variable",
+    "Segoe UI", system-ui, sans-serif;
 }
 
 *,

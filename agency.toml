@@ -1,0 +1,6 @@
+[mcps]
+
+[mcps.servers]
+microsoft-learn = { tools = ["*"], type = "http", url = "https://learn.microsoft.com/api/mcp" }
+fluent-ui = { args = ["mcp-fluent-ui"], command = "npx.cmd", tools = ["*"], type = "stdio" }
+excalidraw = { args = ["-y", "excalidraw-mcp-server"], command = "npx.cmd", tools = ["*"], type = "stdio" }

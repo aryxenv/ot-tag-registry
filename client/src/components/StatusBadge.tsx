@@ -2,17 +2,30 @@ import { Badge, makeStyles } from "@fluentui/react-components";
 import type { TagStatus } from "../types/tag";
 import { aperamTokens } from "../theme/aperamTheme";
 
-const statusConfig: Record<TagStatus, { color: "success" | "warning" | "informative"; label: string }> = {
-  active: { color: "success", label: "Active" },
-  draft: { color: "warning", label: "Draft" },
-  retired: { color: "informative", label: "Retired" },
+const statusConfig: Record<
+  TagStatus,
+  {
+    appearance: "outline" | "tint";
+    color: "informative" | "subtle" | "warning";
+    label: string;
+  }
+> = {
+  active: { appearance: "tint", color: "informative", label: "Active" },
+  draft: { appearance: "tint", color: "warning", label: "Draft" },
+  retired: { appearance: "outline", color: "subtle", label: "Retired" },
 };
 
 const useStyles = makeStyles({
-  active: {
-    backgroundColor: aperamTokens.microsoftBlue,
-    color: aperamTokens.white,
-    boxShadow: "0 0 0 1px rgba(0, 120, 212, 0.12)",
+  badge: {
+    height: "22px",
+    minWidth: "auto",
+    paddingRight: "9px",
+    paddingLeft: "9px",
+    fontFamily: aperamTokens.displayFont,
+    fontSize: "11px",
+    fontWeight: 600,
+    letterSpacing: "0.01em",
+    boxShadow: "none",
   },
 });
 
@@ -21,9 +34,11 @@ export default function StatusBadge({ status }: { status: TagStatus }) {
   const config = statusConfig[status];
   return (
     <Badge
-      appearance="filled"
+      appearance={config.appearance}
       color={config.color}
-      className={status === "active" ? styles.active : undefined}
+      shape="rounded"
+      size="small"
+      className={styles.badge}
     >
       {config.label}
     </Badge>

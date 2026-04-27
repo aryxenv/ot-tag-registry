@@ -70,10 +70,10 @@ export const aperamTokens = {
   orangeGlow: "0 0 12px rgba(241, 81, 27, 0.45)",
   azureGlow: "0 0 16px rgba(80, 230, 255, 0.35)",
 
-  // Display font stack — Sora variable is loaded via @fontsource-variable/sora
-  // in main.tsx; this stack provides graceful fallbacks.
+  // Display font stack — Aptos/Segoe UI keeps the UI close to Fluent while
+  // echoing the Aperam logo's broad, rounded industrial letterforms.
   displayFont:
-    '"Sora Variable", "Sora", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif',
+    '"Aptos Display", "Aptos", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif',
 } as const;
 
 export type AperamTokens = typeof aperamTokens;

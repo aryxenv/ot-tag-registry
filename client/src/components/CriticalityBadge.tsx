@@ -4,38 +4,44 @@ import { aperamTokens } from "../theme/aperamTheme";
 
 const criticalityConfig: Record<
   Criticality,
-  { appearance: "filled" | "tint"; color: "danger" | "severe" | "warning" | "informative"; label: string }
+  {
+    appearance: "outline" | "tint";
+    color: "danger" | "severe" | "subtle" | "warning";
+    label: string;
+  }
 > = {
-  critical: { appearance: "filled", color: "danger", label: "Critical" },
-  high: { appearance: "filled", color: "severe", label: "High" },
-  medium: { appearance: "filled", color: "warning", label: "Medium" },
-  low: { appearance: "tint", color: "informative", label: "Low" },
+  critical: { appearance: "tint", color: "danger", label: "Critical" },
+  high: { appearance: "tint", color: "severe", label: "High" },
+  medium: { appearance: "tint", color: "warning", label: "Medium" },
+  low: { appearance: "outline", color: "subtle", label: "Low" },
 };
 
 const useStyles = makeStyles({
-  critical: {
-    backgroundColor: aperamTokens.orange500,
-    color: aperamTokens.white,
-    boxShadow: "0 0 0 1px rgba(241, 81, 27, 0.15), 0 4px 10px -6px rgba(241, 81, 27, 0.6)",
+  badge: {
+    height: "22px",
+    minWidth: "auto",
+    paddingRight: "9px",
+    paddingLeft: "9px",
+    fontFamily: aperamTokens.displayFont,
+    fontSize: "11px",
     fontWeight: 600,
-    letterSpacing: "0.04em",
-    textTransform: "uppercase",
-    fontSize: "10px",
+    letterSpacing: "0.01em",
+    boxShadow: "none",
+    textTransform: "none",
   },
 });
 
 export default function CriticalityBadge({ criticality }: { criticality: Criticality }) {
   const styles = useStyles();
   const config = criticalityConfig[criticality];
-  if (criticality === "critical") {
-    return (
-      <Badge appearance="filled" color="danger" className={styles.critical}>
-        {config.label}
-      </Badge>
-    );
-  }
   return (
-    <Badge appearance={config.appearance} color={config.color}>
+    <Badge
+      appearance={config.appearance}
+      color={config.color}
+      shape="rounded"
+      size="small"
+      className={styles.badge}
+    >
       {config.label}
     </Badge>
   );

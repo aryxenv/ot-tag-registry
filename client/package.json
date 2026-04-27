@@ -12,7 +12,6 @@
   "dependencies": {
     "@fluentui/react-components": "^9.73.5",
     "@fluentui/react-icons": "^2.0.323",
-    "@fontsource-variable/sora": "^5.2.8",
     "@tanstack/react-query": "^5.96.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

@@ -32,27 +32,40 @@ const useStyles = makeStyles({
   surface: {
     backgroundColor: aperamTokens.white,
     ...shorthands.border("1px", "solid", aperamTokens.steel200),
-    ...shorthands.borderRadius(tokens.borderRadiusLarge),
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
     overflow: "hidden",
-    boxShadow: "0 1px 2px rgba(15, 42, 92, 0.04), 0 12px 32px -22px rgba(15, 42, 92, 0.22)",
+    boxShadow: "0 1px 2px rgba(15, 42, 92, 0.03)",
   },
   grid: {
+    minWidth: "980px",
     "& [role='columnheader']": {
       fontFamily: aperamTokens.displayFont,
       fontWeight: 600,
-      fontSize: "12px",
-      letterSpacing: "0.08em",
+      fontSize: "11px",
+      letterSpacing: "0.12em",
       textTransform: "uppercase",
-      color: aperamTokens.steel700,
-      backgroundColor: aperamTokens.steel50,
+      color: aperamTokens.steel500,
+      backgroundColor: aperamTokens.white,
       borderBottom: `1px solid ${aperamTokens.steel200}`,
+    },
+    "& [role='gridcell']": {
+      minHeight: "50px",
+      fontSize: "13px",
+      color: aperamTokens.steel700,
+      borderBottom: `1px solid ${aperamTokens.steel200}`,
+    },
+    "& [role='row']:last-child [role='gridcell']": {
+      borderBottomColor: "transparent",
     },
   },
   row: {
     cursor: "pointer",
+    transitionDuration: "120ms",
+    transitionProperty: "background-color, box-shadow",
+    transitionTimingFunction: "ease-out",
     ":hover": {
-      backgroundColor: aperamTokens.steel50,
-      boxShadow: `inset 3px 0 0 ${aperamTokens.orange500}`,
+      backgroundColor: "rgba(248, 250, 252, 0.82)",
+      boxShadow: `inset 2px 0 0 ${aperamTokens.steel300}`,
     },
   },
   truncateCell: {
@@ -67,9 +80,24 @@ const useStyles = makeStyles({
     whiteSpace: "nowrap",
     display: "block",
     fontFamily: aperamTokens.displayFont,
+    fontSize: "13px",
     fontWeight: 600,
-    color: aperamTokens.navy700,
+    color: aperamTokens.navy600,
     fontVariantNumeric: "tabular-nums",
+    letterSpacing: "-0.01em",
+  },
+  assetCell: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    display: "block",
+    color: aperamTokens.steel500,
+  },
+  mutedDash: {
+    color: aperamTokens.steel300,
+    fontFamily: aperamTokens.displayFont,
+    fontSize: "13px",
+    fontWeight: 600,
   },
   pagination: {
     display: "flex",
@@ -119,7 +147,7 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
       renderCell: (item) => {
         const asset = assetMap.get(item.assetId);
         const text = asset ? asset.hierarchy : item.assetId;
-        return <span className={styles.truncateCell} title={text}>{text}</span>;
+        return <span className={styles.assetCell} title={text}>{text}</span>;
       },
     }),
     createTableColumn<Tag>({
@@ -133,9 +161,12 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
       compare: (a, b) =>
         (a.approvalStatus ?? "none").localeCompare(b.approvalStatus ?? "none"),
       renderHeaderCell: () => "Approval",
-      renderCell: (item) => (
-        <ApprovalBadge approvalStatus={item.approvalStatus ?? "none"} />
-      ),
+      renderCell: (item) =>
+        item.approvalStatus && item.approvalStatus !== "none" ? (
+          <ApprovalBadge approvalStatus={item.approvalStatus} />
+        ) : (
+          <span className={styles.mutedDash}>—</span>
+        ),
     }),
     createTableColumn<Tag>({
       columnId: "criticality",
@@ -168,12 +199,12 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
   ];
 
   const columnSizingOptions = {
-    name: { idealWidth: 240, minWidth: 150 },
-    description: { idealWidth: 280, minWidth: 150 },
-    asset: { idealWidth: 200, minWidth: 120 },
-    status: { idealWidth: 90, minWidth: 80 },
-    approval: { idealWidth: 100, minWidth: 80 },
-    criticality: { idealWidth: 100, minWidth: 80 },
+    name: { idealWidth: 300, minWidth: 180 },
+    description: { idealWidth: 340, minWidth: 180 },
+    asset: { idealWidth: 250, minWidth: 150 },
+    status: { idealWidth: 86, minWidth: 76 },
+    approval: { idealWidth: 104, minWidth: 88 },
+    criticality: { idealWidth: 112, minWidth: 92 },
     actions: { idealWidth: 48, minWidth: 48 },
   };
 

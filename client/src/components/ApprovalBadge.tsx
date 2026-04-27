@@ -4,18 +4,28 @@ import { aperamTokens } from "../theme/aperamTheme";
 
 const approvalConfig: Record<
   Exclude<ApprovalStatus, "none">,
-  { color: "warning" | "success" | "danger"; label: string }
+  {
+    appearance: "tint";
+    color: "danger" | "success" | "warning";
+    label: string;
+  }
 > = {
-  pending: { color: "warning", label: "Pending Approval" },
-  approved: { color: "success", label: "Approved" },
-  rejected: { color: "danger", label: "Rejected" },
+  pending: { appearance: "tint", color: "warning", label: "Pending" },
+  approved: { appearance: "tint", color: "success", label: "Approved" },
+  rejected: { appearance: "tint", color: "danger", label: "Rejected" },
 };
 
 const useStyles = makeStyles({
-  pending: {
-    backgroundColor: aperamTokens.azureSurface,
-    color: aperamTokens.microsoftBlueDark,
-    boxShadow: "0 0 0 1px rgba(0, 120, 212, 0.14)",
+  badge: {
+    height: "22px",
+    minWidth: "auto",
+    paddingRight: "9px",
+    paddingLeft: "9px",
+    fontFamily: aperamTokens.displayFont,
+    fontSize: "11px",
+    fontWeight: 600,
+    letterSpacing: "0.01em",
+    boxShadow: "none",
   },
 });
 
@@ -33,9 +43,11 @@ export default function ApprovalBadge({
   const config = approvalConfig[status];
   return (
     <Badge
-      appearance="filled"
+      appearance={config.appearance}
       color={config.color}
-      className={status === "pending" ? styles.pending : undefined}
+      shape="rounded"
+      size="small"
+      className={styles.badge}
     >
       {config.label}
     </Badge>
