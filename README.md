@@ -91,6 +91,28 @@ To start the servers immediately after setup:
 ./setup.sh --start client    # frontend only
 ```
 
+### Manual Start
+
+If dependencies and Azure resources are already set up, you can start the backend and frontend manually in separate terminals.
+
+#### Server
+
+```bash
+cd server
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at `http://localhost:8000`.
+
+#### Client
+
+```bash
+cd client
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`.
+
 ## API Reference
 
 All endpoints are prefixed with `/api`.
