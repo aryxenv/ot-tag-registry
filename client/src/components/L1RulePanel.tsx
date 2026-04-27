@@ -27,6 +27,7 @@ import { useL1Rule } from "../hooks/useL1Rule";
 import { useSaveL1Rule, useDeleteL1Rule } from "../hooks/useSaveL1Rule";
 import type { MissingDataPolicy, CreateL1Rule } from "../types/rule";
 import L1RuleFields from "./L1RuleFields";
+import { aperamTokens } from "../theme/aperamTheme";
 
 interface L1RulePanelProps {
   tagId: string;
@@ -37,8 +38,15 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalM,
-    paddingTop: tokens.spacingVerticalM,
-    paddingBottom: tokens.spacingVerticalM,
+    paddingTop: tokens.spacingVerticalL,
+    paddingBottom: tokens.spacingVerticalL,
+    paddingLeft: tokens.spacingHorizontalL,
+    paddingRight: tokens.spacingHorizontalL,
+    backgroundColor: aperamTokens.white,
+    border: `1px solid ${aperamTokens.steel200}`,
+    borderRadius: tokens.borderRadiusLarge,
+    boxShadow: aperamTokens.shadowPanel,
+    borderLeft: `3px solid ${aperamTokens.microsoftBlue}`,
   },
   actions: {
     display: "flex",

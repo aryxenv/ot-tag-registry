@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef } from "react";
 import {
-  Input,
-  Dropdown,
-  Option,
   Button,
+  Dropdown,
+  Input,
+  Option,
   Tooltip,
   makeStyles,
+  shorthands,
   tokens,
 } from "@fluentui/react-components";
-import { SearchRegular, ArrowClockwiseRegular } from "@fluentui/react-icons";
-import type { TagStatus } from "../types/tag";
+import { ArrowClockwiseRegular, SearchRegular } from "@fluentui/react-icons";
+import { useEffect, useRef, useState } from "react";
+import { aperamTokens } from "../theme/aperamTheme";
 import type { Asset } from "../types/asset";
+import type { TagStatus } from "../types/tag";
 
 const ALL_SENTINEL = "__all__";
 
@@ -31,14 +33,72 @@ interface TagFiltersProps {
 
 const useStyles = makeStyles({
   root: {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "end",
+    display: "grid",
+    gridTemplateColumns:
+      "minmax(220px, 1fr) repeat(4, minmax(148px, 216px)) auto",
+    alignItems: "center",
     gap: tokens.spacingHorizontalM,
-    paddingBottom: tokens.spacingVerticalL,
+    backgroundColor: aperamTokens.white,
+    ...shorthands.border("1px", "solid", aperamTokens.steel200),
+    ...shorthands.borderRadius(tokens.borderRadiusLarge),
+    paddingTop: tokens.spacingVerticalM,
+    paddingBottom: tokens.spacingVerticalM,
+    paddingLeft: tokens.spacingHorizontalL,
+    paddingRight: tokens.spacingHorizontalL,
+    marginBottom: tokens.spacingVerticalL,
+    boxShadow:
+      "0 1px 2px rgba(15, 42, 92, 0.04), 0 8px 24px -18px rgba(15, 42, 92, 0.18)",
+    position: "relative",
+    "::before": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+      top: "16px",
+      bottom: "16px",
+      width: "3px",
+      borderRadius: "0 2px 2px 0",
+      backgroundColor: aperamTokens.orange500,
+      opacity: 0.85,
+    },
+    "@media (max-width: 1280px)": {
+      gridTemplateColumns: "repeat(4, minmax(0, 1fr)) auto",
+    },
+    "@media (max-width: 760px)": {
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    },
+    "@media (max-width: 520px)": {
+      gridTemplateColumns: "1fr",
+    },
   },
   field: {
-    minWidth: "160px",
+    width: "100%",
+    minWidth: 0,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  searchField: {
+    width: "100%",
+    minWidth: 0,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    "@media (max-width: 1280px)": {
+      gridColumnStart: 1,
+      gridColumnEnd: -1,
+    },
+  },
+  refreshButton: {
+    justifySelf: "start",
+    "@media (max-width: 760px)": {
+      gridColumnStart: 1,
+      gridColumnEnd: -1,
+    },
+  },
+  noWrapOption: {
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
 });
 
@@ -49,7 +109,12 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "retired", label: "Retired" },
 ];
 
-export default function TagFilters({ filters, onFiltersChange, onRefresh, assets }: TagFiltersProps) {
+export default function TagFilters({
+  filters,
+  onFiltersChange,
+  onRefresh,
+  assets,
+}: TagFiltersProps) {
   const styles = useStyles();
   const [searchInput, setSearchInput] = useState(filters.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,21 +133,27 @@ export default function TagFilters({ filters, onFiltersChange, onRefresh, assets
 
   const uniqueSites = [...new Set(assets.map((a) => a.site))].sort();
   const uniqueLines = filters.site
-    ? [...new Set(assets.filter((a) => a.site === filters.site).map((a) => a.line))].sort()
+    ? [
+        ...new Set(
+          assets.filter((a) => a.site === filters.site).map((a) => a.line),
+        ),
+      ].sort()
     : [];
   const uniqueEquipment =
     filters.site && filters.line
-      ? [...new Set(
-          assets
-            .filter((a) => a.site === filters.site && a.line === filters.line)
-            .map((a) => a.equipment),
-        )].sort()
+      ? [
+          ...new Set(
+            assets
+              .filter((a) => a.site === filters.site && a.line === filters.line)
+              .map((a) => a.equipment),
+          ),
+        ].sort()
       : [];
 
   return (
     <div className={styles.root}>
       <Input
-        className={styles.field}
+        className={styles.searchField}
         contentBefore={<SearchRegular />}
         placeholder="Search tags..."
         value={searchInput}
@@ -94,12 +165,15 @@ export default function TagFilters({ filters, onFiltersChange, onRefresh, assets
         placeholder="All statuses"
         selectedOptions={[filters.status || ALL_SENTINEL]}
         onOptionSelect={(_e, data) => {
-          const val = data.optionValue === ALL_SENTINEL ? "" : (data.optionValue as TagStatus | "");
+          const val =
+            data.optionValue === ALL_SENTINEL
+              ? ""
+              : (data.optionValue as TagStatus | "");
           onFiltersChange({ ...filters, status: val ?? "" });
         }}
       >
         {STATUS_OPTIONS.map((opt) => (
-          <Option key={opt.value} value={opt.value}>
+          <Option key={opt.value} value={opt.value} className={styles.noWrapOption}>
             {opt.label}
           </Option>
         ))}
@@ -112,15 +186,16 @@ export default function TagFilters({ filters, onFiltersChange, onRefresh, assets
         onOptionSelect={(_e, data) =>
           onFiltersChange({
             ...filters,
-            site: data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
+            site:
+              data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
             line: "",
             equipment: "",
           })
         }
       >
-        <Option value={ALL_SENTINEL}>All sites</Option>
+        <Option value={ALL_SENTINEL} className={styles.noWrapOption}>All sites</Option>
         {uniqueSites.map((site) => (
-          <Option key={site} value={site}>
+          <Option key={site} value={site} className={styles.noWrapOption}>
             {site}
           </Option>
         ))}
@@ -134,14 +209,15 @@ export default function TagFilters({ filters, onFiltersChange, onRefresh, assets
         onOptionSelect={(_e, data) =>
           onFiltersChange({
             ...filters,
-            line: data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
+            line:
+              data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
             equipment: "",
           })
         }
       >
-        <Option value={ALL_SENTINEL}>All lines</Option>
+        <Option value={ALL_SENTINEL} className={styles.noWrapOption}>All lines</Option>
         {uniqueLines.map((line) => (
-          <Option key={line} value={line}>
+          <Option key={line} value={line} className={styles.noWrapOption}>
             {line}
           </Option>
         ))}
@@ -155,13 +231,14 @@ export default function TagFilters({ filters, onFiltersChange, onRefresh, assets
         onOptionSelect={(_e, data) =>
           onFiltersChange({
             ...filters,
-            equipment: data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
+            equipment:
+              data.optionValue === ALL_SENTINEL ? "" : (data.optionValue ?? ""),
           })
         }
       >
-        <Option value={ALL_SENTINEL}>All equipment</Option>
+        <Option value={ALL_SENTINEL} className={styles.noWrapOption}>All equipment</Option>
         {uniqueEquipment.map((eq) => (
-          <Option key={eq} value={eq}>
+          <Option key={eq} value={eq} className={styles.noWrapOption}>
             {eq}
           </Option>
         ))}
@@ -169,7 +246,8 @@ export default function TagFilters({ filters, onFiltersChange, onRefresh, assets
 
       <Tooltip content="Refresh" relationship="label">
         <Button
-          appearance="subtle"
+          className={styles.refreshButton}
+          appearance="secondary"
           icon={<ArrowClockwiseRegular />}
           onClick={onRefresh}
         />

@@ -1,3 +1,40 @@
+:root {
+  /* Aperam navy ramp */
+  --apr-navy-900: #050B1A;
+  --apr-navy-800: #0A1428;
+  --apr-navy-700: #0F2A5C;
+  --apr-navy-600: #143573;
+  --apr-navy-500: #1A4291;
+  --apr-navy-400: #2150B0;
+  --apr-navy-100: #DBE5FA;
+
+  /* Aperam orange accent */
+  --apr-orange-600: #C9410E;
+  --apr-orange-500: #F1511B;
+  --apr-orange-400: #FF7A3D;
+  --apr-orange-50: #FFF1EA;
+
+  /* Microsoft / Azure intelligence layer */
+  --apr-ms-blue-dark: #005A9E;
+  --apr-ms-blue: #0078D4;
+  --apr-ms-blue-light: #2B88D8;
+  --apr-azure-cyan: #50E6FF;
+  --apr-azure-cyan-soft: #BDF2FF;
+  --apr-azure-surface: #EAF6FF;
+
+  /* Warm steel neutrals */
+  --apr-steel-900: #1F2937;
+  --apr-steel-700: #374151;
+  --apr-steel-500: #6B7280;
+  --apr-steel-300: #D1D5DB;
+  --apr-steel-200: #E5E7EB;
+  --apr-steel-100: #F3F4F6;
+  --apr-steel-50: #F8FAFC;
+
+  --apr-display-font: "Sora Variable", "Sora", "Segoe UI Variable", "Segoe UI",
+    system-ui, sans-serif;
+}
+
 *,
 *::before,
 *::after {
@@ -10,3 +47,50 @@ html, body, #root {
   height: 100%;
   width: 100%;
 }
+
+body {
+  position: relative;
+  overflow: hidden;
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Atmospheric radial — navy gloom in the bottom-right with a faint orange
+   echo, layered over a barely-perceptible grain. Sits behind every page
+   without ever interfering with interaction. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      circle at 82% 12%,
+      rgba(80, 230, 255, 0.12) 0%,
+      rgba(0, 120, 212, 0.08) 26%,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(241, 81, 27, 0.10) 0%,
+      rgba(15, 42, 92, 0.18) 28%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(33, 80, 176, 0.05) 0%,
+      transparent 45%
+    );
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.9'/></svg>");
+}
+

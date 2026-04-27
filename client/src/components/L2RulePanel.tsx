@@ -32,6 +32,7 @@ import L2RuleFields, {
   rowFromMapping,
   rowToMapping,
 } from "./L2RuleFields";
+import { aperamTokens } from "../theme/aperamTheme";
 
 interface L2RulePanelProps {
   tagId: string;
@@ -42,8 +43,15 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalM,
-    paddingTop: tokens.spacingVerticalM,
-    paddingBottom: tokens.spacingVerticalM,
+    paddingTop: tokens.spacingVerticalL,
+    paddingBottom: tokens.spacingVerticalL,
+    paddingLeft: tokens.spacingHorizontalL,
+    paddingRight: tokens.spacingHorizontalL,
+    backgroundColor: aperamTokens.white,
+    border: `1px solid ${aperamTokens.steel200}`,
+    borderRadius: tokens.borderRadiusLarge,
+    boxShadow: aperamTokens.shadowPanel,
+    borderLeft: `3px solid ${aperamTokens.azureCyan}`,
   },
   actions: {
     display: "flex",

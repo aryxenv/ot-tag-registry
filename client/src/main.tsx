@@ -2,16 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  FluentProvider,
-  createLightTheme,
-  type BrandVariants,
-} from '@fluentui/react-components'
+import { FluentProvider } from '@fluentui/react-components'
+import '@fontsource-variable/sora'
 import './index.css'
 import App from './App'
 import TagListPage from './pages/TagListPage'
 import TagCreatePage from './pages/TagCreatePage'
 import TagEditPage from './pages/TagEditPage'
+import { aperamLightTheme } from './theme/aperamTheme'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,28 +20,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Aperam brand: purple #490B42, orange #F1511B
-const aperamBrand: BrandVariants = {
-  10: "#0D0209",
-  20: "#1E0615",
-  30: "#300A22",
-  40: "#3C0B2E",
-  50: "#490B42",
-  60: "#5C1054",
-  70: "#6F1666",
-  80: "#7D1D73",
-  90: "#8C2681",
-  100: "#9A3290",
-  110: "#A840A0",
-  120: "#B550AF",
-  130: "#C162BE",
-  140: "#CC76CC",
-  150: "#D88CDA",
-  160: "#E4A4E7",
-}
-
-const aperamTheme = createLightTheme(aperamBrand)
 
 const router = createBrowserRouter([
   {
@@ -62,7 +38,7 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <FluentProvider theme={aperamTheme}>
+      <FluentProvider theme={aperamLightTheme}>
         <RouterProvider router={router} />
       </FluentProvider>
     </QueryClientProvider>

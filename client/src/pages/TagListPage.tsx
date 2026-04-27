@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Title2,
   Spinner,
   Text,
   Button,
@@ -15,16 +14,12 @@ import { useTags } from "../hooks/useTags";
 import { useAssets } from "../hooks/useAssets";
 import TagFilters from "../components/TagFilters";
 import TagTable from "../components/TagTable";
+import PageHero from "../components/PageHero";
 import type { TagFilterValues } from "../components/TagFilters";
 import type { TagStatus } from "../types/tag";
+import { aperamTokens } from "../theme/aperamTheme";
 
 const useStyles = makeStyles({
-  headerRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "16px",
-  },
   center: {
     display: "flex",
     justifyContent: "center",
@@ -34,7 +29,24 @@ const useStyles = makeStyles({
     display: "flex",
     justifyContent: "center",
     paddingTop: tokens.spacingVerticalXXL,
-    color: tokens.colorNeutralForeground3,
+    color: aperamTokens.steel500,
+  },
+  createBtn: {
+    fontFamily: aperamTokens.displayFont,
+    fontWeight: 600,
+    backgroundColor: aperamTokens.orange500,
+    color: aperamTokens.white,
+    border: `1px solid ${aperamTokens.orange600}`,
+    boxShadow: "0 8px 18px -10px rgba(241, 81, 27, 0.7)",
+    ":hover": {
+      backgroundColor: aperamTokens.orange400,
+      color: aperamTokens.white,
+      border: `1px solid ${aperamTokens.orange500}`,
+    },
+    ":hover:active": {
+      backgroundColor: aperamTokens.orange600,
+      color: aperamTokens.white,
+    },
   },
 });
 
@@ -54,7 +66,6 @@ export default function TagListPage() {
 
   const { assets, loading: assetsLoading, refreshing: assetsRefreshing } = useAssets();
 
-  // Find all assets matching the current site/line/equipment filters
   const matchedAssetIds = new Set(
     assets
       .filter((a) => {
@@ -66,7 +77,6 @@ export default function TagListPage() {
       .map((a) => a.id),
   );
 
-  // When all three are selected, pass the single assetId for an efficient partition-scoped query
   const exactAsset =
     filters.site && filters.line && filters.equipment
       ? assets.find(
@@ -84,7 +94,6 @@ export default function TagListPage() {
 
   const { tags: fetchedTags, loading: tagsLoading, refreshing: tagsRefreshing } = useTags(apiFilters);
 
-  // Client-side filtering for partial site/line/equipment selection
   const hasPartialAssetFilter = !!(filters.site || filters.line || filters.equipment) && !exactAsset;
   const tags = hasPartialAssetFilter
     ? fetchedTags.filter((t) => matchedAssetIds.has(t.assetId))
@@ -101,16 +110,21 @@ export default function TagListPage() {
 
   return (
     <div>
-      <div className={styles.headerRow}>
-        <Title2>Tags</Title2>
-        <Button
-          appearance="primary"
-          icon={<AddRegular />}
-          onClick={() => navigate("/tags/new")}
-        >
-          Create Tag
-        </Button>
-      </div>
+      <PageHero
+        title="Tags"
+        subtitle="Browse, govern, and create industrial sensor tags across every site and line."
+        actions={
+          <Button
+            appearance="primary"
+            icon={<AddRegular />}
+            className={styles.createBtn}
+            onClick={() => navigate("/tags/new")}
+          >
+            Create Tag
+          </Button>
+        }
+      />
+
       <TagFilters filters={filters} onFiltersChange={setFilters} onRefresh={handleRefresh} assets={assets} />
 
       {(tagsRefreshing || assetsRefreshing) && <ProgressBar />}

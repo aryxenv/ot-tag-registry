@@ -13,7 +13,6 @@ import {
   Subtitle2,
   Text,
   Textarea,
-  Title2,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
@@ -23,6 +22,7 @@ import ApprovalBadge from "../components/ApprovalBadge";
 import L1RulePanel from "../components/L1RulePanel";
 import L2RulePanel from "../components/L2RulePanel";
 import TagForm from "../components/TagForm";
+import PageHero from "../components/PageHero";
 import { useRetireTag } from "../hooks/useRetireTag";
 import { useTag } from "../hooks/useTag";
 import {
@@ -32,13 +32,9 @@ import {
 } from "../hooks/useTagApproval";
 import { useUpdateTag } from "../hooks/useUpdateTag";
 import type { CreateTag } from "../types/tag";
+import { aperamTokens } from "../theme/aperamTheme";
 
 const useStyles = makeStyles({
-  headerSection: {
-    display: "flex",
-    flexDirection: "column",
-    gap: tokens.spacingVerticalL,
-  },
   center: {
     display: "flex",
     justifyContent: "center",
@@ -56,11 +52,20 @@ const useStyles = makeStyles({
   },
   rulesSectionHeader: {
     marginBottom: tokens.spacingVerticalXS,
+    fontFamily: aperamTokens.displayFont,
+    color: aperamTokens.navy700,
+    letterSpacing: "0.02em",
   },
   approvalRow: {
     display: "flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalM,
+    marginBottom: tokens.spacingVerticalL,
+  },
+  dialogContentStack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalM,
   },
 });
 
@@ -134,35 +139,33 @@ export default function TagEditPage() {
 
   return (
     <div>
-      <div className={styles.headerSection}>
-        <Title2>Edit Tag</Title2>
+      <PageHero title="Edit tag" subtitle={tag.name} />
 
-        <div className={styles.approvalRow}>
-          <ApprovalBadge approvalStatus={tag.approvalStatus ?? "none"} />
+      <div className={styles.approvalRow}>
+        <ApprovalBadge approvalStatus={tag.approvalStatus ?? "none"} />
 
-          {tag.status === "draft" &&
-            (!tag.approvalStatus ||
-              tag.approvalStatus === "none" ||
-              tag.approvalStatus === "rejected") && (
-              <Button appearance="primary" onClick={handleRequestApproval}>
-                Request Approval
-              </Button>
-            )}
-
-          {tag.approvalStatus === "pending" && (
-            <>
-              <Button appearance="primary" onClick={handleApprove}>
-                Approve
-              </Button>
-              <Button
-                appearance="secondary"
-                onClick={() => setRejectOpen(true)}
-              >
-                Reject
-              </Button>
-            </>
+        {tag.status === "draft" &&
+          (!tag.approvalStatus ||
+            tag.approvalStatus === "none" ||
+            tag.approvalStatus === "rejected") && (
+            <Button appearance="primary" onClick={handleRequestApproval}>
+              Request Approval
+            </Button>
           )}
-        </div>
+
+        {tag.approvalStatus === "pending" && (
+          <>
+            <Button appearance="primary" onClick={handleApprove}>
+              Approve
+            </Button>
+            <Button
+              appearance="secondary"
+              onClick={() => setRejectOpen(true)}
+            >
+              Reject
+            </Button>
+          </>
+        )}
       </div>
 
       {tag.approvalStatus === "rejected" && tag.rejectionReason && (
@@ -224,9 +227,7 @@ export default function TagEditPage() {
         <DialogSurface>
           <DialogBody>
             <DialogTitle>Reject Tag</DialogTitle>
-            <DialogContent
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-            >
+            <DialogContent className={styles.dialogContentStack}>
               <Text>Optionally provide a reason for rejecting this tag.</Text>
               <Textarea
                 placeholder="Rejection reason (optional)"

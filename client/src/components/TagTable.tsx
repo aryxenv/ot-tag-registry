@@ -8,6 +8,7 @@ import {
   DataGridCell,
   createTableColumn,
   makeStyles,
+  shorthands,
   tokens,
   Button,
   Text,
@@ -23,14 +24,35 @@ import type { Asset } from "../types/asset";
 import StatusBadge from "./StatusBadge";
 import CriticalityBadge from "./CriticalityBadge";
 import ApprovalBadge from "./ApprovalBadge";
+import { aperamTokens } from "../theme/aperamTheme";
 
 const PAGE_SIZE = 15;
 
 const useStyles = makeStyles({
+  surface: {
+    backgroundColor: aperamTokens.white,
+    ...shorthands.border("1px", "solid", aperamTokens.steel200),
+    ...shorthands.borderRadius(tokens.borderRadiusLarge),
+    overflow: "hidden",
+    boxShadow: "0 1px 2px rgba(15, 42, 92, 0.04), 0 12px 32px -22px rgba(15, 42, 92, 0.22)",
+  },
+  grid: {
+    "& [role='columnheader']": {
+      fontFamily: aperamTokens.displayFont,
+      fontWeight: 600,
+      fontSize: "12px",
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      color: aperamTokens.steel700,
+      backgroundColor: aperamTokens.steel50,
+      borderBottom: `1px solid ${aperamTokens.steel200}`,
+    },
+  },
   row: {
     cursor: "pointer",
     ":hover": {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
+      backgroundColor: aperamTokens.steel50,
+      boxShadow: `inset 3px 0 0 ${aperamTokens.orange500}`,
     },
   },
   truncateCell: {
@@ -44,7 +66,10 @@ const useStyles = makeStyles({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
     display: "block",
-    fontWeight: tokens.fontWeightSemibold,
+    fontFamily: aperamTokens.displayFont,
+    fontWeight: 600,
+    color: aperamTokens.navy700,
+    fontVariantNumeric: "tabular-nums",
   },
   pagination: {
     display: "flex",
@@ -53,6 +78,7 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalM,
     paddingTop: tokens.spacingVerticalM,
     paddingBottom: tokens.spacingVerticalM,
+    color: aperamTokens.steel700,
   },
 });
 
@@ -160,36 +186,39 @@ export default function TagTable({ tags, assets, onTagClick, onEditClick }: TagT
 
   return (
     <>
-      <DataGrid
-        items={pagedTags}
-        columns={columns}
-        sortable
-        resizableColumns
-        columnSizingOptions={columnSizingOptions}
-        onSortChange={handleSortChange}
-        getRowId={(item) => item.id}
-      >
-        <DataGridHeader>
-          <DataGridRow>
-            {({ renderHeaderCell }) => (
-              <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-            )}
-          </DataGridRow>
-        </DataGridHeader>
-        <DataGridBody<Tag>>
-          {({ item, rowId }) => (
-            <DataGridRow<Tag>
-              key={rowId}
-              className={styles.row}
-              onClick={() => onTagClick(item.id)}
-            >
-              {({ renderCell }) => (
-                <DataGridCell>{renderCell(item)}</DataGridCell>
+      <div className={styles.surface}>
+        <DataGrid
+          className={styles.grid}
+          items={pagedTags}
+          columns={columns}
+          sortable
+          resizableColumns
+          columnSizingOptions={columnSizingOptions}
+          onSortChange={handleSortChange}
+          getRowId={(item) => item.id}
+        >
+          <DataGridHeader>
+            <DataGridRow>
+              {({ renderHeaderCell }) => (
+                <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
               )}
             </DataGridRow>
-          )}
-        </DataGridBody>
-      </DataGrid>
+          </DataGridHeader>
+          <DataGridBody<Tag>>
+            {({ item, rowId }) => (
+              <DataGridRow<Tag>
+                key={rowId}
+                className={styles.row}
+                onClick={() => onTagClick(item.id)}
+              >
+                {({ renderCell }) => (
+                  <DataGridCell>{renderCell(item)}</DataGridCell>
+                )}
+              </DataGridRow>
+            )}
+          </DataGridBody>
+        </DataGrid>
+      </div>
 
       {tags.length > PAGE_SIZE && (
         <div className={styles.pagination}>

@@ -15,6 +15,7 @@ import {
 import { useAssets } from "../hooks/useAssets";
 import { useNextAvailableName } from "../hooks/useNextAvailableName";
 import { generateBaseTagName } from "../utils/tagNameMappings";
+import { aperamTokens } from "../theme/aperamTheme";
 import type {
   Tag,
   CreateTag,
@@ -87,6 +88,13 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalL,
     maxWidth: "720px",
     paddingTop: tokens.spacingVerticalL,
+    paddingBottom: tokens.spacingVerticalL,
+    paddingLeft: tokens.spacingHorizontalXL,
+    paddingRight: tokens.spacingHorizontalXL,
+    backgroundColor: aperamTokens.white,
+    border: `1px solid ${aperamTokens.steel200}`,
+    borderRadius: tokens.borderRadiusLarge,
+    boxShadow: aperamTokens.shadowSoft,
   },
   row: {
     display: "flex",
@@ -98,11 +106,37 @@ const useStyles = makeStyles({
   },
   advancedLabel: {
     paddingTop: tokens.spacingVerticalM,
+    fontFamily: aperamTokens.displayFont,
+    fontWeight: 600,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    fontSize: "12px",
+    color: aperamTokens.steel700,
+    borderTop: `1px solid ${aperamTokens.steel200}`,
+    marginTop: tokens.spacingVerticalM,
   },
   actions: {
     display: "flex",
     gap: tokens.spacingHorizontalM,
     paddingTop: tokens.spacingVerticalL,
+    borderTop: `1px solid ${aperamTokens.steel100}`,
+    marginTop: tokens.spacingVerticalS,
+  },
+  submitButton: {
+    backgroundColor: aperamTokens.orange500,
+    color: aperamTokens.white,
+    border: `1px solid ${aperamTokens.orange600}`,
+    fontWeight: 600,
+    boxShadow: "0 8px 18px -10px rgba(241, 81, 27, 0.7)",
+    ":hover": {
+      backgroundColor: aperamTokens.orange400,
+      color: aperamTokens.white,
+      border: `1px solid ${aperamTokens.orange500}`,
+    },
+    ":hover:active": {
+      backgroundColor: aperamTokens.orange600,
+      color: aperamTokens.white,
+    },
   },
   retireButton: {
     marginLeft: "auto",
@@ -485,6 +519,7 @@ export default function TagForm({
       <div className={styles.actions}>
         <Button
           appearance="primary"
+          className={styles.submitButton}
           onClick={handleSubmit}
           disabled={submitting}
         >

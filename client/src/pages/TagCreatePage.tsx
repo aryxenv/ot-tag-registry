@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Title2,
   Accordion,
   AccordionItem,
   AccordionHeader,
@@ -14,6 +13,7 @@ import {
   DataUsageRegular,
 } from "@fluentui/react-icons";
 import TagForm from "../components/TagForm";
+import PageHero from "../components/PageHero";
 import L1RuleFields from "../components/L1RuleFields";
 import L2RuleFields, {
   type RowState,
@@ -25,17 +25,20 @@ import { useSaveL1Rule } from "../hooks/useSaveL1Rule";
 import { useSaveL2Rule } from "../hooks/useSaveL2Rule";
 import type { CreateTag } from "../types/tag";
 import type { MissingDataPolicy } from "../types/rule";
+import { aperamTokens } from "../theme/aperamTheme";
 
 const useStyles = makeStyles({
-  header: {
-    marginBottom: tokens.spacingVerticalS,
-  },
   rulePanel: {
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalM,
-    paddingTop: tokens.spacingVerticalM,
-    paddingBottom: tokens.spacingVerticalM,
+    paddingTop: tokens.spacingVerticalL,
+    paddingBottom: tokens.spacingVerticalL,
+    paddingLeft: tokens.spacingHorizontalL,
+    paddingRight: tokens.spacingHorizontalL,
+    backgroundColor: aperamTokens.azureSurface,
+    border: `1px solid ${aperamTokens.azureCyanSoft}`,
+    borderRadius: tokens.borderRadiusLarge,
   },
 });
 
@@ -142,7 +145,10 @@ export default function TagCreatePage() {
 
   return (
     <div>
-      <Title2 className={styles.header}>Create Tag</Title2>
+      <PageHero
+        title="Create tag"
+        subtitle="Define a new sensor data point. AI suggestions help you derive the technical name from a plain description."
+      />
       <TagForm
         mode="create"
         onSubmit={handleSubmit}
