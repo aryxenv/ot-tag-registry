@@ -1,0 +1,2 @@
+- DEMO PROMPT: Main compressor discharge temp sensor on Belgium Line 2
+- DEMO PROMPT (NL): Uitlaattemperatuursensor van de hoofdcompressor in België op Lijn 2
